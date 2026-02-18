@@ -1,0 +1,217 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 50% 95%;
+    /* #F8F4EC Warm Cream */
+    --foreground: 0 0% 12%;
+    /* #1E1E1E Charcoal */
+
+    --card: 38 65% 96%;
+    /* #FBF7F0 Soft Ivory */
+    --card-foreground: 0 0% 12%;
+
+    --popover: 38 65% 96%;
+    --popover-foreground: 0 0% 12%;
+
+    --primary: 44 80% 46%;
+    /* #D4A017 Mango Gold */
+    --primary-foreground: 40 50% 95%;
+
+    --secondary: 40 30% 92%;
+    --secondary-foreground: 0 0% 12%;
+
+    --muted: 40 30% 92%;
+    --muted-foreground: 0 11% 21%;
+    /* #3B2F2F Warm Brown */
+
+    --accent: 80 45% 25%;
+    /* #4A5D23 Deep Olive */
+    --accent-foreground: 40 50% 95%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 85%;
+    --input: 0 0% 85%;
+    --ring: 44 80% 46%;
+
+    --radius: 1.5rem;
+    /* 24px rounded corners as requested */
+
+    --sidebar-background: 40 50% 95%;
+    --sidebar-foreground: 0 0% 12%;
+    --sidebar-primary: 44 80% 46%;
+    --sidebar-primary-foreground: 40 50% 95%;
+    --sidebar-accent: 38 65% 96%;
+    --sidebar-accent-foreground: 0 0% 12%;
+    --sidebar-border: 0 0% 85%;
+    --sidebar-ring: 44 80% 46%;
+
+    /* Custom brand tokens */
+    --mango-gold: 44 80% 46%;
+    /* #D4A017 */
+    --mango-deep: 80 45% 25%;
+    /* #4A5D23 - Mapping deep olive to mango-deep for compatibility */
+    --cream: 40 50% 95%;
+    /* #F8F4EC */
+    --cream-dark: 40 30% 92%;
+    --warm-white: 38 65% 96%;
+    /* #FBF7F0 */
+    --charcoal: 0 0% 12%;
+    /* #1E1E1E */
+    --warm-brown: 0 11% 21%;
+    /* #3B2F2F */
+    --olive: 80 45% 25%;
+    /* #4A5D23 */
+    --leaf-green: 80 45% 25%;
+    /* Updated to Olive */
+    --whatsapp-green: 142 70% 40%;
+
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+  }
+
+  .dark {
+    --background: 30 15% 8%;
+    --foreground: 40 30% 92%;
+    --card: 30 15% 10%;
+    --card-foreground: 40 30% 92%;
+    --popover: 30 15% 10%;
+    --popover-foreground: 40 30% 92%;
+    --primary: 43 96% 56%;
+    --primary-foreground: 30 40% 8%;
+    --secondary: 30 15% 15%;
+    --secondary-foreground: 40 30% 92%;
+    --muted: 30 10% 18%;
+    --muted-foreground: 40 15% 60%;
+    --accent: 38 80% 42%;
+    --accent-foreground: 40 50% 97%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 30 10% 20%;
+    --input: 30 10% 20%;
+    --ring: 43 96% 56%;
+    --sidebar-background: 30 15% 10%;
+    --sidebar-foreground: 40 30% 92%;
+    --sidebar-primary: 43 96% 56%;
+    --sidebar-primary-foreground: 30 40% 8%;
+    --sidebar-accent: 30 10% 15%;
+    --sidebar-accent-foreground: 40 30% 92%;
+    --sidebar-border: 30 10% 20%;
+    --sidebar-ring: 43 96% 56%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+  }
+
+  /* Smooth scroll behavior and base styles */
+  html {
+    scroll-behavior: smooth;
+    background-color: hsl(40 50% 95%);
+    /* Match --background (Warm Cream) to fix overscroll white */
+    overflow-x: hidden;
+    /* Prevent horizontal scroll gaps */
+    overscroll-behavior-y: none;
+    /* Prevent bounce at top/bottom */
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    overflow-x: hidden;
+    /* Double safety */
+  }
+
+  /* Accessibility: Respect reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Focus visible for keyboard navigation */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer components {
+  .section-padding {
+    @apply px-6 py-20 md:px-12 lg:px-20 xl:px-32;
+  }
+
+  .section-padding-sm {
+    @apply px-6 py-12 md:px-12 lg:px-20;
+  }
+
+  .editorial-heading {
+    font-family: var(--font-display);
+    @apply text-4xl md:text-5xl lg:text-6xl font-medium leading-tight tracking-tight;
+  }
+
+  .editorial-subheading {
+    font-family: var(--font-display);
+    @apply text-2xl md:text-3xl font-normal leading-relaxed;
+  }
+
+  .body-large {
+    @apply text-lg md:text-xl leading-relaxed;
+  }
+
+  .brand-label {
+    @apply text-xs md:text-sm font-medium uppercase tracking-[0.2em];
+    color: hsl(var(--mango-gold));
+  }
+
+  .brand-label-underline {
+    @apply text-xs md:text-sm font-medium uppercase tracking-[0.2em] relative inline-block;
+    color: hsl(var(--mango-gold));
+  }
+
+  .brand-label-underline::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-px opacity-40;
+    background: linear-gradient(to right, transparent, hsl(var(--mango-gold)), transparent);
+  }
+
+  /* Traditional Heritage Pattern - Subtle Paper Texture */
+  .bg-heritage-pattern {
+    background-color: hsl(var(--cream));
+    background-image: radial-gradient(hsl(var(--mango-gold) / 0.15) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Organic Dappled Light Effect - Removes "Plainness" */
+  .bg-organic-blooms {
+    background-color: hsl(var(--warm-white));
+    background-image:
+      radial-gradient(circle at 0% 0%, hsl(var(--mango-gold) / 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 100% 100%, hsl(var(--olive) / 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, hsl(var(--cream)) 0%, transparent 100%);
+    background-attachment: fixed;
+    /* Parallax feel */
+  }
+}
