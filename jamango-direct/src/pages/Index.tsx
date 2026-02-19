@@ -2,7 +2,7 @@ import SiteHeader from "@/components/jamango/SiteHeader";
 import HeroSection from "@/components/jamango/HeroSection";
 import BrandStory from "@/components/jamango/BrandStory";
 import ProductCards from "@/components/jamango/ProductCards";
-import HowItWorks from "@/components/jamango/HowItWorks";
+
 import DeliveryInfo from "@/components/jamango/DeliveryInfo";
 import SiteFooter from "@/components/jamango/SiteFooter";
 import StickyWhatsApp from "@/components/jamango/StickyWhatsApp";
@@ -34,8 +34,7 @@ const Index = () => {
         {/* 5. Ordering Options */}
         <OrderingOptions />
 
-        {/* 6. How it Works */}
-        <HowItWorks />
+
 
         {/* 7. Brand Story */}
         <div id="story">
