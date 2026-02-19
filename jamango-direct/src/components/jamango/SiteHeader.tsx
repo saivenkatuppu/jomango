@@ -31,8 +31,8 @@ const SiteHeader = () => {
   const navLinks = [
     { label: "Home", href: "/" },
     { label: "Collection", href: "/#products" },
-    { label: "Our Story", href: "/#story" },
     { label: "Delivery", href: "/#delivery" },
+    { label: "Our Story", href: "/#story" },
   ];
 
   const handleLogout = () => {
