@@ -3,6 +3,7 @@ export interface ProductVariant {
     price: string;
     badge?: string;
     description?: string;
+    stock?: number;
 }
 
 export interface ProductData {

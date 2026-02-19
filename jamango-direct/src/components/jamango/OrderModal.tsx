@@ -112,10 +112,10 @@ const OrderModal = ({ isOpen, onClose, productName = "Premium Mango Box", produc
                                             onClick={() => !outOfStock && setSelectedVariant(variant)}
                                             disabled={outOfStock}
                                             className={`w-full flex items-start justify-between p-4 rounded-xl border transition-all duration-200 group ${outOfStock
-                                                    ? 'bg-gray-50 border-gray-200 cursor-not-allowed opacity-60'
-                                                    : isSelected
-                                                        ? 'bg-[hsl(44,80%,46%)]/10 border-[hsl(44,80%,46%)] shadow-sm'
-                                                        : 'bg-white border-border/50 hover:border-[hsl(44,80%,46%)]/50 hover:bg-gray-50/50'
+                                                ? 'bg-gray-50 border-gray-200 cursor-not-allowed opacity-60'
+                                                : isSelected
+                                                    ? 'bg-[hsl(44,80%,46%)]/10 border-[hsl(44,80%,46%)] shadow-sm'
+                                                    : 'bg-white border-border/50 hover:border-[hsl(44,80%,46%)]/50 hover:bg-gray-50/50'
                                                 }`}
                                         >
                                             <div className="flex flex-col items-start gap-1 text-left">
@@ -141,10 +141,18 @@ const OrderModal = ({ isOpen, onClose, productName = "Premium Mango Box", produc
                                                     </span>
                                                 )}
                                             </div>
-                                            <span className={`font-body font-bold text-lg ${outOfStock ? 'text-gray-400' : isSelected ? 'text-[hsl(44,80%,46%)]' : 'text-charcoal'
-                                                }`}>
-                                                {variant.price}
-                                            </span>
+                                            <div className="flex flex-col items-end">
+                                                <span className={`font-body font-bold text-lg ${outOfStock ? 'text-gray-400' : isSelected ? 'text-[hsl(44,80%,46%)]' : 'text-charcoal'
+                                                    }`}>
+                                                    {variant.price}
+                                                </span>
+                                                {!outOfStock && (
+                                                    <span className={`text-[10px] font-medium uppercase tracking-wide ${(variant.stock ?? 0) < 10 ? 'text-red-500' : 'text-green-600'
+                                                        }`}>
+                                                        {(variant.stock ?? 0) < 10 ? `Only ${variant.stock} left` : `${variant.stock} in stock`}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </button>
                                     );
                                 })}

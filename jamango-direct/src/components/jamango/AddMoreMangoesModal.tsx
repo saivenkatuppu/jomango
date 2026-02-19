@@ -37,7 +37,8 @@ export const AddMoreMangoesModal = ({ isOpen, onClose, addToCart }: AddMoreMango
                         price: variant.price,
                         fullName: variant.name,
                         categoryTitle: productCategory.title, // "3 KG Box" or "5 KG Box"
-                        rawPrice: parseInt(variant.price.replace(/[^0-9]/g, "") || "0")
+                        rawPrice: parseInt(variant.price.replace(/[^0-9]/g, "") || "0"),
+                        stock: variant.stock
                     });
                 } else {
                     // Fallback for items that might not match pattern perfectly
@@ -50,7 +51,8 @@ export const AddMoreMangoesModal = ({ isOpen, onClose, addToCart }: AddMoreMango
                         price: variant.price,
                         fullName: variant.name,
                         categoryTitle: productCategory.title,
-                        rawPrice: parseInt(variant.price.replace(/[^0-9]/g, "") || "0")
+                        rawPrice: parseInt(variant.price.replace(/[^0-9]/g, "") || "0"),
+                        stock: variant.stock
                     });
                 }
             });
@@ -133,14 +135,23 @@ export const AddMoreMangoesModal = ({ isOpen, onClose, addToCart }: AddMoreMango
                                                             <span className="text-[10px] font-medium px-1.5 py-0.5 bg-white border border-stone-200 rounded text-charcoal/60">Box</span>
                                                         </span>
                                                         <span className="text-xs font-medium text-[hsl(44,90%,40%)] mt-0.5">{option.price}</span>
+                                                        {!option.stock ? null : option.stock > 0 && (
+                                                            <span className={`text-[9px] font-bold mt-1 ${option.stock < 10 ? 'text-red-500' : 'text-green-600'}`}>
+                                                                {option.stock < 10 ? `Only ${option.stock} left` : `${option.stock} in stock`}
+                                                            </span>
+                                                        )}
                                                     </div>
 
                                                     <Button
                                                         size="sm"
                                                         onClick={() => handleAdd(option)}
-                                                        className="h-8 px-4 bg-white hover:bg-[hsl(44,90%,50%)] text-charcoal hover:text-white border border-stone-200 hover:border-transparent transition-all shadow-sm font-medium text-xs rounded-lg"
+                                                        disabled={option.stock === 0}
+                                                        className={`h-8 px-4 border transition-all shadow-sm font-medium text-xs rounded-lg ${option.stock === 0
+                                                            ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                                                            : "bg-white hover:bg-[hsl(44,90%,50%)] text-charcoal hover:text-white border-stone-200 hover:border-transparent"
+                                                            }`}
                                                     >
-                                                        Add +
+                                                        {option.stock === 0 ? "Sold Out" : "Add +"}
                                                     </Button>
                                                 </div>
                                             ))}
