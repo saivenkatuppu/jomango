@@ -29,14 +29,36 @@ interface OrderModalProps {
 const OrderModal = ({ isOpen, onClose, productName = "Premium Mango Box", productPrice, variants }: OrderModalProps) => {
     const { addToCart } = useCart();
     const navigate = useNavigate();
-    const [selectedVariant, setSelectedVariant] = useState<{ name: string; price: string } | null>(null);
+    const [selectedVariant, setSelectedVariant] = useState<{ name: string; price: string; stock?: number } | null>(null);
+    const [email, setEmail] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Reset variant when modal opens/closes or product changes
+    // Reset email and variant when modal opens/closes or product changes
     useEffect(() => {
         if (isOpen) {
             setSelectedVariant(null);
+            setEmail("");
+            setIsSubmitting(false);
         }
     }, [isOpen, productName]);
+
+    const handleNotify = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email) return;
+
+        setIsSubmitting(true);
+        // Simulate API call
+        setTimeout(() => {
+            setIsSubmitting(false);
+            onClose();
+            // You would ideally call an API endpoint here
+            import("sonner").then(({ toast }) => {
+                toast.success("You're on the list!", {
+                    description: `We'll notify ${email} when fresh stock arrives.`
+                });
+            });
+        }, 1000);
+    };
 
     const handleWhatsAppOrder = () => {
         const finalProduct = selectedVariant ? `${productName} (${selectedVariant.name})` : productName;
@@ -71,6 +93,7 @@ const OrderModal = ({ isOpen, onClose, productName = "Premium Mango Box", produc
 
     const hasVariants = variants && variants.length > 0;
     const isReadyToOrder = !hasVariants || selectedVariant;
+    const isSelectedOutOfStock = selectedVariant && (selectedVariant.stock ?? 1) === 0;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -109,10 +132,11 @@ const OrderModal = ({ isOpen, onClose, productName = "Premium Mango Box", produc
                                     return (
                                         <button
                                             key={variant.name}
-                                            onClick={() => !outOfStock && setSelectedVariant(variant)}
-                                            disabled={outOfStock}
+                                            onClick={() => setSelectedVariant(variant)}
                                             className={`w-full flex items-start justify-between p-4 rounded-xl border transition-all duration-200 group ${outOfStock
-                                                ? 'bg-gray-50 border-gray-200 cursor-not-allowed opacity-60'
+                                                ? isSelected
+                                                    ? 'bg-red-50 border-red-200 ring-1 ring-red-200'
+                                                    : 'bg-stone-50 border-stone-100 opacity-80 hover:border-red-200 hover:bg-red-50/30'
                                                 : isSelected
                                                     ? 'bg-[hsl(44,80%,46%)]/10 border-[hsl(44,80%,46%)] shadow-sm'
                                                     : 'bg-white border-border/50 hover:border-[hsl(44,80%,46%)]/50 hover:bg-gray-50/50'
@@ -120,7 +144,7 @@ const OrderModal = ({ isOpen, onClose, productName = "Premium Mango Box", produc
                                         >
                                             <div className="flex flex-col items-start gap-1 text-left">
                                                 <div className="flex flex-wrap items-center gap-2">
-                                                    <span className={`font-display font-semibold text-lg leading-tight ${outOfStock ? 'text-gray-400' : isSelected ? 'text-[hsl(44,80%,46%)]' : 'text-charcoal group-hover:text-charcoal/90'
+                                                    <span className={`font-display font-semibold text-lg leading-tight ${outOfStock ? 'text-stone-500' : isSelected ? 'text-[hsl(44,80%,46%)]' : 'text-charcoal group-hover:text-charcoal/90'
                                                         }`}>
                                                         {variant.name}
                                                     </span>
@@ -142,7 +166,7 @@ const OrderModal = ({ isOpen, onClose, productName = "Premium Mango Box", produc
                                                 )}
                                             </div>
                                             <div className="flex flex-col items-end">
-                                                <span className={`font-body font-bold text-lg ${outOfStock ? 'text-gray-400' : isSelected ? 'text-[hsl(44,80%,46%)]' : 'text-charcoal'
+                                                <span className={`font-body font-bold text-lg ${outOfStock ? 'text-stone-400 line-through decoration-red-400/50' : isSelected ? 'text-[hsl(44,80%,46%)]' : 'text-charcoal'
                                                     }`}>
                                                     {variant.price}
                                                 </span>
@@ -160,60 +184,97 @@ const OrderModal = ({ isOpen, onClose, productName = "Premium Mango Box", produc
                         </div>
                     )}
 
-                    <div className={`space-y-6 transition-opacity duration-300 ${!isReadyToOrder ? "opacity-50 pointer-events-none grayscale" : "opacity-100"}`}>
+                    <div className={`space-y-6 transition-all duration-300 ${!isReadyToOrder ? "opacity-50 pointer-events-none grayscale" : "opacity-100"}`}>
 
-                        {/* Option 1: Website */}
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                            <Button
-                                onClick={handleWebsiteOrder}
-                                className="w-full h-auto py-5 bg-gradient-to-br from-charcoal to-black hover:bg-charcoal/90 text-white flex items-center justify-between group rounded-2xl shadow-lg border border-white/5 transition-all duration-300 relative overflow-hidden"
+                        {isSelectedOutOfStock ? (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="bg-white p-6 rounded-2xl border border-red-100 shadow-sm"
                             >
-                                <div className="absolute top-0 right-0 w-24 h-full bg-white/5 skew-x-12 group-hover:translate-x-4 transition-transform duration-500" />
-                                <div className="flex items-center gap-5 relative z-10">
-                                    <div className="bg-white/10 p-2.5 rounded-xl border border-white/5 shadow-inner">
-                                        <ShoppingBag className="h-7 w-7 text-white/90" />
-                                    </div>
-                                    <div className="text-left">
-                                        <span className="block font-bold text-xl leading-none mb-1.5 font-display tracking-wide">Website Checkout</span>
-                                        <span className="block text-xs font-medium tracking-wider text-white/60 group-hover:text-white/80 transition-colors">SECURE CARD PAYMENT</span>
-                                    </div>
+                                <div className="text-center mb-6">
+                                    <h3 className="font-display text-xl text-charcoal mb-2">Out of Stock</h3>
+                                    <p className="text-sm text-charcoal/70 leading-relaxed">
+                                        Please wait and subscribe with your email we’ll notify you when fresh stock arrives.
+                                    </p>
                                 </div>
-                                <ArrowRight className="h-5 w-5 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300 text-white/70" />
-                            </Button>
-                        </motion.div>
 
-                        {/* Divider */}
-                        <div className="relative flex items-center py-1">
-                            <div className="flex-grow border-t border-[hsl(44,80%,46%)]/20"></div>
-                            <span className="flex-shrink-0 mx-4 text-[hsl(44,80%,46%)] font-display italic text-lg opacity-70">or</span>
-                            <div className="flex-grow border-t border-[hsl(44,80%,46%)]/20"></div>
-                        </div>
+                                <form onSubmit={handleNotify} className="space-y-3">
+                                    <div className="relative">
+                                        <input
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            placeholder="Enter your email address"
+                                            required
+                                            className="w-full h-12 px-4 rounded-xl border border-stone-200 focus:border-[hsl(44,80%,46%)] focus:ring-[hsl(44,80%,46%)] outline-none bg-stone-50 transition-all font-body text-sm"
+                                        />
+                                    </div>
+                                    <Button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        className="w-full h-12 rounded-xl bg-charcoal text-white hover:bg-charcoal/90 font-medium tracking-wide transition-all"
+                                    >
+                                        {isSubmitting ? "Subscribing..." : "Notify Me"}
+                                    </Button>
+                                </form>
+                            </motion.div>
+                        ) : (
+                            <>
+                                {/* Option 1: Website */}
+                                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                                    <Button
+                                        onClick={handleWebsiteOrder}
+                                        className="w-full h-auto py-5 bg-gradient-to-br from-charcoal to-black hover:bg-charcoal/90 text-white flex items-center justify-between group rounded-2xl shadow-lg border border-white/5 transition-all duration-300 relative overflow-hidden"
+                                    >
+                                        <div className="absolute top-0 right-0 w-24 h-full bg-white/5 skew-x-12 group-hover:translate-x-4 transition-transform duration-500" />
+                                        <div className="flex items-center gap-5 relative z-10">
+                                            <div className="bg-white/10 p-2.5 rounded-xl border border-white/5 shadow-inner">
+                                                <ShoppingBag className="h-7 w-7 text-white/90" />
+                                            </div>
+                                            <div className="text-left">
+                                                <span className="block font-bold text-xl leading-none mb-1.5 font-display tracking-wide">Website Checkout</span>
+                                                <span className="block text-xs font-medium tracking-wider text-white/60 group-hover:text-white/80 transition-colors">SECURE CARD PAYMENT</span>
+                                            </div>
+                                        </div>
+                                        <ArrowRight className="h-5 w-5 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300 text-white/70" />
+                                    </Button>
+                                </motion.div>
 
-                        {/* Option 2: WhatsApp */}
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                            <Button
-                                onClick={handleWhatsAppOrder}
-                                className="w-full h-auto py-5 bg-gradient-to-br from-[#25D366] to-[#128C7E] hover:from-[#20bd5a] hover:to-[#0e7064] text-white flex items-center justify-between group rounded-2xl shadow-lg shadow-[#25D366]/25 border border-white/10 transition-all duration-300 relative overflow-hidden"
-                            >
-                                <div className="absolute top-0 left-0 w-full h-1/2 bg-white/10" />
-                                <div className="flex items-center gap-5 relative z-10">
-                                    <div className="bg-white/20 p-2.5 rounded-xl backdrop-blur-sm shadow-inner">
-                                        <svg
-                                            viewBox="0 0 24 24"
-                                            className="h-7 w-7 fill-current text-white"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-                                        </svg>
-                                    </div>
-                                    <div className="text-left">
-                                        <span className="block font-bold text-xl leading-none mb-1.5 font-display tracking-wide">WhatsApp Order</span>
-                                        <span className="block text-xs font-medium tracking-wider text-white/90">BEST FOR PERSONAL CARE</span>
-                                    </div>
+                                {/* Divider */}
+                                <div className="relative flex items-center py-1">
+                                    <div className="flex-grow border-t border-[hsl(44,80%,46%)]/20"></div>
+                                    <span className="flex-shrink-0 mx-4 text-[hsl(44,80%,46%)] font-display italic text-lg opacity-70">or</span>
+                                    <div className="flex-grow border-t border-[hsl(44,80%,46%)]/20"></div>
                                 </div>
-                                <ArrowRight className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </Button>
-                        </motion.div>
+
+                                {/* Option 2: WhatsApp */}
+                                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                                    <Button
+                                        onClick={handleWhatsAppOrder}
+                                        className="w-full h-auto py-5 bg-gradient-to-br from-[#25D366] to-[#128C7E] hover:from-[#20bd5a] hover:to-[#0e7064] text-white flex items-center justify-between group rounded-2xl shadow-lg shadow-[#25D366]/25 border border-white/10 transition-all duration-300 relative overflow-hidden"
+                                    >
+                                        <div className="absolute top-0 left-0 w-full h-1/2 bg-white/10" />
+                                        <div className="flex items-center gap-5 relative z-10">
+                                            <div className="bg-white/20 p-2.5 rounded-xl backdrop-blur-sm shadow-inner">
+                                                <svg
+                                                    viewBox="0 0 24 24"
+                                                    className="h-7 w-7 fill-current text-white"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                >
+                                                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                                                </svg>
+                                            </div>
+                                            <div className="text-left">
+                                                <span className="block font-bold text-xl leading-none mb-1.5 font-display tracking-wide">WhatsApp Order</span>
+                                                <span className="block text-xs font-medium tracking-wider text-white/90">BEST FOR PERSONAL CARE</span>
+                                            </div>
+                                        </div>
+                                        <ArrowRight className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </Button>
+                                </motion.div>
+                            </>
+                        )}
                     </div>
 
                     {/* Trust Footer */}
