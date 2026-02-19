@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const Order = require('../models/Order');
+const { createShiprocketOrder } = require('../utils/shiprocket');
 
 // @desc    Create Razorpay Order
 // @route   POST /api/payments/order
@@ -65,7 +66,7 @@ const verifyPayment = asyncHandler(async (req, res) => {
         // Save the confirmed order to DB
         try {
             const order = await Order.create({
-                user: null, // guest order; attach user if token available
+                user: req.user ? req.user._id : null,
                 customerName: customerName || 'Guest',
                 customerEmail: customerEmail || '',
                 customerPhone: customerPhone || '',
@@ -78,6 +79,9 @@ const verifyPayment = asyncHandler(async (req, res) => {
                 razorpayPaymentId: razorpay_payment_id,
                 status: 'Confirmed',
             });
+
+            // Trigger Shiprocket asynchronously
+            createShiprocketOrder(order);
 
             res.json({
                 success: true,

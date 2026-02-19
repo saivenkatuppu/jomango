@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const Order = require('../models/Order');
+const { createShiprocketOrder } = require('../utils/shiprocket');
 
 // @desc    Create a new order (from cart)
 // @route   POST /api/orders
@@ -36,6 +37,9 @@ const createOrder = asyncHandler(async (req, res) => {
         razorpayPaymentId: razorpayPaymentId || '',
         status: 'Confirmed',
     });
+
+    // Trigger Shiprocket asynchronously
+    createShiprocketOrder(order);
 
     res.status(201).json(order);
 });
