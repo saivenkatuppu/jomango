@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, ArrowRight, User, ShoppingBag } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
@@ -20,6 +20,9 @@ const SiteHeader = () => {
   const { itemCount } = useCart();
   const navigate = useNavigate();
 
+  const location = useLocation();
+  const isBlogsPage = location.pathname === "/blogs";
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
@@ -27,6 +30,8 @@ const SiteHeader = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const useDarkText = scrolled || isBlogsPage;
 
   const navLinks = [
     { label: "Home", href: "/" },
@@ -56,10 +61,10 @@ const SiteHeader = () => {
             className="h-10 w-10 object-contain group-hover:scale-110 transition-transform duration-300 drop-shadow-sm rounded-full bg-white/20 p-0.5"
           />
           <div className="flex flex-col">
-            <span className={`font-display text-2xl font-bold tracking-[0.15em] uppercase leading-none transition-colors duration-300 drop-shadow-sm ${scrolled ? "text-charcoal" : "text-white"}`}>
+            <span className={`font-display text-2xl font-bold tracking-[0.15em] uppercase leading-none transition-colors duration-300 drop-shadow-sm ${useDarkText ? "text-charcoal" : "text-white"}`}>
               JAMANGO
             </span>
-            <span className={`text-[10px] uppercase tracking-[0.3em] font-medium transition-colors duration-300 ${scrolled ? "text-[hsl(44,80%,46%)]" : "text-white/80"}`}>
+            <span className={`text-[10px] uppercase tracking-[0.3em] font-medium transition-colors duration-300 ${useDarkText ? "text-[hsl(44,80%,46%)]" : "text-white/80"}`}>
               PureCraft
             </span>
           </div>
@@ -71,7 +76,7 @@ const SiteHeader = () => {
             <a
               key={link.label}
               href={link.href}
-              className={`relative font-body text-sm font-medium transition-colors duration-300 group py-1 ${scrolled ? "text-muted-foreground hover:text-charcoal" : "text-white/90 hover:text-white"}`}
+              className={`relative font-body text-sm font-medium transition-colors duration-300 group py-1 ${useDarkText ? "text-muted-foreground hover:text-charcoal" : "text-white/90 hover:text-white"}`}
             >
               {link.label}
               <span className="absolute bottom-0 left-0 w-0 h-px bg-[hsl(44,80%,46%)] transition-all duration-300 ease-out group-hover:w-full" />
@@ -81,7 +86,7 @@ const SiteHeader = () => {
           {user && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className={`flex items-center gap-2 font-medium px-4 py-2 rounded-full transition-all ${scrolled ? "text-charcoal hover:bg-stone-100" : "text-white hover:bg-white/10"}`}>
+                <button className={`flex items-center gap-2 font-medium px-4 py-2 rounded-full transition-all ${useDarkText ? "text-charcoal hover:bg-stone-100" : "text-white hover:bg-white/10"}`}>
                   <User className="h-4 w-4" />
                   <span>{user.name.split(' ')[0]}</span>
                 </button>
@@ -111,7 +116,7 @@ const SiteHeader = () => {
 
           <Link
             to="/checkout"
-            className={`relative p-2 rounded-full transition-colors ${scrolled ? "text-charcoal hover:bg-stone-100" : "text-white hover:bg-white/10"}`}
+            className={`relative p-2 rounded-full transition-colors ${useDarkText ? "text-charcoal hover:bg-stone-100" : "text-white hover:bg-white/10"}`}
           >
             <ShoppingBag className="h-5 w-5" />
             {itemCount > 0 && (
@@ -124,7 +129,7 @@ const SiteHeader = () => {
 
         {/* Mobile toggle */}
         <button
-          className={`md:hidden transition-colors ${scrolled ? "text-charcoal" : "text-white"}`}
+          className={`md:hidden transition-colors ${useDarkText ? "text-charcoal" : "text-white"}`}
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
         >

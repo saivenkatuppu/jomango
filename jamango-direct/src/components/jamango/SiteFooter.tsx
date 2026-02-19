@@ -35,8 +35,8 @@ const SiteFooter = () => {
               <h4 className="font-display text-xl mb-6 text-[#F8F4EC]">Quick Links</h4>
               <ul className="space-y-4 font-body text-sm text-[#F8F4EC]/70">
                 <li><a href="#" className="hover:text-[hsl(44,80%,46%)] transition-colors">Home</a></li>
-                <li><a href="#story" className="hover:text-[hsl(44,80%,46%)] transition-colors">Our Story</a></li>
                 <li><a href="#products" className="hover:text-[hsl(44,80%,46%)] transition-colors">Shop Collection</a></li>
+                <li><a href="#story" className="hover:text-[hsl(44,80%,46%)] transition-colors">Our Story</a></li>
                 <li><a href="#delivery" className="hover:text-[hsl(44,80%,46%)] transition-colors">Delivery Info</a></li>
                 <li><Link to="/blogs" className="hover:text-[hsl(44,80%,46%)] transition-colors">Mango Chronicles</Link></li>
               </ul>
