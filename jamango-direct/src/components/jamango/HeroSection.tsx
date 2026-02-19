@@ -69,31 +69,23 @@ const HeroSection = () => {
 
           {/* Buttons - Refined & Responsive */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6 mb-16">
-            {/* Primary CTA - Premium Gold Gradient */}
+            {/* Primary CTA: Secure Your Harvest */}
             <a
               href="#products"
-              className="relative group inline-flex items-center justify-center px-10 py-5 bg-gradient-to-r from-[hsl(44,90%,50%)] to-[hsl(44,70%,45%)] text-white font-bold text-base md:text-lg tracking-wide rounded-full shadow-xl shadow-[hsl(44,80%,46%)]/30 border border-white/20 hover:shadow-2xl hover:shadow-[hsl(44,80%,46%)]/50 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out overflow-hidden w-full sm:w-auto"
+              className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-[hsl(44,80%,46%)] text-[#1a1a1a] font-bold text-base uppercase tracking-wider rounded-full shadow-[0_4px_14px_0_rgba(234,179,8,0.39)] hover:shadow-[0_6px_20px_rgba(234,179,8,0.23)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 ease-out w-full sm:w-auto"
             >
-              <span className="relative z-10 flex items-center gap-2 drop-shadow-md">
-                SECURE YOUR HARVEST
-              </span>
-              {/* Shimmer Effect */}
-              <div className="absolute inset-0 -translate-x-full group-hover:animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent z-0" />
+              SECURE YOUR HARVEST
             </a>
 
-            {/* Secondary CTA - Matching Premium Style */}
+            {/* Secondary CTA: Order via WhatsApp */}
             <a
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="relative group inline-flex items-center justify-center px-10 py-5 bg-gradient-to-r from-[hsl(44,90%,50%)] to-[hsl(44,70%,45%)] text-white font-bold text-base md:text-lg tracking-wide rounded-full shadow-xl shadow-[hsl(44,80%,46%)]/30 border border-white/20 hover:shadow-2xl hover:shadow-[hsl(44,80%,46%)]/50 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-out overflow-hidden w-full sm:w-auto"
+              className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-[hsl(44,80%,46%)] text-[#1a1a1a] font-bold text-base uppercase tracking-wider rounded-full shadow-[0_4px_14px_0_rgba(234,179,8,0.39)] hover:shadow-[0_6px_20px_rgba(234,179,8,0.23)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 ease-out w-full sm:w-auto"
             >
-              <span className="relative z-10 flex items-center gap-2 drop-shadow-md">
-                <MessageCircle className="h-5 w-5" />
-                ORDER VIA WHATSAPP
-              </span>
-              {/* Shimmer Effect */}
-              <div className="absolute inset-0 -translate-x-full group-hover:animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent z-0" />
+              <MessageCircle className="h-5 w-5" />
+              ORDER VIA WHATSAPP
             </a>
           </div>
 
