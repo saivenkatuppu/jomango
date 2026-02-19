@@ -38,6 +38,7 @@ const SiteFooter = () => {
                 <li><a href="#story" className="hover:text-[hsl(44,80%,46%)] transition-colors">Our Story</a></li>
                 <li><a href="#products" className="hover:text-[hsl(44,80%,46%)] transition-colors">Shop Collection</a></li>
                 <li><a href="#delivery" className="hover:text-[hsl(44,80%,46%)] transition-colors">Delivery Info</a></li>
+                <li><Link to="/blogs" className="hover:text-[hsl(44,80%,46%)] transition-colors">Mango Chronicles</Link></li>
               </ul>
             </div>
 

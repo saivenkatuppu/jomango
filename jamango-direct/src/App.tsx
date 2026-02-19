@@ -23,6 +23,7 @@ import PrivacyPolicy from "./pages/policies/PrivacyPolicy";
 import TermsOfService from "./pages/policies/TermsOfService";
 
 import RefundPolicy from "./pages/policies/RefundPolicy";
+import Blogs from "./pages/Blogs";
 import ScrollToTop from "./components/utils/ScrollToTop";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const App = () => (
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/refund-policy" element={<RefundPolicy />} />
+              <Route path="/blogs" element={<Blogs />} />
               <Route path="/admin" element={<AdminLogin />} />
               <Route element={<AdminLayout />}>
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
