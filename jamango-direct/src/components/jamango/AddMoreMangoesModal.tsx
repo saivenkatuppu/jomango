@@ -13,52 +13,49 @@ interface AddMoreMangoesModalProps {
 
 export const AddMoreMangoesModal = ({ isOpen, onClose, addToCart }: AddMoreMangoesModalProps) => {
 
-    // Group variants by Mango Name (e.g. "Alphonso", "Kesar")
-    // ensuring we show options for 3KG and 5KG side-by-side
+    const [apiProducts, setApiProducts] = React.useState<any[]>([]);
+
+    React.useEffect(() => {
+        if (isOpen) {
+            import("@/api/client").then(({ default: client }) => {
+                client.get("/products")
+                    .then(({ data }) => setApiProducts(data))
+                    .catch((err) => console.error("Failed to load add-on products:", err));
+            });
+        }
+    }, [isOpen]);
+
+    // Group variants by Mango Name from API data
     const varieties = useMemo(() => {
         const map = new Map<string, any[]>();
 
-        products.forEach(productCategory => {
-            productCategory.variants.forEach(variant => {
-                // Parse "Name (Weight)" format
-                // e.g. "Banganapalli (3KG)" -> Name: Banganapalli, Weight: 3KG
-                const match = variant.name.match(/^(.*?)\s*\((.*?)\)$/);
+        // If API data is empty, we fall back to nothing (or could fall back to static, but static has no stock)
+        // Let's rely on API data for consistency.
+        if (apiProducts.length === 0) return [];
 
-                if (match) {
-                    const name = match[1];
-                    const weight = match[2];
+        apiProducts.forEach(product => {
+            // Check if product follows naming pattern "Name QuantityKG" e.g. "Banganapalli 3KG"
+            // The DB product structure is flat: { name: "Banganapalli 3KG", variety: "Banganapalli", weight: 3, ... }
 
-                    if (!map.has(name)) {
-                        map.set(name, []);
-                    }
+            const name = product.variety; // "Banganapalli"
+            const weight = `${product.weight}KG`; // "3KG"
 
-                    map.get(name)?.push({
-                        weight, // "3KG" or "5KG"
-                        price: variant.price,
-                        fullName: variant.name,
-                        categoryTitle: productCategory.title, // "3 KG Box" or "5 KG Box"
-                        rawPrice: parseInt(variant.price.replace(/[^0-9]/g, "") || "0"),
-                        stock: variant.stock
-                    });
-                } else {
-                    // Fallback for items that might not match pattern perfectly
-                    // or handle them as standalone
-                    if (!map.has(variant.name)) {
-                        map.set(variant.name, []);
-                    }
-                    map.get(variant.name)?.push({
-                        weight: "Standard",
-                        price: variant.price,
-                        fullName: variant.name,
-                        categoryTitle: productCategory.title,
-                        rawPrice: parseInt(variant.price.replace(/[^0-9]/g, "") || "0"),
-                        stock: variant.stock
-                    });
-                }
+            if (!map.has(name)) {
+                map.set(name, []);
+            }
+
+            map.get(name)?.push({
+                weight,
+                price: `₹${product.price}`,
+                fullName: product.name,
+                categoryTitle: `${product.weight} KG Box`,
+                rawPrice: product.price,
+                stock: product.stock,
+                active: product.active
             });
         });
 
-        // Sort weights for consistency (3KG first, then 5KG)
+        // Sort weights
         map.forEach((options) => {
             options.sort((a, b) => {
                 const weightA = parseInt(a.weight) || 0;
@@ -68,7 +65,7 @@ export const AddMoreMangoesModal = ({ isOpen, onClose, addToCart }: AddMoreMango
         });
 
         return Array.from(map.entries());
-    }, []);
+    }, [apiProducts]);
 
     const handleAdd = (option: any) => {
         addToCart({
@@ -135,11 +132,15 @@ export const AddMoreMangoesModal = ({ isOpen, onClose, addToCart }: AddMoreMango
                                                             <span className="text-[10px] font-medium px-1.5 py-0.5 bg-white border border-stone-200 rounded text-charcoal/60">Box</span>
                                                         </span>
                                                         <span className="text-xs font-medium text-[hsl(44,90%,40%)] mt-0.5">{option.price}</span>
-                                                        {!option.stock ? null : option.stock > 0 && (
-                                                            <span className={`text-[9px] font-bold mt-1 ${option.stock < 10 ? 'text-red-500' : 'text-green-600'}`}>
-                                                                {option.stock < 10 ? `Only ${option.stock} left` : `${option.stock} in stock`}
-                                                            </span>
-                                                        )}
+                                                        <div className="mt-1">
+                                                            {option.stock === 0 ? (
+                                                                <span className="text-[9px] font-bold text-red-500 uppercase">Out of Stock</span>
+                                                            ) : (
+                                                                <span className={`text-[9px] font-bold ${option.stock < 10 ? 'text-red-500' : 'text-green-600'}`}>
+                                                                    {option.stock < 10 ? `Only ${option.stock} left` : `${option.stock} in stock`}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
 
                                                     <Button
