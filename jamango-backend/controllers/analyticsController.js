@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const InventoryLog = require('../models/InventoryLog');
 
 // @desc    Get dashboard stats + recent orders
 // @route   GET /api/admin/stats
@@ -34,23 +35,23 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         Order.countDocuments({ status: 'Pending' }),
         // Delivered today
         Order.countDocuments({ status: 'Delivered', createdAt: { $gte: startOfToday } }),
-        // Total revenue (paid orders)
+        // Total revenue (paid orders, not cancelled)
         Order.aggregate([
-            { $match: { paymentStatus: 'paid' } },
+            { $match: { paymentStatus: 'paid', status: { $ne: 'Cancelled' } } },
             { $group: { _id: null, total: { $sum: '$totalAmount' } } },
         ]),
         // Today's revenue
         Order.aggregate([
-            { $match: { paymentStatus: 'paid', createdAt: { $gte: startOfToday } } },
+            { $match: { paymentStatus: 'paid', createdAt: { $gte: startOfToday }, status: { $ne: 'Cancelled' } } },
             { $group: { _id: null, total: { $sum: '$totalAmount' } } },
         ]),
         // Recent 5 orders
         Order.find({}).sort({ createdAt: -1 }).limit(5),
         // Low stock products (stock < 15)
         Product.find({ stock: { $lt: 15 }, active: true }).select('name stock'),
-        // Orders per day for last 7 days
+        // Orders per day for last 7 days (not cancelled)
         Order.aggregate([
-            { $match: { createdAt: { $gte: startOfWeek } } },
+            { $match: { createdAt: { $gte: startOfWeek }, status: { $ne: 'Cancelled' } } },
             {
                 $group: {
                     _id: {
@@ -64,6 +65,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         ]),
         // Product name breakdown from order items
         Order.aggregate([
+            { $match: { status: { $ne: 'Cancelled' } } },
             { $unwind: '$items' },
             {
                 $group: {
@@ -90,9 +92,37 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         Order.countDocuments({ status: 'Cancelled', createdAt: { $gte: startOfToday } })
     ]);
 
-    const totalRevenue = revenueResult[0]?.total || 0;
-    const todayRevenue = todayRevenueResult[0]?.total || 0;
-    const avgOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
+    let totalRevenue = revenueResult[0]?.total || 0;
+    let todayRevenue = todayRevenueResult[0]?.total || 0;
+    let avgOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
+
+    let processedRecentOrders = recentOrders;
+    let processedWeeklyOrders = weeklyOrders;
+    let processedProductBreakdown = productBreakdown;
+
+    if (req.user && req.user.role === 'staff') {
+        totalRevenue = 0;
+        todayRevenue = 0;
+        avgOrderValue = 0;
+
+        processedRecentOrders = recentOrders.map((ro) => {
+            const copy = JSON.parse(JSON.stringify(ro));
+            delete copy.totalAmount;
+            return copy;
+        });
+
+        processedWeeklyOrders = weeklyOrders.map((wo) => {
+            const copy = { ...wo };
+            delete copy.revenue;
+            return copy;
+        });
+
+        processedProductBreakdown = productBreakdown.map((pb) => {
+            const copy = { ...pb };
+            delete copy.revenue;
+            return copy;
+        });
+    }
 
     const boxesToday = todayBoxesResult[0]?.totalBoxes || 0;
     const codBoxesToday = todayBoxesByPaymentResult.find(r => r._id === 'cod')?.totalBoxes || 0;
@@ -113,11 +143,96 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             paidBoxesToday,
             cancelledToday
         },
-        recentOrders,
+        recentOrders: processedRecentOrders,
         lowStockProducts,
-        weeklyOrders,
-        productBreakdown,
+        weeklyOrders: processedWeeklyOrders,
+        productBreakdown: processedProductBreakdown,
     });
 });
 
-module.exports = { getDashboardStats };
+// @desc    Download Sales & Inventory Report
+// @route   GET /api/analytics/report
+// @access  Private/Admin|Staff
+const getSalesReport = asyncHandler(async (req, res) => {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const isStaff = req.user && req.user.role === 'staff';
+
+    // Get all today's orders (including cancelled)
+    const orders = await Order.find({
+        createdAt: { $gte: startOfToday }
+    }).populate('user', 'name email').sort({ createdAt: 1 });
+
+    const products = await Product.find({});
+
+    // Calculate boxes sold today (excluding cancelled) and boxes cancelled today per product
+    const boxesSoldToday = {};
+    const boxesCancelledToday = {};
+    products.forEach(p => {
+        boxesSoldToday[p._id.toString()] = 0;
+        boxesCancelledToday[p._id.toString()] = 0;
+    });
+
+    // Tally boxes sold and cancelled
+    orders.forEach(order => {
+        order.items.forEach(item => {
+            const matchedProduct = products.find(p => p.name === item.name);
+            if (matchedProduct) {
+                if (order.status === 'Cancelled') {
+                    boxesCancelledToday[matchedProduct._id.toString()] += item.quantity;
+                } else {
+                    boxesSoldToday[matchedProduct._id.toString()] += item.quantity;
+                }
+            }
+        });
+    });
+
+    const reportRows = [];
+
+    // Generate row for each order item
+    orders.forEach(order => {
+        const orderDate = new Date(order.createdAt).toLocaleDateString('en-IN');
+        const orderTime = new Date(order.createdAt).toLocaleTimeString('en-IN');
+
+        order.items.forEach(item => {
+            const matchedProduct = products.find(p => p.name === item.name);
+            const remainingInv = matchedProduct ? matchedProduct.stock : 0;
+            const soldToday = matchedProduct ? boxesSoldToday[matchedProduct._id.toString()] : 0;
+            const cancelledTodayQuant = matchedProduct ? boxesCancelledToday[matchedProduct._id.toString()] : 0;
+            // Total Inventory start of day conceptually means remaining + soldToday. 
+            // Cancelled items were added back to remaining, so they don't offset startOfDayInv.
+            const startOfDayInv = remainingInv + soldToday;
+
+            const row = {
+                orderId: order._id.toString(),
+                productName: item.name,
+                productVariant: item.variant || '',
+                boxesSoldInThisOrder: item.quantity,
+                orderDate,
+                orderTime,
+                totalInventoryStartOfDay: startOfDayInv,
+                totalBoxesSoldToday: soldToday,
+                cancelledQuantityToday: cancelledTodayQuant,
+                remainingInventoryNow: remainingInv,
+                orderStatus: order.status === 'Cancelled' ? 'Cancelled (Added back to inventory)' : 'Completed'
+            };
+
+            // Admin only fields
+            if (!isStaff) {
+                row.revenuePerOrder = order.totalAmount;
+                row.productPrice = item.price;
+                row.itemRevenue = order.status === 'Cancelled' ? 0 : (item.price * item.quantity);
+            }
+
+            reportRows.push(row);
+        });
+    });
+
+    res.json(reportRows);
+});
+
+module.exports = {
+    getDashboardStats,
+    getSalesReport,
+};

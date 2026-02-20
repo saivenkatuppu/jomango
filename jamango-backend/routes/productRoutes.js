@@ -9,14 +9,16 @@ const {
     getInventoryLogs,
 } = require('../controllers/productController');
 
+const { protect, admin, adminOrStaff } = require('../middleware/authMiddleware');
+
 // Public
 router.get('/', getProducts);
 
-// Admin routes — no JWT guard (admin panel protected by localStorage check)
-router.get('/admin', getAdminProducts);
-router.get('/admin/inventory-logs', getInventoryLogs);
-router.post('/admin', createProduct);
-router.put('/admin/:id', updateProduct);
-router.delete('/admin/:id', deleteProduct);
+// Admin / Staff routes
+router.get('/admin', protect, adminOrStaff, getAdminProducts);
+router.get('/admin/inventory-logs', protect, adminOrStaff, getInventoryLogs);
+router.post('/admin', protect, admin, createProduct);
+router.put('/admin/:id', protect, adminOrStaff, updateProduct);
+router.delete('/admin/:id', protect, admin, deleteProduct);
 
 module.exports = router;

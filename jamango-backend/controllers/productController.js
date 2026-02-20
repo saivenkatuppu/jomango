@@ -14,7 +14,18 @@ const getProducts = asyncHandler(async (req, res) => {
 // @route   GET /api/admin/products
 // @access  Private/Admin
 const getAdminProducts = asyncHandler(async (req, res) => {
-    const products = await Product.find({}).sort({ createdAt: -1 });
+    let products = await Product.find({}).sort({ createdAt: -1 }).lean();
+
+    if (req.user && req.user.role === 'staff') {
+        products = products.map((p) => {
+            delete p.price;
+            delete p.mrp;
+            delete p.discountLabel;
+            delete p.showDiscount;
+            return p;
+        });
+    }
+
     res.json(products);
 });
 
@@ -56,35 +67,38 @@ const updateProduct = asyncHandler(async (req, res) => {
     }
 
     const { name, variety, weight, price, stock, active, description, badge, mrp, showDiscount, discountLabel } = req.body;
-
-    // Check if price changed for history
-    if (price !== undefined && price !== product.price) {
-        product.priceHistory.push({ price: product.price, date: Date.now() });
-    }
-
-    product.name = name ?? product.name;
-    product.variety = variety ?? product.variety;
-    product.weight = weight ?? product.weight;
-    product.price = price ?? product.price;
-
-    // Handle stock changes
     let oldStock = product.stock;
-    if (stock !== undefined && stock !== product.stock) {
-        product.stock = stock;
+
+    if (req.user && req.user.role === 'staff') {
+        if (stock !== undefined && stock !== product.stock) {
+            product.stock = stock;
+        }
+    } else {
+        // Admin updates
+        if (price !== undefined && price !== product.price) {
+            product.priceHistory.push({ price: product.price, date: Date.now() });
+        }
+
+        product.name = name ?? product.name;
+        product.variety = variety ?? product.variety;
+        product.weight = weight ?? product.weight;
+        product.price = price ?? product.price;
+
+        if (stock !== undefined && stock !== product.stock) {
+            product.stock = stock;
+        }
+        product.active = active !== undefined ? active : product.active;
+        product.description = description ?? product.description;
+        product.badge = badge ?? product.badge;
+
+        product.mrp = mrp ?? product.mrp;
+        product.showDiscount = showDiscount !== undefined ? showDiscount : product.showDiscount;
+        product.discountLabel = discountLabel ?? product.discountLabel;
+
+        const { showBadge, badgeType } = req.body;
+        product.showBadge = showBadge !== undefined ? showBadge : product.showBadge;
+        product.badgeType = badgeType ?? product.badgeType;
     }
-    product.active = active !== undefined ? active : product.active;
-    product.description = description ?? product.description;
-    product.badge = badge ?? product.badge;
-
-    // New Pricing Fields
-    product.mrp = mrp ?? product.mrp;
-    product.showDiscount = showDiscount !== undefined ? showDiscount : product.showDiscount;
-    product.discountLabel = discountLabel ?? product.discountLabel;
-
-    // New Badge Fields
-    const { showBadge, badgeType } = req.body;
-    product.showBadge = showBadge !== undefined ? showBadge : product.showBadge;
-    product.badgeType = badgeType ?? product.badgeType;
 
     const updated = await product.save();
 

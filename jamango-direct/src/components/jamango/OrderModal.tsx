@@ -77,7 +77,7 @@ const OrderModal = ({ isOpen, onClose, productName = "Premium Mango Box", produc
         const finalPrice = selectedVariant ? selectedVariant.price : productPrice;
 
         const message = `Hi, I'd like to order the *${finalProduct}*${finalPrice ? ` for ${finalPrice}` : ""}. Is it available?`;
-        window.open(`https://wa.me/919999999999?text=${encodeURIComponent(message)}`, "_blank");
+        window.open(`https://wa.me/919866425756?text=${encodeURIComponent(message)}`, "_blank");
         onClose();
     };
 
@@ -170,12 +170,12 @@ const OrderModal = ({ isOpen, onClose, productName = "Premium Mango Box", produc
                                                         </span>
                                                     )}
                                                     {!outOfStock && variant.showDiscount && variant.discountLabel && (
-                                                        <span className="bg-[hsl(44,80%,46%)] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                                                        <span className="bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
                                                             {/^\d+$/.test(variant.discountLabel) ? `${variant.discountLabel}% OFF` : variant.discountLabel}
                                                         </span>
                                                     )}
                                                     {!outOfStock && variant.badge && !variant.showDiscount && (
-                                                        <span className="bg-[#4A5D23]/10 text-[#4A5D23] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                                        <span className="bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                                                             {variant.badge}
                                                         </span>
                                                     )}

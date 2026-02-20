@@ -68,9 +68,26 @@ const createOrder = asyncHandler(async (req, res) => {
 // @route   GET /api/admin/orders
 // @access  Private/Admin
 const getAdminOrders = asyncHandler(async (req, res) => {
-    const orders = await Order.find({})
+    let orders = await Order.find({})
         .sort({ createdAt: -1 })
-        .populate('user', 'name email');
+        .populate('user', 'name email')
+        .lean();
+
+    if (req.user && req.user.role === 'staff') {
+        orders = orders.map((order) => {
+            delete order.totalPrice;
+            delete order.paymentMethod;
+            delete order.paymentResult;
+            if (order.items) {
+                order.items = order.items.map(item => {
+                    delete item.price;
+                    return item;
+                });
+            }
+            return order;
+        });
+    }
+
     res.json(orders);
 });
 
@@ -121,9 +138,48 @@ const getMyOrders = asyncHandler(async (req, res) => {
     res.json(orders);
 });
 
+// @desc    Cancel user's own order
+// @route   PUT /api/orders/:id/cancel
+// @access  Private
+const cancelMyOrder = asyncHandler(async (req, res) => {
+    const order = await Order.findById(req.params.id);
+    const Product = require('../models/Product');
+
+    if (!order) {
+        res.status(404);
+        throw new Error('Order not found');
+    }
+
+    if (order.user.toString() !== req.user._id.toString()) {
+        res.status(403);
+        throw new Error('Not authorized to cancel this order');
+    }
+
+    if (order.status !== 'Pending' && order.status !== 'Confirmed') {
+        res.status(400);
+        throw new Error('Order cannot be cancelled at this stage (Already shipped or delivered)');
+    }
+
+    // inventory restoration logic
+    for (const item of order.items) {
+        const productName = item.variant || item.name;
+        if (productName) {
+            await Product.findOneAndUpdate(
+                { name: productName },
+                { $inc: { stock: item.quantity } }
+            );
+        }
+    }
+
+    order.status = 'Cancelled';
+    const updated = await order.save();
+    res.json(updated);
+});
+
 module.exports = {
     createOrder,
     getAdminOrders,
     updateOrderStatus,
     getMyOrders,
+    cancelMyOrder,
 };

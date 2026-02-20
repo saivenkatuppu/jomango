@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { AlertTriangle, RefreshCw, Save, History, X } from "lucide-react";
+import { AlertTriangle, RefreshCw, Save, History, X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import client from "@/api/client";
+import { useAuth } from "@/context/AuthContext";
 
 interface Product {
   _id: string;
@@ -37,6 +38,42 @@ const AdminInventory = () => {
   const [logsModalOpen, setLogsModalOpen] = useState(false);
   const [logs, setLogs] = useState<InventoryLog[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
+
+  const { user } = useAuth();
+  const isStaff = user?.role === "staff";
+
+  const downloadReport = async () => {
+    try {
+      const { data } = await client.get("/analytics/report");
+      if (!data || data.length === 0) {
+        alert("No data available for today's report.");
+        return;
+      }
+
+      const headers = Object.keys(data[0]);
+      const csvRows = [headers.join(",")];
+
+      data.forEach((row: any) => {
+        const values = headers.map(header => {
+          const val = row[header] === undefined || row[header] === null ? "" : row[header];
+          return `"${String(val).replace(/"/g, '""')}"`;
+        });
+        csvRows.push(values.join(","));
+      });
+
+      const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `jamango_sales_inventory_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      alert("Failed to download report.");
+      console.error(err);
+    }
+  };
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -119,6 +156,10 @@ const AdminInventory = () => {
           </p>
         </div>
         <div className="flex gap-3">
+          <Button variant="outline" size="sm" onClick={downloadReport} className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Download Report
+          </Button>
           <Button variant="outline" size="sm" onClick={fetchLogs} className="flex items-center gap-2">
             <History className="h-4 w-4" />
             View Logs
@@ -179,7 +220,7 @@ const AdminInventory = () => {
                     )}
                   </div>
                   <p className="font-body text-sm text-muted-foreground">
-                    {product.variety} · {product.weight}KG · ₹{product.price.toLocaleString("en-IN")}
+                    {product.variety} · {product.weight}KG {!isStaff && `· ₹${product.price?.toLocaleString("en-IN")}`}
                   </p>
                 </div>
                 {(isLow || isOut) && (

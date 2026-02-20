@@ -5,6 +5,8 @@ export interface User {
     isAdmin: boolean;
     token: string;
     phone?: string;
+    role?: 'admin' | 'staff' | 'user';
+    status?: 'active' | 'disabled';
 }
 
 export interface AuthResponse {
@@ -14,6 +16,9 @@ export interface AuthResponse {
     isAdmin: boolean;
     token: string;
     phone?: string;
+    role?: 'admin' | 'staff' | 'user';
+    status?: 'active' | 'disabled';
+    isImpersonated?: boolean;
 }
 
 export interface DecodedToken {

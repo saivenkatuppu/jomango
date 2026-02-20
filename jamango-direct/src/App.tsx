@@ -13,6 +13,7 @@ import AdminInventory from "./pages/admin/AdminInventory";
 import AdminSlots from "./pages/admin/AdminSlots";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminContacts from "./pages/admin/AdminContacts";
+import AdminStaff from "./pages/admin/AdminStaff";
 import AdminLayout from "./components/admin/AdminLayout";
 import { AuthProvider } from "./context/AuthContext";
 import LoginPage from "./pages/auth/LoginPage";
@@ -20,6 +21,8 @@ import RegisterPage from "./pages/auth/RegisterPage";
 
 import { CartProvider } from "./context/CartContext";
 import CheckoutPage from "./pages/CheckoutPage";
+import OrderSuccessPage from "./pages/OrderSuccessPage";
+import MyOrdersPage from "./pages/MyOrdersPage";
 import PrivacyPolicy from "./pages/policies/PrivacyPolicy";
 import TermsOfService from "./pages/policies/TermsOfService";
 
@@ -42,6 +45,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/order-success" element={<OrderSuccessPage />} />
+              <Route path="/my-orders" element={<MyOrdersPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -57,6 +62,7 @@ const App = () => (
                 <Route path="/admin/slots" element={<AdminSlots />} />
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />
                 <Route path="/admin/contacts" element={<AdminContacts />} />
+                <Route path="/admin/staff" element={<AdminStaff />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

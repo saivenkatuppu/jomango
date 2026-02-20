@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Trash2, ShoppingBag, ShieldCheck, Plus, ChevronDown, ChevronUp, ArrowLeft } from "lucide-react";
+import { Trash2, ShoppingBag, ShieldCheck, Plus, ChevronDown, ChevronUp, ArrowLeft, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -165,6 +165,7 @@ const CheckoutPage = () => {
                                 city: formData.city,
                                 state: formData.state,
                                 zip: formData.zip,
+                                zipCode: formData.zip,
                                 country: formData.country,
                             },
                             orderNotes: formData.orderNotes,
@@ -178,11 +179,17 @@ const CheckoutPage = () => {
                         });
 
                         if (verifyRes.data.success) {
-                            toast.success("Payment Successful!", {
-                                description: "Your order has been placed.",
-                            });
+                            const details = {
+                                id: verifyRes.data.order?._id || response.razorpay_order_id,
+                                date: new Date().toLocaleDateString('en-IN'),
+                                time: new Date().toLocaleTimeString('en-IN'),
+                                items: [...cart],
+                                address: `${formData.address}, ${formData.city} - ${formData.zip}`,
+                                total: total,
+                                paymentMode: 'online'
+                            };
                             clearCart();
-                            navigate("/");
+                            navigate('/order-success', { state: { orderDetails: details } });
                         }
                     } catch (error) {
                         toast.error("Payment Verification Failed");
@@ -235,7 +242,7 @@ const CheckoutPage = () => {
 
         setCodLoading(true);
         try {
-            await client.post("/orders", {
+            const res = await client.post("/orders", {
                 customerName: formData.name,
                 customerEmail: formData.email,
                 customerPhone: formData.phone,
@@ -245,6 +252,7 @@ const CheckoutPage = () => {
                     city: formData.city,
                     state: formData.state,
                     zip: formData.zip,
+                    zipCode: formData.zip,
                     country: formData.country,
                 },
                 orderNotes: formData.orderNotes,
@@ -257,11 +265,18 @@ const CheckoutPage = () => {
                 totalAmount: total,
                 paymentMode: "cod",
             });
-            toast.success("Order Placed!", {
-                description: "Your COD order has been confirmed. Pay on delivery.",
-            });
+
+            const details = {
+                id: res.data._id || `ORD-${Date.now().toString().slice(-6)}`,
+                date: new Date().toLocaleDateString('en-IN'),
+                time: new Date().toLocaleTimeString('en-IN'),
+                items: [...cart],
+                address: `${formData.address}, ${formData.city} - ${formData.zip}`,
+                total: total,
+                paymentMode: 'cod'
+            };
             clearCart();
-            navigate("/");
+            navigate('/order-success', { state: { orderDetails: details } });
         } catch (error: any) {
             toast.error("Order Failed", {
                 description: error.response?.data?.message || "Could not place COD order.",

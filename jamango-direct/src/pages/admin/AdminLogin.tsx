@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Lock, User, Leaf } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import client from "@/api/client";
 
 // Simple SVG for a Mango shape
 const MangoIcon = ({ className }: { className?: string }) => (
@@ -22,6 +24,7 @@ const MangoIcon = ({ className }: { className?: string }) => (
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"admin" | "staff">("admin");
   const navigate = useNavigate();
   const [animateBg, setAnimateBg] = useState(false);
 
@@ -32,29 +35,30 @@ const AdminLogin = () => {
     setAnimateBg(true);
   }, []);
 
+  const { login } = useAuth();
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (email && password) {
       setLoading(true);
       setError("");
       try {
-        const response = await fetch('/api/users/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
-        const data = await response.json();
+        const { data } = await client.post('/users/login', { email, password });
 
-        if (response.ok) {
-          localStorage.setItem("jamango_admin", "true");
-          localStorage.setItem("token", data.token); // Store the JWT token!
-          localStorage.setItem("userInfo", JSON.stringify(data));
+        const isUserAdmin = data.isAdmin || data.role === "admin";
+        const isUserStaff = data.role === "staff";
+
+        if (role === "admin" && isUserAdmin) {
+          await login({ email, password });
+          navigate("/admin/dashboard");
+        } else if (role === "staff" && isUserStaff) {
+          await login({ email, password });
           navigate("/admin/dashboard");
         } else {
-          setError(data.message || "Invalid credentials");
+          setError(`Not authorized as ${role}. Please check your credentials.`);
         }
-      } catch (err) {
-        setError("Login failed. Check server connection.");
+      } catch (err: any) {
+        setError(err.response?.data?.message || "Invalid credentials. Check server connection.");
       } finally {
         setLoading(false);
       }
@@ -159,6 +163,33 @@ const AdminLogin = () => {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
+
+          <div className="flex gap-6 justify-center mb-6 bg-white/50 p-3 rounded-xl border border-charcoal/10">
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="radio"
+                name="role"
+                value="admin"
+                checked={role === "admin"}
+                onChange={() => setRole("admin")}
+                className="w-4 h-4 text-[hsl(44,80%,46%)] border-charcoal/20 focus:ring-[hsl(44,80%,46%)] cursor-pointer"
+              />
+              <span className={`font-medium text-sm transition-colors ${role === "admin" ? "text-[hsl(44,80%,46%)]" : "text-charcoal/60 group-hover:text-charcoal"}`}>Admin</span>
+            </label>
+            <div className="w-px h-5 bg-charcoal/10" />
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="radio"
+                name="role"
+                value="staff"
+                checked={role === "staff"}
+                onChange={() => setRole("staff")}
+                className="w-4 h-4 text-[hsl(44,80%,46%)] border-charcoal/20 focus:ring-[hsl(44,80%,46%)] cursor-pointer"
+              />
+              <span className={`font-medium text-sm transition-colors ${role === "staff" ? "text-[hsl(44,80%,46%)]" : "text-charcoal/60 group-hover:text-charcoal"}`}>Staff</span>
+            </label>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="email" className="text-charcoal/80 font-medium">Dashboard Access ID</Label>
             <div className="relative group">

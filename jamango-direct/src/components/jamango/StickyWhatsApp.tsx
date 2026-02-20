@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const StickyWhatsApp = () => {
     const [isVisible, setIsVisible] = useState(false);
-    const whatsappUrl = "https://wa.me/919999999999?text=Hi%2C%20I%20want%20to%20order%20mangoes.%20Is%20it%20available%20today%3F";
+    const whatsappUrl = "https://wa.me/919866425756?text=Hi%2C%20I%20want%20to%20order%20mangoes.%20Is%20it%20available%20today%3F";
 
     useEffect(() => {
         const toggleVisibility = () => {

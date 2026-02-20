@@ -3,7 +3,7 @@ import { MessageCircle, Shield, ArrowRight, Leaf, Sun, Award, Lock } from "lucid
 import heroImage from "@/assets/hero-mangoes.jpg";
 
 const HeroSection = () => {
-  const whatsappUrl = "https://wa.me/919999999999?text=Hi%2C%20I%20want%20to%20order%20mangoes.%20Is%20it%20available%20today%3F";
+  const whatsappUrl = "https://wa.me/919866425756?text=Hi%2C%20I%20want%20to%20order%20mangoes.%20Is%20it%20available%20today%3F";
 
   return (
     <section className="relative min-h-screen flex flex-col justify-start overflow-hidden">

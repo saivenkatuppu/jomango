@@ -60,7 +60,7 @@ const SiteFooter = () => {
                 <a href="#" className="w-10 h-10 rounded-full bg-[#F8F4EC]/10 flex items-center justify-center hover:bg-[hsl(44,80%,46%)] transition-colors text-white">
                   <Instagram className="h-5 w-5" />
                 </a>
-                <a href="#" className="w-10 h-10 rounded-full bg-[#F8F4EC]/10 flex items-center justify-center hover:bg-[hsl(44,80%,46%)] transition-colors text-white">
+                <a href="https://wa.me/919866425756?text=Hi%2C%20I%20want%20to%20order%20mangoes.%20Is%20it%20available%20today%3F" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-[#F8F4EC]/10 flex items-center justify-center hover:bg-[hsl(44,80%,46%)] transition-colors text-white">
                   <svg
                     viewBox="0 0 24 24"
                     fill="currentColor"
@@ -91,15 +91,15 @@ const SiteFooter = () => {
               <ul className="space-y-4 font-body text-sm text-[#F8F4EC]/70">
                 <li className="flex items-start gap-3">
                   <Phone className="h-5 w-5 text-[hsl(44,80%,46%)] shrink-0" />
-                  <span>+91 99999 99999</span>
+                  <span>+91 98664 25756</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Mail className="h-5 w-5 text-[hsl(44,80%,46%)] shrink-0" />
-                  <span>hello@jamango.in</span>
+                  <span>hello@jamangonow.com</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <MapPin className="h-5 w-5 text-[hsl(44,80%,46%)] shrink-0" />
-                  <span>Indiranagar, Bengaluru,<br />Karnataka 560038</span>
+                  <span>Tirupati, Andhra Pradesh,<br />517501</span>
                 </li>
               </ul>
             </div>

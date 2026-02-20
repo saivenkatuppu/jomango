@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { ShoppingCart, IndianRupee, Clock, CheckCircle, AlertTriangle, RefreshCw, TrendingUp } from "lucide-react";
+import { ShoppingCart, IndianRupee, Clock, CheckCircle, AlertTriangle, RefreshCw, TrendingUp, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import client from "@/api/client";
+import { useAuth } from "@/context/AuthContext";
 
 interface Order {
   _id: string;
@@ -52,6 +53,39 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const { user } = useAuth();
+  const isStaff = user?.role === "staff";
+
+  const downloadReport = async () => {
+    try {
+      const { data } = await client.get("/analytics/report");
+      if (!data || data.length === 0) {
+        alert("No data available for today's report.");
+        return;
+      }
+      const headers = Object.keys(data[0]);
+      const csvRows = [headers.join(",")];
+      data.forEach((row: any) => {
+        const values = headers.map(header => {
+          const val = row[header] === undefined || row[header] === null ? "" : row[header];
+          return `"${String(val).replace(/"/g, '""')}"`;
+        });
+        csvRows.push(values.join(","));
+      });
+      const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `jamango_sales_inventory_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      alert("Failed to download report.");
+      console.error(err);
+    }
+  };
+
   const fetchStats = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -84,12 +118,12 @@ const AdminDashboard = () => {
         icon: ShoppingCart,
         sub: `${data.stats.totalOrders} total all time`,
       },
-      {
+      ...(!isStaff ? [{
         label: "Revenue Today",
         value: fmt(data.stats.todayRevenue),
         icon: IndianRupee,
         sub: `Avg order: ${fmt(data.stats.avgOrderValue)}`,
-      },
+      }] : []),
       {
         label: "Pending Orders",
         value: String(data.stats.pendingOrders),
@@ -100,7 +134,7 @@ const AdminDashboard = () => {
         label: "Delivered Today",
         value: String(data.stats.deliveredToday),
         icon: CheckCircle,
-        sub: `Total revenue: ${fmt(data.stats.totalRevenue)}`,
+        sub: !isStaff ? `Total revenue: ${fmt(data.stats.totalRevenue)}` : "Successfully delivered",
       },
     ]
     : [];
@@ -114,10 +148,16 @@ const AdminDashboard = () => {
             {loading ? "Loading..." : "Live data from your store"}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchStats} disabled={loading} className="flex items-center gap-2">
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
+        <div className="flex gap-3">
+          <Button variant="outline" size="sm" onClick={downloadReport} className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Download Report
+          </Button>
+          <Button variant="outline" size="sm" onClick={fetchStats} disabled={loading} className="flex items-center gap-2">
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {error && (
@@ -217,9 +257,11 @@ const AdminDashboard = () => {
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1 text-right">
-                        ₹{product.revenue.toLocaleString("en-IN")}
-                      </p>
+                      {!isStaff && (
+                        <p className="text-xs text-muted-foreground mt-1 text-right">
+                          ₹{product.revenue?.toLocaleString("en-IN")}
+                        </p>
+                      )}
                     </div>
                   );
                 })
@@ -240,8 +282,10 @@ const AdminDashboard = () => {
               {data.weeklyOrders.length > 0 ? (
                 <div className="space-y-4 flex flex-col justify-end h-[280px]">
                   {data.weeklyOrders.map((day) => {
-                    const maxRev = Math.max(...data.weeklyOrders.map((d) => d.revenue));
-                    const percentage = Math.max((day.revenue / maxRev) * 100, 5);
+                    // For staff, revenue is undefined, fallback to plotting orders
+                    const maxVal = Math.max(...data.weeklyOrders.map((d) => (isStaff ? d.orders : (d.revenue || 0))));
+                    const currentVal = isStaff ? day.orders : (day.revenue || 0);
+                    const percentage = Math.max((currentVal / (maxVal || 1)) * 100, 5);
                     const dateFormatted = new Date(day._id).toLocaleDateString("en-US", { weekday: 'short', month: 'short', day: 'numeric' });
 
                     return (
@@ -254,9 +298,11 @@ const AdminDashboard = () => {
                             className="absolute left-0 h-6 bg-blue-100 border border-blue-200 rounded transition-all duration-500 group-hover:bg-blue-200"
                             style={{ width: `${percentage}%` }}
                           />
-                          <span className="relative z-10 pl-3 text-xs font-semibold text-blue-900 font-body">
-                            ₹{day.revenue.toLocaleString("en-IN")}
-                          </span>
+                          {!isStaff && (
+                            <span className="relative z-10 pl-3 text-xs font-semibold text-blue-900 font-body">
+                              ₹{day.revenue?.toLocaleString("en-IN")}
+                            </span>
+                          )}
                         </div>
                         <div className="w-16 text-xs text-muted-foreground font-body text-right">
                           {day.orders} ord.
@@ -277,7 +323,7 @@ const AdminDashboard = () => {
       )}
 
       {/* Total Revenue Banner */}
-      {data && (
+      {data && !isStaff && (
         <div className="bg-gradient-to-r from-primary/20 to-primary/5 border border-primary/20 rounded-xl p-5 mb-8 flex items-center gap-4">
           <TrendingUp className="h-6 w-6 text-mango-deep" />
           <div>
@@ -304,7 +350,7 @@ const AdminDashboard = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
-                {["Order ID", "Customer", "Items", "Payment", "Status", "Amount", "Date"].map((h) => (
+                {["Order ID", "Customer", "Items", "Payment", "Status", !isStaff ? "Amount" : null, "Date"].filter(Boolean).map((h) => (
                   <th key={h} className="text-left p-4 font-body text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                     {h}
                   </th>
@@ -336,9 +382,11 @@ const AdminDashboard = () => {
                         {order.status}
                       </span>
                     </td>
-                    <td className="p-4 font-body text-sm font-medium text-foreground whitespace-nowrap">
-                      ₹{order.totalAmount.toLocaleString("en-IN")}
-                    </td>
+                    {!isStaff && (
+                      <td className="p-4 font-body text-sm font-medium text-foreground whitespace-nowrap">
+                        ₹{order.totalAmount?.toLocaleString("en-IN")}
+                      </td>
+                    )}
                     <td className="p-4 font-body text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
                     </td>

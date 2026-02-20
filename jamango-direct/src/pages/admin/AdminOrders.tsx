@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import client from "@/api/client";
-import { RefreshCw, X, MapPin, Download } from "lucide-react";
+import { RefreshCw, X, MapPin, Download, CheckCircle } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 interface OrderItem {
   name: string;
@@ -52,6 +53,9 @@ const AdminOrders = () => {
   const [search, setSearch] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  const { user } = useAuth();
+  const isStaff = user?.role === "staff";
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -137,10 +141,12 @@ const AdminOrders = () => {
           </p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" size="sm" onClick={downloadCSV} className="flex items-center gap-2">
-            <Download className="h-4 w-4" />
-            Download User Data
-          </Button>
+          {!isStaff && (
+            <Button variant="outline" size="sm" onClick={downloadCSV} className="flex items-center gap-2">
+              <Download className="h-4 w-4" />
+              Download User Data
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={fetchOrders} disabled={loading} className="flex items-center gap-2">
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
@@ -182,7 +188,7 @@ const AdminOrders = () => {
         <table className="w-full">
           <thead>
             <tr className="border-b border-border">
-              {["Order ID", "Customer", "Items", "Payment", "Status", "Amount", "Date", "Actions"].map((h) => (
+              {["Order ID", "Customer", "Items", "Payment", "Status", !isStaff ? "Amount" : null, "Date", "Actions"].filter(Boolean).map((h) => (
                 <th key={h} className="text-left p-4 font-body text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                   {h}
                 </th>
@@ -214,7 +220,9 @@ const AdminOrders = () => {
                       {order.status}
                     </span>
                   </td>
-                  <td className="p-4 font-body text-sm font-medium text-foreground whitespace-nowrap">₹{order.totalAmount.toLocaleString()}</td>
+                  {!isStaff && (
+                    <td className="p-4 font-body text-sm font-medium text-foreground whitespace-nowrap">₹{order.totalAmount?.toLocaleString()}</td>
+                  )}
                   <td className="p-4 font-body text-xs text-muted-foreground whitespace-nowrap">
                     {new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: '2-digit', minute: '2-digit' })}
                   </td>
@@ -256,6 +264,55 @@ const AdminOrders = () => {
             Loading orders...
           </div>
         )}
+      </div>
+
+      {/* Cancelled Orders Section */}
+      <div className="mt-12 bg-card rounded-xl border border-red-200 overflow-hidden shadow-sm">
+        <div className="p-5 border-b border-red-200 bg-red-50/50 flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold text-red-800">Cancelled Orders Log</h2>
+          <span className="text-sm font-medium text-red-600 bg-red-100 px-3 py-1 rounded-full">Inventory Automatically Restored</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border bg-secondary/10">
+                <th className="text-left p-4 font-body text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Order ID</th>
+                <th className="text-left p-4 font-body text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Product Name</th>
+                <th className="text-center p-4 font-body text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Qty Cancelled</th>
+                <th className="text-left p-4 font-body text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Cancellation Date & Time</th>
+                <th className="text-left p-4 font-body text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.filter(o => o.status === "Cancelled").map(order =>
+                order.items.map((item, idx) => (
+                  <tr key={`${order._id}-${idx}`} className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors">
+                    <td className="p-4 font-body text-xs font-mono text-muted-foreground">{order._id.slice(-8).toUpperCase()}</td>
+                    <td className="p-4 font-body text-sm font-medium text-foreground whitespace-nowrap">
+                      {item.name} {item.variant}
+                    </td>
+                    <td className="p-4 text-center text-foreground font-medium">{item.quantity}</td>
+                    <td className="p-4 font-body text-xs text-muted-foreground whitespace-nowrap">
+                      {new Date(order.updatedAt || order.createdAt).toLocaleString("en-IN", {
+                        day: "2-digit", month: "short", year: "numeric", hour: '2-digit', minute: '2-digit'
+                      })}
+                    </td>
+                    <td className="p-4 font-body text-xs text-green-700 font-medium whitespace-nowrap flex items-center gap-1">
+                      <CheckCircle className="h-4 w-4" /> Inventory Restored
+                    </td>
+                  </tr>
+                ))
+              )}
+              {orders.filter(o => o.status === "Cancelled").length === 0 && (
+                <tr>
+                  <td colSpan={5} className="p-8 text-center font-body text-muted-foreground">
+                    No cancelled orders found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Order Details Modal */}
@@ -321,7 +378,7 @@ const AdminOrders = () => {
                       <tr>
                         <th className="p-3 font-medium">Item</th>
                         <th className="p-3 font-medium text-center">Qty</th>
-                        <th className="p-3 font-medium text-right">Price</th>
+                        {!isStaff && <th className="p-3 font-medium text-right">Price</th>}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -332,7 +389,7 @@ const AdminOrders = () => {
                             {item.variant && <p className="text-xs text-muted-foreground mt-0.5">{item.variant}</p>}
                           </td>
                           <td className="p-3 text-center text-foreground font-medium">{item.quantity}</td>
-                          <td className="p-3 text-right text-foreground font-medium">₹{(item.price * item.quantity).toLocaleString('en-IN')}</td>
+                          {!isStaff && <td className="p-3 text-right text-foreground font-medium">₹{(item.price * item.quantity).toLocaleString('en-IN')}</td>}
                         </tr>
                       ))}
                     </tbody>
@@ -340,19 +397,23 @@ const AdminOrders = () => {
                 </div>
 
                 {/* Subtotal */}
-                <div className="space-y-2 text-sm font-body bg-secondary/30 p-4 rounded-xl border border-secondary">
+                <div className="space-y-2 text-sm font-body bg-secondary/30 p-4 rounded-xl border border-secondary mt-4">
                   <div className="flex justify-between text-muted-foreground">
                     <span>Total Boxes</span>
                     <span>{selectedOrder.items.reduce((sum, item) => sum + item.quantity, 0)}</span>
                   </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Subtotal</span>
-                    <span>₹{selectedOrder.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString('en-IN')}</span>
-                  </div>
-                  <div className="flex justify-between font-semibold text-foreground text-base pt-2 border-t border-border mt-2">
-                    <span>Order Total</span>
-                    <span>₹{selectedOrder.totalAmount.toLocaleString('en-IN')}</span>
-                  </div>
+                  {!isStaff && (
+                    <>
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Subtotal</span>
+                        <span>₹{selectedOrder.items.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0).toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="flex justify-between font-semibold text-foreground text-base pt-2 border-t border-border mt-2">
+                        <span>Order Total</span>
+                        <span>₹{selectedOrder.totalAmount?.toLocaleString('en-IN')}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

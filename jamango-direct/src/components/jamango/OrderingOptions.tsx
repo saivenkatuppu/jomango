@@ -76,7 +76,7 @@ const OrderingOptions = () => {
                         initial={{ opacity: 0, x: 20 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
-                        onClick={() => window.open('https://wa.me/919999999999?text=Hi,%20I%20would%20like%20to%20order%20mangoes', '_blank')}
+                        onClick={() => window.open('https://wa.me/919866425756?text=Hi,%20I%20would%20like%20to%20order%20mangoes', '_blank')}
                         className="bg-[#F0FFF4] rounded-[2.5rem] p-10 border border-[#DCFCE7] shadow-xl shadow-[#DCFCE7]/60 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 cursor-pointer"
                     >
                         <div className="absolute top-0 right-0 w-64 h-64 bg-[#25D366]/5 rounded-full blur-3xl -mr-32 -mt-32" />

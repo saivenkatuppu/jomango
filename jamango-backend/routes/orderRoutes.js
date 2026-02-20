@@ -5,17 +5,19 @@ const {
     getAdminOrders,
     updateOrderStatus,
     getMyOrders,
+    cancelMyOrder
 } = require('../controllers/orderController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, adminOrStaff } = require('../middleware/authMiddleware');
 
 // Public — create order from checkout (COD or post-Razorpay)
 router.post('/', createOrder);
 
 // Private — user's own orders (still needs user JWT)
 router.get('/mine', protect, getMyOrders);
+router.put('/:id/cancel', protect, cancelMyOrder);
 
-// Admin routes — no JWT guard (admin panel protected by localStorage check)
-router.get('/admin', getAdminOrders);
-router.put('/admin/:id/status', updateOrderStatus);
+// Admin / Staff routes
+router.get('/admin', protect, adminOrStaff, getAdminOrders);
+router.put('/admin/:id/status', protect, adminOrStaff, updateOrderStatus);
 
 module.exports = router;
