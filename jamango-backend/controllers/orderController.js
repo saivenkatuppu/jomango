@@ -17,6 +17,7 @@ const createOrder = asyncHandler(async (req, res) => {
         paymentMode,
         razorpayOrderId,
         razorpayPaymentId,
+        orderNotes,
     } = req.body;
 
     if (!items || items.length === 0) {
@@ -54,6 +55,7 @@ const createOrder = asyncHandler(async (req, res) => {
         razorpayOrderId: razorpayOrderId || '',
         razorpayPaymentId: razorpayPaymentId || '',
         status: 'Confirmed',
+        orderNotes: orderNotes || '',
     });
 
     // Trigger Shiprocket asynchronously

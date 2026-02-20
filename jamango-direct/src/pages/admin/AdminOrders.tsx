@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import client from "@/api/client";
-import { RefreshCw, X, MapPin } from "lucide-react";
+import { RefreshCw, X, MapPin, Download } from "lucide-react";
 
 interface OrderItem {
   name: string;
@@ -16,7 +16,16 @@ interface Order {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
-  shippingAddress: { address: string; city: string; zip: string };
+  shippingAddress: {
+    address: string;
+    landmark?: string;
+    city: string;
+    state?: string;
+    zip?: string;
+    zipCode?: string;
+    country?: string
+  };
+  orderNotes?: string;
   items: OrderItem[];
   totalAmount: number;
   paymentMode: "online" | "cod";
@@ -85,6 +94,39 @@ const AdminOrders = () => {
     return true;
   });
 
+  const downloadCSV = () => {
+    const headers = [
+      "Full Name", "Email", "Phone", "Address", "City",
+      "State", "Zip Code", "Country", "Order Notes", "Products", "Date"
+    ];
+
+    const rows = orders.map((order) => {
+      const itemsStr = order.items.map(i => `${i.quantity}x ${i.name}`).join(" | ");
+      return [
+        `"${order.customerName || ''}"`,
+        `"${order.customerEmail || ''}"`,
+        `"${order.customerPhone || ''}"`,
+        `"${order.shippingAddress?.address || ''}"`,
+        `"${order.shippingAddress?.city || ''}"`,
+        `"${order.shippingAddress?.state || ''}"`,
+        `"${order.shippingAddress?.zipCode || order.shippingAddress?.zip || ''}"`,
+        `"${order.shippingAddress?.country || 'India'}"`,
+        `"${order.orderNotes || ''}"`,
+        `"${itemsStr}"`,
+        `"${new Date(order.createdAt).toLocaleDateString("en-IN")}"`
+      ].join(",");
+    });
+
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `jamango_users_${new Date().getTime()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div>
       <div className="mb-8 flex items-center justify-between">
@@ -94,10 +136,16 @@ const AdminOrders = () => {
             {loading ? "Loading..." : `${orders.length} total orders`}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchOrders} disabled={loading} className="flex items-center gap-2">
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
+        <div className="flex gap-3">
+          <Button variant="outline" size="sm" onClick={downloadCSV} className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Download User Data
+          </Button>
+          <Button variant="outline" size="sm" onClick={fetchOrders} disabled={loading} className="flex items-center gap-2">
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {error && (

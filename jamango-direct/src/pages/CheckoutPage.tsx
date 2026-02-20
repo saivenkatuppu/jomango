@@ -66,14 +66,25 @@ const CheckoutPage = () => {
     const [loading, setLoading] = useState(false);
     const [codLoading, setCodLoading] = useState(false);
     const [isAddMoreOpen, setIsAddMoreOpen] = useState(false);
-    const [formData, setFormData] = useState({
-        name: user?.name || "",
-        email: user?.email || "",
-        phone: user?.phone || "",
-        address: "",
-        city: "",
-        zip: "",
+
+    const [formData, setFormData] = useState(() => {
+        const saved = localStorage.getItem("savedCheckoutDetails");
+        const parsed = saved ? JSON.parse(saved) : null;
+        return {
+            name: user?.name || parsed?.name || "",
+            email: user?.email || parsed?.email || "",
+            phone: user?.phone || parsed?.phone || "",
+            address: parsed?.address || "",
+            landmark: parsed?.landmark || "",
+            city: parsed?.city || "",
+            state: parsed?.state || "",
+            zip: parsed?.zip || "",
+            country: parsed?.country || "India",
+            orderNotes: "",
+        };
     });
+
+    const [saveDetails, setSaveDetails] = useState(() => !!localStorage.getItem("savedCheckoutDetails"));
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -95,9 +106,19 @@ const CheckoutPage = () => {
             return;
         }
 
-        if (!formData.name || !formData.email || !formData.phone || !formData.address || !formData.city || !formData.zip) {
-            toast.error("Please fill in all shipping details including name and email");
+        if (!formData.name || !formData.email || !formData.phone || !formData.address || !formData.city || !formData.state || !formData.zip || !formData.country) {
+            toast.error("⚠️ Please fill all required fields before proceeding.");
             return;
+        }
+
+        if (saveDetails) {
+            localStorage.setItem("savedCheckoutDetails", JSON.stringify({
+                name: formData.name, email: formData.email, phone: formData.phone,
+                address: formData.address, landmark: formData.landmark, city: formData.city,
+                state: formData.state, zip: formData.zip, country: formData.country,
+            }));
+        } else {
+            localStorage.removeItem("savedCheckoutDetails");
         }
 
         setLoading(true);
@@ -140,9 +161,13 @@ const CheckoutPage = () => {
                             customerPhone: formData.phone,
                             shippingAddress: {
                                 address: formData.address,
+                                landmark: formData.landmark,
                                 city: formData.city,
+                                state: formData.state,
                                 zip: formData.zip,
+                                country: formData.country,
                             },
+                            orderNotes: formData.orderNotes,
                             items: cart.map((item) => ({
                                 name: item.name,
                                 variant: item.variant || "",
@@ -193,10 +218,21 @@ const CheckoutPage = () => {
             toast.error("Your cart is empty");
             return;
         }
-        if (!formData.name || !formData.email || !formData.phone || !formData.address || !formData.city || !formData.zip) {
-            toast.error("Please fill in all shipping details");
+        if (!formData.name || !formData.email || !formData.phone || !formData.address || !formData.city || !formData.state || !formData.zip || !formData.country) {
+            toast.error("⚠️ Please fill all required fields before proceeding.");
             return;
         }
+
+        if (saveDetails) {
+            localStorage.setItem("savedCheckoutDetails", JSON.stringify({
+                name: formData.name, email: formData.email, phone: formData.phone,
+                address: formData.address, landmark: formData.landmark, city: formData.city,
+                state: formData.state, zip: formData.zip, country: formData.country,
+            }));
+        } else {
+            localStorage.removeItem("savedCheckoutDetails");
+        }
+
         setCodLoading(true);
         try {
             await client.post("/orders", {
@@ -205,9 +241,13 @@ const CheckoutPage = () => {
                 customerPhone: formData.phone,
                 shippingAddress: {
                     address: formData.address,
+                    landmark: formData.landmark,
                     city: formData.city,
+                    state: formData.state,
                     zip: formData.zip,
+                    country: formData.country,
                 },
+                orderNotes: formData.orderNotes,
                 items: cart.map((item) => ({
                     name: item.name,
                     variant: item.variant || "",
@@ -337,64 +377,133 @@ const CheckoutPage = () => {
                             </h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div className="space-y-2">
-                                    <Label className="text-xs uppercase tracking-wider text-charcoal/60 font-semibold pl-1">Full Name</Label>
+                                    <Label className="text-xs uppercase tracking-wider text-charcoal/60 font-semibold pl-1">Full Name *</Label>
                                     <Input
                                         name="name"
                                         value={formData.name}
                                         onChange={handleInputChange}
                                         placeholder="Enter your full name"
                                         className="h-12 rounded-xl border-stone-200 focus:border-[hsl(44,90%,45%)] focus:ring-[hsl(44,90%,45%)] bg-stone-50/50"
+                                        required
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-xs uppercase tracking-wider text-charcoal/60 font-semibold pl-1">Phone Number</Label>
+                                    <Label className="text-xs uppercase tracking-wider text-charcoal/60 font-semibold pl-1">Phone Number *</Label>
                                     <Input
                                         name="phone"
                                         value={formData.phone}
                                         onChange={handleInputChange}
                                         placeholder="+91 98765 43210"
                                         className="h-12 rounded-xl border-stone-200 focus:border-[hsl(44,90%,45%)] focus:ring-[hsl(44,90%,45%)] bg-stone-50/50"
+                                        required
                                     />
                                 </div>
                                 <div className="space-y-2 md:col-span-2">
-                                    <Label className="text-xs uppercase tracking-wider text-charcoal/60 font-semibold pl-1">Email Address</Label>
+                                    <Label className="text-xs uppercase tracking-wider text-charcoal/60 font-semibold pl-1">Email Address *</Label>
                                     <Input
                                         name="email"
                                         value={formData.email}
                                         onChange={handleInputChange}
                                         placeholder="you@email.com"
                                         className="h-12 rounded-xl border-stone-200 focus:border-[hsl(44,90%,45%)] focus:ring-[hsl(44,90%,45%)] bg-stone-50/50"
+                                        required
                                     />
                                 </div>
                                 <div className="space-y-2 md:col-span-2">
-                                    <Label className="text-xs uppercase tracking-wider text-charcoal/60 font-semibold pl-1">Delivery Address</Label>
+                                    <Label className="text-xs uppercase tracking-wider text-charcoal/60 font-semibold pl-1">Delivery Address *</Label>
                                     <Input
                                         name="address"
                                         value={formData.address}
                                         onChange={handleInputChange}
                                         placeholder="Flat, House no., Building, Apartment, Area"
                                         className="h-12 rounded-xl border-stone-200 focus:border-[hsl(44,90%,45%)] focus:ring-[hsl(44,90%,45%)] bg-stone-50/50"
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <Label className="text-xs uppercase tracking-wider text-charcoal/60 font-semibold pl-1">Landmark (Optional)</Label>
+                                    <Input
+                                        name="landmark"
+                                        value={formData.landmark}
+                                        onChange={handleInputChange}
+                                        placeholder="Near a known location"
+                                        className="h-12 rounded-xl border-stone-200 focus:border-[hsl(44,90%,45%)] focus:ring-[hsl(44,90%,45%)] bg-stone-50/50"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-xs uppercase tracking-wider text-charcoal/60 font-semibold pl-1">City</Label>
+                                    <Label className="text-xs uppercase tracking-wider text-charcoal/60 font-semibold pl-1">City *</Label>
                                     <Input
                                         name="city"
                                         value={formData.city}
                                         onChange={handleInputChange}
                                         placeholder="City / Town"
                                         className="h-12 rounded-xl border-stone-200 focus:border-[hsl(44,90%,45%)] focus:ring-[hsl(44,90%,45%)] bg-stone-50/50"
+                                        required
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-xs uppercase tracking-wider text-charcoal/60 font-semibold pl-1">ZIP Code</Label>
+                                    <Label className="text-xs uppercase tracking-wider text-charcoal/60 font-semibold pl-1">State *</Label>
+                                    <Input
+                                        name="state"
+                                        value={formData.state}
+                                        onChange={handleInputChange}
+                                        placeholder="State / Province"
+                                        className="h-12 rounded-xl border-stone-200 focus:border-[hsl(44,90%,45%)] focus:ring-[hsl(44,90%,45%)] bg-stone-50/50"
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs uppercase tracking-wider text-charcoal/60 font-semibold pl-1">ZIP / Postal Code *</Label>
                                     <Input
                                         name="zip"
                                         value={formData.zip}
                                         onChange={handleInputChange}
                                         placeholder="000000"
                                         className="h-12 rounded-xl border-stone-200 focus:border-[hsl(44,90%,45%)] focus:ring-[hsl(44,90%,45%)] bg-stone-50/50"
+                                        required
                                     />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs uppercase tracking-wider text-charcoal/60 font-semibold pl-1">Country *</Label>
+                                    <select
+                                        name="country"
+                                        value={formData.country}
+                                        onChange={(e: any) => handleInputChange(e)}
+                                        className="flex h-12 w-full rounded-xl border border-stone-200 bg-stone-50/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(44,90%,45%)] focus:ring-1 focus:ring-[hsl(44,90%,45%)] disabled:cursor-not-allowed disabled:opacity-50"
+                                        required
+                                    >
+                                        <option value="India">India</option>
+                                        <option value="United States">United States</option>
+                                        <option value="United Kingdom">United Kingdom</option>
+                                        <option value="Canada">Canada</option>
+                                        <option value="Australia">Australia</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <Label className="text-xs uppercase tracking-wider text-charcoal/60 font-semibold pl-1">Order Notes (Optional)</Label>
+                                    <textarea
+                                        name="orderNotes"
+                                        value={formData.orderNotes}
+                                        onChange={(e: any) => handleInputChange(e)}
+                                        placeholder="Special delivery instructions..."
+                                        className="flex min-h-[80px] w-full rounded-xl border border-stone-200 bg-stone-50/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(44,90%,45%)] focus:ring-1 focus:ring-[hsl(44,90%,45%)] disabled:cursor-not-allowed disabled:opacity-50"
+                                    />
+                                </div>
+
+                                <div className="flex items-center space-x-2 md:col-span-2 mt-2">
+                                    <input
+                                        type="checkbox"
+                                        id="saveDetails"
+                                        checked={saveDetails}
+                                        onChange={(e) => setSaveDetails(e.target.checked)}
+                                        className="h-4 w-4 rounded border-stone-300 text-[hsl(44,90%,45%)] focus:ring-[hsl(44,90%,45%)] cursor-pointer"
+                                    />
+                                    <label
+                                        htmlFor="saveDetails"
+                                        className="text-sm font-medium leading-none cursor-pointer text-charcoal/70 user-select-none"
+                                    >
+                                        Save my details for faster checkout
+                                    </label>
                                 </div>
                             </div>
                         </div>

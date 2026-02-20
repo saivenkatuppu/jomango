@@ -52,6 +52,7 @@ const verifyPayment = asyncHandler(async (req, res) => {
         shippingAddress,
         items,
         totalAmount,
+        orderNotes,
     } = req.body;
 
     const body = razorpay_order_id + '|' + razorpay_payment_id;
@@ -79,6 +80,7 @@ const verifyPayment = asyncHandler(async (req, res) => {
                 razorpayOrderId: razorpay_order_id,
                 razorpayPaymentId: razorpay_payment_id,
                 status: 'Confirmed',
+                orderNotes: orderNotes || '',
             });
 
             // Trigger Shiprocket asynchronously
