@@ -46,12 +46,15 @@ export const AddMoreMangoesModal = ({ isOpen, onClose, addToCart }: AddMoreMango
 
             map.get(name)?.push({
                 weight,
-                price: `₹${product.price}`,
+                price: `₹${product.price.toLocaleString("en-IN")}`,
+                mrp: product.mrp ? `₹${product.mrp.toLocaleString("en-IN")}` : undefined,
                 fullName: product.name,
                 categoryTitle: `${product.weight} KG Box`,
                 rawPrice: product.price,
                 stock: product.stock,
-                active: product.active
+                active: product.active,
+                showDiscount: product.showDiscount,
+                discountLabel: product.discountLabel
             });
         });
 
@@ -68,10 +71,14 @@ export const AddMoreMangoesModal = ({ isOpen, onClose, addToCart }: AddMoreMango
     }, [apiProducts]);
 
     const handleAdd = (option: any) => {
+        const discountLabel = option.discountLabel;
+        const formattedDiscountLabel = discountLabel && /^\d+$/.test(discountLabel) ? `${discountLabel}% OFF` : discountLabel;
+
         addToCart({
             name: option.categoryTitle,
             variant: option.fullName,
-            price: option.rawPrice
+            price: option.rawPrice,
+            discountLabel: formattedDiscountLabel
         });
         toast.success(`Added ${option.fullName} to cart`);
     };
@@ -131,7 +138,17 @@ export const AddMoreMangoesModal = ({ isOpen, onClose, addToCart }: AddMoreMango
                                                             {option.weight}
                                                             <span className="text-[10px] font-medium px-1.5 py-0.5 bg-white border border-stone-200 rounded text-charcoal/60">Box</span>
                                                         </span>
-                                                        <span className="text-xs font-medium text-[hsl(44,90%,40%)] mt-0.5">{option.price}</span>
+                                                        <div className="flex items-center gap-1.5 mt-0.5">
+                                                            <span className={`text-xs font-medium ${option.showDiscount ? 'text-red-600' : 'text-[hsl(44,90%,40%)]'}`}>{option.price}</span>
+                                                            {option.showDiscount && option.mrp && (
+                                                                <span className="text-[10px] text-stone-400 line-through decoration-stone-400/50">{option.mrp}</span>
+                                                            )}
+                                                            {option.showDiscount && option.discountLabel && (
+                                                                <span className="bg-[hsl(44,80%,46%)] text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-tighter shadow-sm">
+                                                                    {/^\d+$/.test(option.discountLabel) ? `${option.discountLabel}% OFF` : option.discountLabel}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                         <div className="mt-1">
                                                             {option.stock === 0 ? (
                                                                 <span className="text-[9px] font-bold text-red-500 uppercase">Out of Stock</span>

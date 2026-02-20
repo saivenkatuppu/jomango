@@ -23,13 +23,24 @@ interface OrderModalProps {
         badge?: string;
         description?: string;
         stock?: number;
+        mrp?: string;
+        showDiscount?: boolean;
+        discountLabel?: string;
     }[];
 }
 
 const OrderModal = ({ isOpen, onClose, productName = "Premium Mango Box", productPrice, variants }: OrderModalProps) => {
+    // ... (rest of the setup logic remains same)
     const { addToCart } = useCart();
     const navigate = useNavigate();
-    const [selectedVariant, setSelectedVariant] = useState<{ name: string; price: string; stock?: number } | null>(null);
+    const [selectedVariant, setSelectedVariant] = useState<{
+        name: string;
+        price: string;
+        stock?: number;
+        mrp?: string;
+        showDiscount?: boolean;
+        discountLabel?: string
+    } | null>(null);
     const [email, setEmail] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -42,6 +53,7 @@ const OrderModal = ({ isOpen, onClose, productName = "Premium Mango Box", produc
         }
     }, [isOpen, productName]);
 
+    // ... (handleNotify, handleWhatsAppOrder helper functions)
     const handleNotify = (e: React.FormEvent) => {
         e.preventDefault();
         if (!email) return;
@@ -81,10 +93,14 @@ const OrderModal = ({ isOpen, onClose, productName = "Premium Mango Box", produc
             return;
         }
 
+        const discountLabel = selectedVariant?.discountLabel;
+        const formattedDiscountLabel = discountLabel && /^\d+$/.test(discountLabel) ? `${discountLabel}% OFF` : discountLabel;
+
         addToCart({
             name,
             variant,
-            price
+            price,
+            discountLabel: formattedDiscountLabel
         });
 
         onClose();
@@ -153,8 +169,13 @@ const OrderModal = ({ isOpen, onClose, productName = "Premium Mango Box", produc
                                                             Out of Stock
                                                         </span>
                                                     )}
-                                                    {!outOfStock && variant.badge && (
+                                                    {!outOfStock && variant.showDiscount && variant.discountLabel && (
                                                         <span className="bg-[hsl(44,80%,46%)] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                                                            {/^\d+$/.test(variant.discountLabel) ? `${variant.discountLabel}% OFF` : variant.discountLabel}
+                                                        </span>
+                                                    )}
+                                                    {!outOfStock && variant.badge && !variant.showDiscount && (
+                                                        <span className="bg-[#4A5D23]/10 text-[#4A5D23] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                                                             {variant.badge}
                                                         </span>
                                                     )}
@@ -166,12 +187,18 @@ const OrderModal = ({ isOpen, onClose, productName = "Premium Mango Box", produc
                                                 )}
                                             </div>
                                             <div className="flex flex-col items-end">
-                                                <span className={`font-body font-bold text-lg ${outOfStock ? 'text-stone-400 line-through decoration-red-400/50' : isSelected ? 'text-[hsl(44,80%,46%)]' : 'text-charcoal'
-                                                    }`}>
-                                                    {variant.price}
-                                                </span>
+                                                <div className="flex flex-col items-end">
+                                                    {variant.showDiscount && variant.mrp && !outOfStock && (
+                                                        <span className="text-xs text-stone-400 line-through decoration-stone-400/50 leading-none mb-0.5">{variant.mrp}</span>
+                                                    )}
+                                                    <span className={`font-body font-bold text-lg leading-none ${outOfStock ? 'text-stone-400 line-through decoration-red-400/50' : isSelected ? 'text-[hsl(44,80%,46%)]' : variant.showDiscount ? 'text-red-600' : 'text-charcoal'
+                                                        }`}>
+                                                        {variant.price}
+                                                    </span>
+                                                </div>
+
                                                 {!outOfStock && (
-                                                    <span className={`text-[10px] font-medium uppercase tracking-wide ${(variant.stock ?? 0) < 10 ? 'text-red-500' : 'text-green-600'
+                                                    <span className={`text-[10px] font-medium uppercase tracking-wide mt-1 ${(variant.stock ?? 0) < 10 ? 'text-red-500' : 'text-green-600'
                                                         }`}>
                                                         {(variant.stock ?? 0) < 10 ? `Only ${variant.stock} left` : `${variant.stock} in stock`}
                                                     </span>

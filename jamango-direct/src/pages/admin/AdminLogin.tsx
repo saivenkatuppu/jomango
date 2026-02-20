@@ -25,15 +25,39 @@ const AdminLogin = () => {
   const navigate = useNavigate();
   const [animateBg, setAnimateBg] = useState(false);
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   useEffect(() => {
     setAnimateBg(true);
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (email && password) {
-      localStorage.setItem("jamango_admin", "true");
-      navigate("/admin/dashboard");
+      setLoading(true);
+      setError("");
+      try {
+        const response = await fetch('/api/users/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          localStorage.setItem("jamango_admin", "true");
+          localStorage.setItem("token", data.token); // Store the JWT token!
+          localStorage.setItem("userInfo", JSON.stringify(data));
+          navigate("/admin/dashboard");
+        } else {
+          setError(data.message || "Invalid credentials");
+        }
+      } catch (err) {
+        setError("Login failed. Check server connection.");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -131,6 +155,7 @@ const AdminLogin = () => {
             <p className="text-xs font-bold tracking-[0.2em] uppercase text-charcoal">Admin Portal</p>
             <div className="h-px w-8 bg-charcoal/20"></div>
           </div>
+          {error && <div className="mt-4 text-red-500 text-sm font-medium bg-red-50 p-2 rounded">{error}</div>}
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
@@ -171,16 +196,20 @@ const AdminLogin = () => {
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="pt-2">
             <Button
               type="submit"
+              disabled={loading}
               className="w-full h-12 rounded-xl bg-gradient-to-r from-[hsl(44,80%,46%)] to-[hsl(38,90%,55%)] hover:from-[hsl(44,90%,40%)] hover:to-[hsl(38,100%,50%)] text-white font-bold text-lg shadow-lg shadow-[hsl(44,80%,46%)]/30 transition-all"
             >
-              Enter Orchard
+              {loading ? "Verifying..." : "Enter Orchard"}
             </Button>
           </motion.div>
         </form>
 
-        <div className="mt-8 text-center text-xs text-charcoal/40 font-medium">
+        <div className="mt-8 text-center text-xs text-charcoal/40 font-medium space-y-2">
           <p>Restricted Access · Authorized Personnel Only</p>
-          <p className="mt-1">© 2026 House of Munagala</p>
+          <p>© 2026 House of Munagala</p>
+          <div className="pt-2">
+            <a href="/" className="text-charcoal/40 hover:text-[hsl(44,80%,46%)] transition-colors underline">Back to Store</a>
+          </div>
         </div>
       </motion.div>
     </div>

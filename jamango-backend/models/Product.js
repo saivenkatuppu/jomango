@@ -36,9 +36,35 @@ const productSchema = mongoose.Schema(
             default: '',
         },
         badge: {
-            type: String,
+            type: String, // Stores the ACTUAL text (Custom or Preset)
             default: '',
         },
+        showBadge: {
+            type: Boolean,
+            default: false,
+        },
+        badgeType: {
+            type: String, // 'preset' | 'custom'
+            default: 'custom',
+        },
+        mrp: { // Base Price
+            type: Number,
+            required: false, // Optional if no discount
+        },
+        showDiscount: {
+            type: Boolean,
+            default: false,
+        },
+        discountLabel: {
+            type: String, // "30% OFF", "Special Price"
+            default: '',
+        },
+        priceHistory: [
+            {
+                price: Number,
+                date: { type: Date, default: Date.now }
+            }
+        ]
     },
     {
         timestamps: true,

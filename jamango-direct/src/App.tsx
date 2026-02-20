@@ -12,6 +12,7 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminInventory from "./pages/admin/AdminInventory";
 import AdminSlots from "./pages/admin/AdminSlots";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminContacts from "./pages/admin/AdminContacts";
 import AdminLayout from "./components/admin/AdminLayout";
 import { AuthProvider } from "./context/AuthContext";
 import LoginPage from "./pages/auth/LoginPage";
@@ -55,6 +56,7 @@ const App = () => (
                 <Route path="/admin/inventory" element={<AdminInventory />} />
                 <Route path="/admin/slots" element={<AdminSlots />} />
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                <Route path="/admin/contacts" element={<AdminContacts />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

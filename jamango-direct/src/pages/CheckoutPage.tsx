@@ -18,7 +18,14 @@ const CartItemRow = ({ item, updateQuantity, removeFromCart }: any) => {
                 <div>
                     <h3 className="font-medium text-charcoal">{item.name}</h3>
                     {item.variant && <p className="text-sm text-charcoal/60">{item.variant}</p>}
-                    <p className="text-[hsl(44,80%,46%)] font-bold">₹{item.price}</p>
+                    <div className="flex items-center gap-2">
+                        <p className="text-[hsl(44,80%,46%)] font-bold">₹{item.price}</p>
+                        {item.discountLabel && (
+                            <span className="bg-[hsl(44,80%,46%)]/10 text-[hsl(44,80%,46%)] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                {item.discountLabel}
+                            </span>
+                        )}
+                    </div>
                 </div>
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1">

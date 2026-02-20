@@ -10,6 +10,8 @@ const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const slotRoutes = require('./routes/slotRoutes');
+const subscriberRoutes = require('./routes/subscriberRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 dotenv.config();
 
@@ -31,6 +33,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/slots', slotRoutes);
+app.use('/api/subscribers', subscriberRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Error Middleware
 app.use(notFound);

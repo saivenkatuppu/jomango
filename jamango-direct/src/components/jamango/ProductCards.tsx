@@ -15,6 +15,11 @@ interface DBProduct {
   active: boolean;
   badge: string;
   description: string;
+  mrp?: number;
+  showDiscount?: boolean;
+  discountLabel?: string;
+  showBadge?: boolean;
+  badgeType?: string;
 }
 
 interface ModalVariant {
@@ -23,20 +28,30 @@ interface ModalVariant {
   badge?: string;
   description?: string;
   stock: number;
+  mrp?: string;
+  showDiscount?: boolean;
+  discountLabel?: string;
+  showBadge?: boolean;
+  badgeType?: string;
 }
 
 interface ProductCardProps {
   title: string;
   subTitle: string;
   price: string;
+  mrp?: string;
+  showDiscount?: boolean;
+  discountLabel?: string;
   tagline: string;
   isBestSeller?: boolean;
+  isNew?: boolean;
+  badge?: string;
   allOutOfStock?: boolean;
   onOrder: () => void;
   delay?: number;
 }
 
-const ProductCard = ({ title, subTitle, price, tagline, isBestSeller, allOutOfStock, onOrder, delay = 0 }: ProductCardProps) => {
+const ProductCard = ({ title, subTitle, price, mrp, showDiscount, discountLabel, tagline, isBestSeller, isNew, badge, allOutOfStock, onOrder, delay = 0 }: ProductCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -54,6 +69,28 @@ const ProductCard = ({ title, subTitle, price, tagline, isBestSeller, allOutOfSt
       {!allOutOfStock && isBestSeller && (
         <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm text-[hsl(44,90%,40%)] text-[9px] font-bold px-3 py-1.5 rounded-full shadow-sm border border-[hsl(44,90%,40%)]/10 z-20 uppercase tracking-[0.15em]">
           Best Seller
+        </div>
+      )}
+      {!allOutOfStock && isNew && !isBestSeller && (
+        <div className="absolute top-4 right-4 bg-emerald-600 text-white text-[9px] font-bold px-3 py-1.5 rounded-full shadow-sm z-20 uppercase tracking-[0.15em]">
+          New Arrival
+        </div>
+      )}
+      {!allOutOfStock && !isBestSeller && !isNew && badge && (
+        <div className="absolute top-4 right-4 bg-blue-600 text-white text-[9px] font-bold px-3 py-1.5 rounded-full shadow-sm z-20 uppercase tracking-[0.15em]">
+          {badge}
+        </div>
+      )}
+      {!allOutOfStock && isNew && isBestSeller && (
+        <div className="absolute top-12 right-4 bg-emerald-600 text-white text-[9px] font-bold px-3 py-1.5 rounded-full shadow-sm z-20 uppercase tracking-[0.15em]">
+          New Arrival
+        </div>
+      )}
+
+      {/* Discount Badge on Card Image if enabled */}
+      {!allOutOfStock && showDiscount && discountLabel && (
+        <div className="absolute top-4 left-4 bg-[hsl(44,80%,46%)] text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm z-20 uppercase tracking-widest">
+          {/^\d+$/.test(discountLabel) ? `${discountLabel}% OFF` : discountLabel}
         </div>
       )}
 
@@ -78,7 +115,15 @@ const ProductCard = ({ title, subTitle, price, tagline, isBestSeller, allOutOfSt
           <h3 className="font-display text-2xl font-medium text-charcoal tracking-wide leading-none">{title}</h3>
           <div className="flex flex-col items-end leading-none">
             <span className="text-[10px] text-stone-400 font-medium uppercase tracking-wider mb-0.5">Starts from</span>
-            <span className="font-display text-xl font-medium text-[hsl(44,80%,40%)] tracking-tight opacity-90">{price}</span>
+            <div className="flex items-center gap-2">
+              {/* Strikethrough MRP if discount active */}
+              {showDiscount && mrp && (
+                <span className="text-xs text-stone-400 line-through decoration-stone-400/50">{mrp}</span>
+              )}
+              <span className={`font-display text-xl font-medium tracking-tight ${showDiscount ? 'text-red-600' : 'text-[hsl(44,80%,40%)] opacity-90'}`}>
+                {price}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -102,8 +147,8 @@ const ProductCard = ({ title, subTitle, price, tagline, isBestSeller, allOutOfSt
             onClick={allOutOfStock ? undefined : onOrder}
             disabled={allOutOfStock}
             className={`w-full py-3.5 font-medium text-sm rounded-2xl border-t transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden ${allOutOfStock
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed border-gray-200'
-                : 'bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] text-[#FDFBF7] shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_16px_rgba(0,0,0,0.12)] border-white/5'
+              ? 'bg-gray-200 text-gray-400 cursor-not-allowed border-gray-200'
+              : 'bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] text-[#FDFBF7] shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_16px_rgba(0,0,0,0.12)] border-white/5'
               }`}
           >
             <span className="relative z-10 tracking-widest uppercase text-xs">
@@ -121,8 +166,13 @@ function groupByWeight(products: DBProduct[]): {
   title: string;
   subTitle: string;
   price: string;
+  mrp?: string;
+  showDiscount?: boolean;
+  discountLabel?: string;
   tagline: string;
   isBestSeller: boolean;
+  isNew: boolean;
+  badge?: string;
   allOutOfStock: boolean;
   variants: ModalVariant[];
 }[] {
@@ -136,24 +186,47 @@ function groupByWeight(products: DBProduct[]): {
     .sort(([a], [b]) => Number(a) - Number(b))
     .map(([weight, items]) => {
       const inStockItems = items.filter((i) => i.stock > 0);
-      const minPrice = Math.min(...(inStockItems.length > 0 ? inStockItems : items).map((i) => i.price));
+      const itemsToConsider = inStockItems.length > 0 ? inStockItems : items;
+
+      // Calculate min price
+      const minPriceItem = itemsToConsider.reduce((prev, curr) => (prev.price < curr.price ? prev : curr), itemsToConsider[0]);
+
+      // Find badge (first one that has showBadge=true)
+      const badgeItem = items.find(i => i.showBadge && i.badge);
+
+      // Determine discount visibility: Respect explicit toggle, but if discount label exists, assume they want to show it
+      const hasDiscount = minPriceItem.showDiscount || (!!minPriceItem.discountLabel && minPriceItem.discountLabel.length > 0);
+
       const mangoCount = Number(weight) === 3 ? "6–9" : Number(weight) === 5 ? "10–14" : `~${Math.round(Number(weight) * 2.5)}`;
+
       return {
         title: `${weight} KG Box`,
         subTitle: `${mangoCount} Mangoes • Naturally Ripened`,
-        price: `₹${minPrice.toLocaleString("en-IN")}`,
+        price: `₹${minPriceItem.price.toLocaleString("en-IN")}`,
+        mrp: minPriceItem.mrp ? `₹${minPriceItem.mrp.toLocaleString("en-IN")}` : undefined,
+        showDiscount: hasDiscount,
+        discountLabel: minPriceItem.discountLabel,
         tagline:
           Number(weight) <= 3
             ? "Perfect for small families or personal indulgence."
             : "The ideal choice for sharing the sweetness.",
-        isBestSeller: items.some((i) => i.badge?.toLowerCase().includes("best") || i.badge?.toLowerCase().includes("seller")),
+        // Only show if showBadge is true
+        isBestSeller: items.some((i) => i.showBadge && (i.badge?.toLowerCase().includes("best") || i.badge?.toLowerCase().includes("seller"))),
+        isNew: items.some((i) => i.showBadge && i.badge?.toLowerCase().includes("new")),
+        badge: badgeItem ? badgeItem.badge : undefined,
         allOutOfStock: items.every((i) => i.stock === 0),
         variants: items.map((i) => ({
           name: `${i.variety} (${weight}KG)`,
           price: `₹${i.price.toLocaleString("en-IN")}`,
-          badge: i.badge || undefined,
+          mrp: i.mrp ? `₹${i.mrp.toLocaleString("en-IN")}` : undefined,
+          showDiscount: i.showDiscount,
+          discountLabel: i.discountLabel,
+          // Only pass badge if showBadge is true
+          badge: i.showBadge ? i.badge : undefined,
           description: i.description || undefined,
           stock: i.stock,
+          showBadge: i.showBadge,
+          badgeType: i.badgeType,
         })),
       };
     });

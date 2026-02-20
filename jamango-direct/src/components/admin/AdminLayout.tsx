@@ -7,7 +7,8 @@ import {
   Clock,
   Boxes,
   LogOut,
-  Leaf
+  Leaf,
+  Users
 } from "lucide-react";
 import { useState } from "react";
 
@@ -18,6 +19,7 @@ const navItems = [
   { label: "Inventory", to: "/admin/inventory", icon: Boxes },
   { label: "Delivery Slots", to: "/admin/slots", icon: Clock },
   { label: "Analytics", to: "/admin/analytics", icon: BarChart3 },
+  { label: "User Contacts", to: "/admin/contacts", icon: Users },
 ];
 
 const AdminLayout = () => {

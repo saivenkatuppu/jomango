@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Pencil, Plus, X, RefreshCw, Check } from "lucide-react";
+import { Pencil, Plus, X, RefreshCw, Check, Bell } from "lucide-react";
 import client from "@/api/client";
 
 interface Product {
@@ -15,11 +15,43 @@ interface Product {
   active: boolean;
   description: string;
   badge: string;
+  mrp?: number;
+  showDiscount?: boolean;
+  discountLabel?: string;
+  showBadge?: boolean;
+  badgeType?: string;
 }
 
-const emptyForm = { name: "", variety: "", weight: "", price: "", stock: "", description: "", badge: "", active: true };
+const badgeOptions = [
+  "Best Seller",
+  "Most Popular",
+  "Recommended",
+  "Premium Quality",
+  "Limited Stock",
+  "Hot Deal",
+  "Trending",
+  "Seasonal Pick",
+  "Editor's Choice"
+];
+
+const emptyForm = {
+  name: "",
+  variety: "",
+  weight: "",
+  price: "",
+  stock: "",
+  description: "",
+  badge: "",
+  active: true,
+  mrp: "",
+  showDiscount: false,
+  discountLabel: "",
+  showBadge: false,
+  badgeType: "custom"
+};
 
 const AdminProducts = () => {
+  // ...
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -27,6 +59,10 @@ const AdminProducts = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<typeof emptyForm>(emptyForm);
   const [saving, setSaving] = useState(false);
+
+  // ... fetchProducts ...
+  // copy fetchProducts logic just to be safe if context requires large chunks, but here I can skip if I use precise Targeting
+  // For safety I will just replace the top block of the component logic
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -62,6 +98,11 @@ const AdminProducts = () => {
       description: p.description,
       badge: p.badge,
       active: p.active,
+      mrp: p.mrp ? String(p.mrp) : "",
+      showDiscount: p.showDiscount || false,
+      discountLabel: p.discountLabel || "",
+      showBadge: p.showBadge || false,
+      badgeType: p.badgeType || "custom"
     });
     setShowForm(true);
   };
@@ -81,6 +122,11 @@ const AdminProducts = () => {
       description: form.description,
       badge: form.badge,
       active: form.active,
+      mrp: Number(form.mrp) || undefined,
+      showDiscount: form.showDiscount,
+      discountLabel: form.discountLabel,
+      showBadge: form.showBadge,
+      badgeType: form.badgeType
     };
     try {
       if (editingId) {
@@ -97,6 +143,9 @@ const AdminProducts = () => {
       setSaving(false);
     }
   };
+
+  // ... rest of handlers can stay same or be part of next chunk if needed
+  // I will end this chunk before handleToggleActive
 
   const handleToggleActive = async (p: Product) => {
     try {
@@ -117,8 +166,19 @@ const AdminProducts = () => {
     }
   };
 
+  const handleNotify = async (product: Product) => {
+    if (!window.confirm(`Send notification to all users about "${product.name}"?`)) return;
+    try {
+      const { data } = await client.post('/notifications/trigger', { productId: product._id });
+      alert(data.message);
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Trigger failed");
+    }
+  };
+
   return (
     <div>
+      {/* ... header code ... */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="font-display text-3xl font-semibold text-foreground">Products</h1>
@@ -149,38 +209,221 @@ const AdminProducts = () => {
               <X className="h-5 w-5" />
             </button>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[
-              { label: "Product Name", key: "name", placeholder: "e.g. 3 KG Mango Box" },
-              { label: "Variety", key: "variety", placeholder: "e.g. Banganapalli" },
-              { label: "Weight (KG)", key: "weight", placeholder: "3", type: "number" },
-              { label: "Price (₹)", key: "price", placeholder: "899", type: "number" },
-              { label: "Stock (units)", key: "stock", placeholder: "50", type: "number" },
-              { label: "Badge (optional)", key: "badge", placeholder: "e.g. Best Seller" },
-            ].map(({ label, key, placeholder, type }) => (
-              <div key={key} className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</label>
+
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Basic Info */}
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Product Name</label>
                 <Input
-                  type={type || "text"}
-                  placeholder={placeholder}
-                  value={(form as any)[key]}
-                  onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+                  placeholder="e.g. 3 KG Mango Box"
+                  value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                   className="h-10 rounded-xl"
                 />
               </div>
-            ))}
-            <div className="space-y-1 sm:col-span-2">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Description</label>
-              <Input
-                placeholder="Short description..."
-                value={form.description}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                className="h-10 rounded-xl"
-              />
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Variety</label>
+                <Input
+                  placeholder="e.g. Banganapalli"
+                  value={form.variety}
+                  onChange={(e) => setForm((f) => ({ ...f, variety: e.target.value }))}
+                  className="h-10 rounded-xl"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Weight (KG)</label>
+                <Input
+                  type="number"
+                  placeholder="3"
+                  value={form.weight}
+                  onChange={(e) => setForm((f) => ({ ...f, weight: e.target.value }))}
+                  className="h-10 rounded-xl"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Stock (units)</label>
+                <Input
+                  type="number"
+                  placeholder="50"
+                  value={form.stock}
+                  onChange={(e) => setForm((f) => ({ ...f, stock: e.target.value }))}
+                  className="h-10 rounded-xl"
+                />
+              </div>
             </div>
+
+            {/* Pricing Section (Shopify Style) */}
+            <div className="bg-muted/30 p-4 rounded-xl space-y-4 border border-border/50">
+              <h3 className="font-semibold text-sm text-foreground uppercase tracking-wider">Pricing & Discounts</h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Base Price (MRP) ₹</label>
+                  <Input
+                    type="number"
+                    placeholder="1000"
+                    value={form.mrp}
+                    onChange={(e) => setForm((f) => ({ ...f, mrp: e.target.value }))}
+                    className="h-10 rounded-xl bg-white"
+                  />
+                  <p className="text-[10px] text-muted-foreground">Original price before discount.</p>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-foreground uppercase tracking-wider">Selling Price ₹</label>
+                  <Input
+                    type="number"
+                    placeholder="899"
+                    value={form.price}
+                    onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                    className="h-10 rounded-xl font-bold bg-white border-[hsl(44,80%,46%)]/50 focus:border-[hsl(44,80%,46%)]"
+                  />
+                  <p className="text-[10px] text-muted-foreground">Customers will pay this amount.</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 pt-2">
+                <div className="flex items-center gap-3 bg-white p-2 rounded-lg border border-border/50">
+                  <Switch checked={form.showDiscount} onCheckedChange={(v) => setForm((f) => ({ ...f, showDiscount: v }))} id="show-discount" />
+                  <label htmlFor="show-discount" className="text-sm font-medium cursor-pointer">Show Discount Badge</label>
+                </div>
+              </div>
+
+              {form.showDiscount && (
+                <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Discount Label</label>
+                      {Number(form.mrp) > Number(form.price) && Number(form.mrp) > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const percent = Math.round(((Number(form.mrp) - Number(form.price)) / Number(form.mrp)) * 100);
+                            setForm(f => ({ ...f, discountLabel: String(percent) }));
+                          }}
+                          className="text-[10px] text-primary hover:underline font-medium cursor-pointer"
+                        >
+                          Auto-apply {Math.round(((Number(form.mrp) - Number(form.price)) / Number(form.mrp)) * 100)}% OFF
+                        </button>
+                      )}
+                    </div>
+                    <Input
+                      placeholder="e.g. 30 (for 30% OFF), Special Price"
+                      value={form.discountLabel}
+                      onChange={(e) => setForm((f) => ({ ...f, discountLabel: e.target.value }))}
+                      className="h-10 rounded-xl bg-white"
+                    />
+                    {/* Preview */}
+                    <div className="text-xs text-muted-foreground pt-1 flex items-center gap-2">
+                      <span>Preview:</span>
+                      {form.discountLabel ? (
+                        <span className="bg-[hsl(44,80%,46%)] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                          {/^\d+$/.test(form.discountLabel) ? `${form.discountLabel}% OFF` : form.discountLabel}
+                        </span>
+                      ) : (
+                        <span className="italic opacity-50">No label</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Description</label>
+                <Input
+                  placeholder="Short description..."
+                  value={form.description}
+                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  className="h-10 rounded-xl"
+                />
+              </div>
+
+              {/* Product Badge Section (Optional) */}
+              <div className=" space-y-4 border border-border/50 bg-muted/30 p-4 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-sm text-foreground uppercase tracking-wider">Product Badge</h3>
+                  <div className="flex items-center gap-3 bg-white p-1.5 rounded-lg border border-border/50">
+                    <label htmlFor="show-badge" className={`text-xs font-medium cursor-pointer transition-colors ${form.showBadge ? "text-foreground" : "text-muted-foreground"}`}>
+                      {form.showBadge ? "Badge ON" : "Badge OFF"}
+                    </label>
+                    <Switch checked={form.showBadge} onCheckedChange={(v) => setForm((f) => ({ ...f, showBadge: v }))} id="show-badge" />
+                  </div>
+                </div>
+
+                {form.showBadge && (
+                  <div className="animate-in fade-in slide-in-from-top-2 duration-200 space-y-4">
+                    {/* Badge Type Toggle */}
+                    <div className="flex p-1 bg-white border border-border/50 rounded-lg w-fit">
+                      <button
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, badgeType: 'preset' }))}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${form.badgeType === 'preset' ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                      >
+                        Select Preset
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, badgeType: 'custom' }))}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${form.badgeType === 'custom' ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                      >
+                        Custom Text
+                      </button>
+                    </div>
+
+                    {/* Preset Selection */}
+                    {form.badgeType === 'preset' && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {badgeOptions.map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => setForm(f => ({ ...f, badge: opt }))}
+                            className={`text-xs py-2 px-3 rounded-lg border transition-all text-left truncate ${form.badge === opt
+                              ? "border-[hsl(44,80%,46%)] bg-[hsl(44,80%,46%)]/5 text-[hsl(44,80%,46%)] font-medium"
+                              : "border-border/40 bg-white text-muted-foreground hover:border-border hover:text-foreground"
+                              }`}
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Custom Input */}
+                    {form.badgeType === 'custom' && (
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Custom Badge Text</label>
+                        <Input
+                          placeholder="e.g. Farm Fresh"
+                          value={form.badge}
+                          onChange={(e) => setForm((f) => ({ ...f, badge: e.target.value }))}
+                          className="h-10 rounded-xl bg-white"
+                        />
+                      </div>
+                    )}
+
+                    {/* Preview */}
+                    <div className="text-xs text-muted-foreground pt-2 border-t border-border/30 flex items-center gap-2">
+                      <span>Preview:</span>
+                      {form.badge ? (
+                        <span className="bg-[hsl(44,80%,46%)] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                          {form.badge}
+                        </span>
+                      ) : (
+                        <span className="italic opacity-50">No text selected</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="flex items-center gap-3">
-              <Switch checked={form.active} onCheckedChange={(v) => setForm((f) => ({ ...f, active: v }))} />
-              <span className="text-sm font-body text-foreground">{form.active ? "Active (visible to customers)" : "Inactive (hidden)"}</span>
+              <Switch checked={form.active} onCheckedChange={(v) => setForm((f) => ({ ...f, active: v }))} id="active-switch" />
+              <label htmlFor="active-switch" className="text-sm font-body text-foreground">{form.active ? "Active (visible to customers)" : "Inactive (hidden)"}</label>
             </div>
           </div>
           <div className="flex gap-3 mt-6">
@@ -209,7 +452,9 @@ const AdminProducts = () => {
               <div className="flex items-center gap-3 mb-1 flex-wrap">
                 <h3 className="font-display text-lg font-semibold text-foreground">{product.name}</h3>
                 {product.badge && (
-                  <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full font-body">{product.badge}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-body ${product.showBadge ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground opacity-60 italic"}`} title={product.showBadge ? "Badge Visible" : "Badge Hidden"}>
+                    {product.badge} {product.showBadge ? "" : "(Hidden)"}
+                  </span>
                 )}
                 {!product.active && (
                   <span className="bg-muted text-muted-foreground text-xs px-2 py-0.5 rounded-full font-body">Inactive</span>
@@ -225,6 +470,9 @@ const AdminProducts = () => {
             </div>
             <div className="flex items-center gap-3 shrink-0">
               <Switch checked={product.active} onCheckedChange={() => handleToggleActive(product)} />
+              <Button variant="outline" size="icon" onClick={() => handleNotify(product)} title="Send Notification">
+                <Bell className="h-4 w-4 text-blue-600" />
+              </Button>
               <Button variant="outline" size="icon" onClick={() => openEdit(product)}>
                 <Pencil className="h-4 w-4" />
               </Button>
