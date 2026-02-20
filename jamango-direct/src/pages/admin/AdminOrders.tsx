@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import client from "@/api/client";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, X, MapPin } from "lucide-react";
 
 interface OrderItem {
   name: string;
@@ -42,6 +42,7 @@ const AdminOrders = () => {
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -133,7 +134,7 @@ const AdminOrders = () => {
         <table className="w-full">
           <thead>
             <tr className="border-b border-border">
-              {["Order ID", "Customer", "Phone", "Items", "Payment", "Status", "Amount", "Date", "Update Status"].map((h) => (
+              {["Order ID", "Customer", "Items", "Payment", "Status", "Amount", "Date", "Actions"].map((h) => (
                 <th key={h} className="text-left p-4 font-body text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                   {h}
                 </th>
@@ -141,42 +142,58 @@ const AdminOrders = () => {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((order) => (
-              <tr key={order._id} className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors">
-                <td className="p-4 font-body text-xs font-mono text-muted-foreground">{order._id.slice(-8).toUpperCase()}</td>
-                <td className="p-4 font-body text-sm font-medium text-foreground whitespace-nowrap">{order.customerName}</td>
-                <td className="p-4 font-body text-sm text-muted-foreground">{order.customerPhone}</td>
-                <td className="p-4 font-body text-xs text-muted-foreground max-w-[160px]">
-                  {order.items.map((i) => `${i.name}${i.variant ? ` (${i.variant})` : ""} ×${i.quantity}`).join(", ")}
-                </td>
-                <td className="p-4">
-                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${order.paymentMode === "cod" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}`}>
-                    {order.paymentMode.toUpperCase()}
-                  </span>
-                </td>
-                <td className="p-4">
-                  <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[order.status] || "bg-gray-100 text-gray-600"}`}>
-                    {order.status}
-                  </span>
-                </td>
-                <td className="p-4 font-body text-sm font-medium text-foreground whitespace-nowrap">₹{order.totalAmount.toLocaleString()}</td>
-                <td className="p-4 font-body text-xs text-muted-foreground whitespace-nowrap">
-                  {new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                </td>
-                <td className="p-4">
-                  <select
-                    value={order.status}
-                    disabled={updatingId === order._id}
-                    onChange={(e) => handleStatusUpdate(order._id, e.target.value)}
-                    className="text-xs border border-border rounded-lg px-2 py-1.5 bg-background text-foreground font-body focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50 cursor-pointer"
-                  >
-                    {["Pending", "Confirmed", "Out for delivery", "Delivered", "Cancelled"].map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </td>
-              </tr>
-            ))}
+            {filtered.map((order) => {
+              const totalItems = new Set(order.items.map(i => i.name)).size || order.items.length;
+              const totalBoxes = order.items.reduce((sum, item) => sum + item.quantity, 0);
+
+              return (
+                <tr key={order._id} className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors">
+                  <td className="p-4 font-body text-xs font-mono text-muted-foreground">{order._id.slice(-8).toUpperCase()}</td>
+                  <td className="p-4 font-body text-sm font-medium text-foreground whitespace-nowrap">
+                    {order.customerName}
+                    <div className="text-xs text-muted-foreground mt-0.5">{order.customerPhone}</div>
+                  </td>
+                  <td className="p-4 font-body text-xs text-muted-foreground whitespace-nowrap">
+                    {totalItems} items • {totalBoxes} boxes
+                  </td>
+                  <td className="p-4">
+                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${order.paymentMode === "cod" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}`}>
+                      {order.paymentMode.toUpperCase()}
+                    </span>
+                  </td>
+                  <td className="p-4">
+                    <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[order.status] || "bg-gray-100 text-gray-600"}`}>
+                      {order.status}
+                    </span>
+                  </td>
+                  <td className="p-4 font-body text-sm font-medium text-foreground whitespace-nowrap">₹{order.totalAmount.toLocaleString()}</td>
+                  <td className="p-4 font-body text-xs text-muted-foreground whitespace-nowrap">
+                    {new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: '2-digit', minute: '2-digit' })}
+                  </td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedOrder(order)}
+                      >
+                        View Details
+                      </Button>
+                      <select
+                        value={order.status}
+                        disabled={updatingId === order._id}
+                        onChange={(e) => handleStatusUpdate(order._id, e.target.value)}
+                        className="text-xs border border-border rounded-lg px-2 py-1.5 bg-background text-foreground font-body focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50 cursor-pointer"
+                      >
+                        {["Pending", "Confirmed", "Out for delivery", "Delivered", "Cancelled"].map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 
@@ -192,6 +209,108 @@ const AdminOrders = () => {
           </div>
         )}
       </div>
+
+      {/* Order Details Modal */}
+      {selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm p-4 sm:p-6 sm:justify-end sm:items-stretch overflow-y-auto">
+          <div className="bg-background rounded-2xl w-full max-w-2xl sm:max-w-md sm:w-[450px] sm:h-full sm:rounded-none sm:rounded-l-2xl shadow-2xl overflow-hidden flex flex-col relative animate-in slide-in-from-bottom-4 sm:slide-in-from-right-full duration-300">
+            {/* Header */}
+            <div className="p-6 border-b border-border bg-secondary/30 flex items-center justify-between sticky top-0 z-10 w-full">
+              <div>
+                <h2 className="font-display text-xl font-bold text-foreground">
+                  Order {selectedOrder._id.slice(-8).toUpperCase()}
+                </h2>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-medium ${selectedOrder.paymentMode === "cod" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}`}>
+                    {selectedOrder.paymentMode.toUpperCase()}
+                  </span>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] whitespace-nowrap font-medium ${statusColors[selectedOrder.status] || "bg-gray-100 text-gray-600"}`}>
+                    {selectedOrder.status}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="p-2 hover:bg-secondary rounded-full transition-colors text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 overflow-y-auto w-full flex-1">
+
+              {/* Customer Info */}
+              <div className="mb-8">
+                <h3 className="font-body text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 border-b border-border pb-2">Customer Details</h3>
+                <div className="space-y-2 font-body text-sm">
+                  <p className="font-medium text-foreground">{selectedOrder.customerName}</p>
+                  <p className="text-muted-foreground">{selectedOrder.customerPhone}</p>
+                  {selectedOrder.customerEmail && <p className="text-muted-foreground">{selectedOrder.customerEmail}</p>}
+                </div>
+              </div>
+
+              {/* Delivery Info */}
+              <div className="mb-8">
+                <h3 className="font-body text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 border-b border-border pb-2">Delivery Address</h3>
+                <div className="flex gap-3 text-sm font-body bg-secondary/30 p-4 rounded-xl border border-secondary">
+                  <MapPin className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-foreground">{selectedOrder.shippingAddress.address}</p>
+                    <p className="text-muted-foreground mt-1">
+                      {selectedOrder.shippingAddress.city} - {selectedOrder.shippingAddress.zip}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <div>
+                <h3 className="font-body text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 border-b border-border pb-2">Order Items</h3>
+                <div className="border border-border rounded-xl overflow-hidden mb-4">
+                  <table className="w-full text-sm font-body">
+                    <thead className="bg-secondary/30 text-xs text-muted-foreground text-left">
+                      <tr>
+                        <th className="p-3 font-medium">Item</th>
+                        <th className="p-3 font-medium text-center">Qty</th>
+                        <th className="p-3 font-medium text-right">Price</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {selectedOrder.items.map((item, idx) => (
+                        <tr key={idx} className="hover:bg-secondary/10">
+                          <td className="p-3">
+                            <p className="font-medium text-foreground">{item.name}</p>
+                            {item.variant && <p className="text-xs text-muted-foreground mt-0.5">{item.variant}</p>}
+                          </td>
+                          <td className="p-3 text-center text-foreground font-medium">{item.quantity}</td>
+                          <td className="p-3 text-right text-foreground font-medium">₹{(item.price * item.quantity).toLocaleString('en-IN')}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Subtotal */}
+                <div className="space-y-2 text-sm font-body bg-secondary/30 p-4 rounded-xl border border-secondary">
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Total Boxes</span>
+                    <span>{selectedOrder.items.reduce((sum, item) => sum + item.quantity, 0)}</span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Subtotal</span>
+                    <span>₹{selectedOrder.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold text-foreground text-base pt-2 border-t border-border mt-2">
+                    <span>Order Total</span>
+                    <span>₹{selectedOrder.totalAmount.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

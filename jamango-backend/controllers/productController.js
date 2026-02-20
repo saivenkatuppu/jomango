@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const Product = require('../models/Product');
+const InventoryLog = require('../models/InventoryLog');
 
 // @desc    Get all active products (including out-of-stock, so frontend can show badge)
 // @route   GET /api/products
@@ -65,7 +66,12 @@ const updateProduct = asyncHandler(async (req, res) => {
     product.variety = variety ?? product.variety;
     product.weight = weight ?? product.weight;
     product.price = price ?? product.price;
-    product.stock = stock ?? product.stock;
+
+    // Handle stock changes
+    let oldStock = product.stock;
+    if (stock !== undefined && stock !== product.stock) {
+        product.stock = stock;
+    }
     product.active = active !== undefined ? active : product.active;
     product.description = description ?? product.description;
     product.badge = badge ?? product.badge;
@@ -81,6 +87,21 @@ const updateProduct = asyncHandler(async (req, res) => {
     product.badgeType = badgeType ?? product.badgeType;
 
     const updated = await product.save();
+
+    // Log the adjustment if stock was changed
+    const { reason } = req.body;
+    if (stock !== undefined && oldStock !== Number(stock)) {
+        await InventoryLog.create({
+            product: product._id,
+            productName: product.name,
+            previousStock: oldStock,
+            newStock: product.stock,
+            adjustmentAmount: product.stock - oldStock,
+            reason: reason || 'Manual adjustment',
+            adjustedBy: req.user ? req.user.name : 'Admin',
+        });
+    }
+
     res.json(updated);
 });
 
@@ -99,10 +120,19 @@ const deleteProduct = asyncHandler(async (req, res) => {
     res.json({ message: 'Product removed' });
 });
 
+// @desc    Get inventory logs
+// @route   GET /api/admin/products/inventory-logs
+// @access  Private/Admin
+const getInventoryLogs = asyncHandler(async (req, res) => {
+    const logs = await InventoryLog.find({}).sort({ createdAt: -1 }).limit(50);
+    res.json(logs);
+});
+
 module.exports = {
     getProducts,
     getAdminProducts,
     createProduct,
     updateProduct,
     deleteProduct,
+    getInventoryLogs,
 };

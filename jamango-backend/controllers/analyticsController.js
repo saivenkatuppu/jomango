@@ -22,6 +22,9 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         lowStockProducts,
         weeklyOrders,
         productBreakdown,
+        todayBoxesResult,
+        todayBoxesByPaymentResult,
+        cancelledTodayResult,
     ] = await Promise.all([
         // Total orders ever
         Order.countDocuments(),
@@ -71,11 +74,30 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             },
             { $sort: { count: -1 } },
         ]),
+        // Boxes ordered today
+        Order.aggregate([
+            { $match: { createdAt: { $gte: startOfToday } } },
+            { $unwind: '$items' },
+            { $group: { _id: null, totalBoxes: { $sum: '$items.quantity' } } }
+        ]),
+        // Boxes ordered today grouped by payment mode
+        Order.aggregate([
+            { $match: { createdAt: { $gte: startOfToday } } },
+            { $unwind: '$items' },
+            { $group: { _id: '$paymentMode', totalBoxes: { $sum: '$items.quantity' } } }
+        ]),
+        // Cancelled orders today
+        Order.countDocuments({ status: 'Cancelled', createdAt: { $gte: startOfToday } })
     ]);
 
     const totalRevenue = revenueResult[0]?.total || 0;
     const todayRevenue = todayRevenueResult[0]?.total || 0;
     const avgOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
+
+    const boxesToday = todayBoxesResult[0]?.totalBoxes || 0;
+    const codBoxesToday = todayBoxesByPaymentResult.find(r => r._id === 'cod')?.totalBoxes || 0;
+    const paidBoxesToday = todayBoxesByPaymentResult.find(r => r._id === 'online')?.totalBoxes || 0;
+    const cancelledToday = cancelledTodayResult || 0;
 
     res.json({
         stats: {
@@ -86,6 +108,10 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             totalRevenue,
             todayRevenue,
             avgOrderValue,
+            boxesToday,
+            codBoxesToday,
+            paidBoxesToday,
+            cancelledToday
         },
         recentOrders,
         lowStockProducts,

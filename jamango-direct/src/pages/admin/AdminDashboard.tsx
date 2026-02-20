@@ -28,9 +28,15 @@ interface StatsData {
     totalRevenue: number;
     todayRevenue: number;
     avgOrderValue: number;
+    boxesToday: number;
+    codBoxesToday: number;
+    paidBoxesToday: number;
+    cancelledToday: number;
   };
   recentOrders: Order[];
   lowStockProducts: LowStockProduct[];
+  weeklyOrders: { _id: string; orders: number; revenue: number }[];
+  productBreakdown: { _id: string; count: number; revenue: number }[];
 }
 
 const statusColors: Record<string, string> = {
@@ -140,6 +146,35 @@ const AdminDashboard = () => {
           ))}
       </div>
 
+      {/* Today's Deep Dive Grid */}
+      {data && (
+        <div className="mb-8">
+          <h2 className="font-display text-lg font-semibold text-foreground mb-4">Today's Performance Overview</h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-card rounded-xl border border-border p-4 bg-secondary/10">
+              <p className="font-body text-xs text-muted-foreground mb-1 uppercase tracking-wider font-semibold">Boxes Ordered Today</p>
+              <p className="font-display text-2xl font-bold text-foreground">{data.stats.boxesToday}</p>
+              <p className="font-body text-xs text-muted-foreground mt-1">Total physical units moved</p>
+            </div>
+            <div className="bg-card rounded-xl border border-border p-4 bg-blue-50/50">
+              <p className="font-body text-xs text-blue-700/70 mb-1 uppercase tracking-wider font-semibold">Pre-Paid Boxes</p>
+              <p className="font-display text-2xl font-bold text-blue-700">{data.stats.paidBoxesToday}</p>
+              <p className="font-body text-xs text-blue-700/70 mt-1">No collection required</p>
+            </div>
+            <div className="bg-card rounded-xl border border-border p-4 bg-orange-50/50">
+              <p className="font-body text-xs text-orange-700/70 mb-1 uppercase tracking-wider font-semibold">COD Boxes Exposure</p>
+              <p className="font-display text-2xl font-bold text-orange-700">{data.stats.codBoxesToday}</p>
+              <p className="font-body text-xs text-orange-700/70 mt-1">Cash to be collected</p>
+            </div>
+            <div className="bg-card rounded-xl border border-border p-4 bg-red-50/50">
+              <p className="font-body text-xs text-red-700/70 mb-1 uppercase tracking-wider font-semibold">Cancelled Orders</p>
+              <p className="font-display text-2xl font-bold text-red-700">{data.stats.cancelledToday}</p>
+              <p className="font-body text-xs text-red-700/70 mt-1">Inventory restored automatically</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Low Stock Alert */}
       {data && data.lowStockProducts.length > 0 && (
         <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 mb-8 flex items-start gap-3">
@@ -152,6 +187,92 @@ const AdminDashboard = () => {
               </p>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Analytics Grid: Top Products & Sales Trend */}
+      {data && (
+        <div className="grid lg:grid-cols-2 gap-8 mb-8">
+
+          {/* Top Selling Items */}
+          <div className="bg-card rounded-xl border border-border">
+            <div className="p-5 border-b border-border">
+              <h2 className="font-display text-lg font-semibold text-foreground">Top Performing Items</h2>
+            </div>
+            <div className="p-5 space-y-4">
+              {data.productBreakdown.length > 0 ? (
+                data.productBreakdown.slice(0, 5).map((product) => {
+                  const maxCount = Math.max(...data.productBreakdown.map((p) => p.count));
+                  const percentage = Math.max((product.count / maxCount) * 100, 5);
+
+                  return (
+                    <div key={product._id} className="relative">
+                      <div className="flex justify-between font-body text-sm mb-1">
+                        <span className="font-medium text-foreground">{product._id}</span>
+                        <span className="text-muted-foreground">{product.count} boxes sold </span>
+                      </div>
+                      <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full transition-all duration-500"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 text-right">
+                        ₹{product.revenue.toLocaleString("en-IN")}
+                      </p>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center text-muted-foreground font-body py-8 text-sm">
+                  No product data available yet.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Weekly Trend */}
+          <div className="bg-card rounded-xl border border-border">
+            <div className="p-5 border-b border-border">
+              <h2 className="font-display text-lg font-semibold text-foreground">7-Day Sales Trend</h2>
+            </div>
+            <div className="p-5">
+              {data.weeklyOrders.length > 0 ? (
+                <div className="space-y-4 flex flex-col justify-end h-[280px]">
+                  {data.weeklyOrders.map((day) => {
+                    const maxRev = Math.max(...data.weeklyOrders.map((d) => d.revenue));
+                    const percentage = Math.max((day.revenue / maxRev) * 100, 5);
+                    const dateFormatted = new Date(day._id).toLocaleDateString("en-US", { weekday: 'short', month: 'short', day: 'numeric' });
+
+                    return (
+                      <div key={day._id} className="flex items-center gap-4 group">
+                        <div className="w-24 text-right text-xs text-muted-foreground font-body whitespace-nowrap">
+                          {dateFormatted}
+                        </div>
+                        <div className="flex-1 relative h-6 flex items-center">
+                          <div
+                            className="absolute left-0 h-6 bg-blue-100 border border-blue-200 rounded transition-all duration-500 group-hover:bg-blue-200"
+                            style={{ width: `${percentage}%` }}
+                          />
+                          <span className="relative z-10 pl-3 text-xs font-semibold text-blue-900 font-body">
+                            ₹{day.revenue.toLocaleString("en-IN")}
+                          </span>
+                        </div>
+                        <div className="w-16 text-xs text-muted-foreground font-body text-right">
+                          {day.orders} ord.
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground font-body py-20 text-sm">
+                  No sales data available for the last 7 days.
+                </div>
+              )}
+            </div>
+          </div>
+
         </div>
       )}
 

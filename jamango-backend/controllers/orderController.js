@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const Order = require('../models/Order');
+const Product = require('../models/Product');
 const { createShiprocketOrder } = require('../utils/shiprocket');
 
 // @desc    Create a new order (from cart)
@@ -21,6 +22,23 @@ const createOrder = asyncHandler(async (req, res) => {
     if (!items || items.length === 0) {
         res.status(400);
         throw new Error('No order items');
+    }
+
+    // Process inventory
+    for (const item of items) {
+        // Try to find the product. 'item.name' might map to `Product.name` or `Product.variety` + weight etc.
+        // Assuming item.name matches product.variety + weight or similar, or we might need productId.
+        // Looking at CheckoutPage: item.name is categoryTitle (e.g., "3 KG Box"), item.variant is fullName ("Kesar 3KG")
+        // But the schema is Product: { name: "Kesar 3KG", variety: "Kesar", weight: 3... }
+        // Let's decrement stock by matching `name: item.variant` or `name: item.name` if variant is absent.
+
+        const productName = item.variant || item.name;
+        if (productName) {
+            await Product.findOneAndUpdate(
+                { name: productName },
+                { $inc: { stock: -item.quantity } }
+            );
+        }
     }
 
     const order = await Order.create({
@@ -59,6 +77,7 @@ const getAdminOrders = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 const updateOrderStatus = asyncHandler(async (req, res) => {
     const order = await Order.findById(req.params.id);
+    const Product = require('../models/Product'); // Ensure it is available if needed locally
 
     if (!order) {
         res.status(404);
@@ -71,6 +90,20 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     if (!validStatuses.includes(status)) {
         res.status(400);
         throw new Error('Invalid status value');
+    }
+
+    // Inventory restoration logic
+    if (status === 'Cancelled' && order.status !== 'Cancelled') {
+        // Restock items
+        for (const item of order.items) {
+            const productName = item.variant || item.name;
+            if (productName) {
+                await Product.findOneAndUpdate(
+                    { name: productName },
+                    { $inc: { stock: item.quantity } }
+                );
+            }
+        }
     }
 
     order.status = status;

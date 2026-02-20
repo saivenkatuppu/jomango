@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const Order = require('../models/Order');
+const Product = require('../models/Product');
 const { createShiprocketOrder } = require('../utils/shiprocket');
 
 // @desc    Create Razorpay Order
@@ -82,6 +83,19 @@ const verifyPayment = asyncHandler(async (req, res) => {
 
             // Trigger Shiprocket asynchronously
             createShiprocketOrder(order);
+
+            // Deduct stock
+            if (items && items.length > 0) {
+                for (const item of items) {
+                    const productName = item.variant || item.name;
+                    if (productName) {
+                        await Product.findOneAndUpdate(
+                            { name: productName },
+                            { $inc: { stock: -item.quantity } }
+                        );
+                    }
+                }
+            }
 
             res.json({
                 success: true,
