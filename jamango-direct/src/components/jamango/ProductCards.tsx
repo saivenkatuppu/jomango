@@ -77,7 +77,7 @@ const ProductCard = ({ title, subTitle, price, mrp, showDiscount, discountLabel,
         </div>
       )}
       {!allOutOfStock && !isBestSeller && !isNew && badge && (
-        <div className="absolute top-4 right-4 bg-blue-600 text-white text-[9px] font-bold px-3 py-1.5 rounded-full shadow-sm z-20 uppercase tracking-[0.15em]">
+        <div className="absolute top-4 right-4 bg-green-600 text-white text-[9px] font-bold px-3 py-1.5 rounded-full shadow-sm z-20 uppercase tracking-[0.15em]">
           {badge}
         </div>
       )}
@@ -89,7 +89,7 @@ const ProductCard = ({ title, subTitle, price, mrp, showDiscount, discountLabel,
 
       {/* Discount Badge on Card Image if enabled */}
       {!allOutOfStock && showDiscount && discountLabel && (
-        <div className="absolute top-4 left-4 bg-[hsl(44,80%,46%)] text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm z-20 uppercase tracking-widest">
+        <div className="absolute top-4 left-4 bg-green-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm z-20 uppercase tracking-widest">
           {/^\d+$/.test(discountLabel) ? `${discountLabel}% OFF` : discountLabel}
         </div>
       )}

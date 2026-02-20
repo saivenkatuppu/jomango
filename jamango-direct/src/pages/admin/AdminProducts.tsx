@@ -112,6 +112,10 @@ const AdminProducts = () => {
       alert("Name, variety, weight, and price are required.");
       return;
     }
+    if (Number(form.mrp) > 0 && Number(form.price) > Number(form.mrp)) {
+      alert("⚠️ Selling Price cannot be greater than Base Price.");
+      return;
+    }
     setSaving(true);
     const payload = {
       name: form.name,
@@ -258,28 +262,45 @@ const AdminProducts = () => {
               <h3 className="font-semibold text-sm text-foreground uppercase tracking-wider">Pricing & Discounts</h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
+                <div className="space-y-1 relative">
                   <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Base Price (MRP) ₹</label>
                   <Input
                     type="number"
                     placeholder="1000"
                     value={form.mrp}
-                    onChange={(e) => setForm((f) => ({ ...f, mrp: e.target.value }))}
+                    onChange={(e) => {
+                      const newMrp = e.target.value;
+                      let newDiscountLabel = form.discountLabel;
+                      if (newMrp && form.price && Number(newMrp) > Number(form.price)) {
+                        newDiscountLabel = String(Math.round(((Number(newMrp) - Number(form.price)) / Number(newMrp)) * 100));
+                      }
+                      setForm((f) => ({ ...f, mrp: newMrp, discountLabel: newDiscountLabel }));
+                    }}
                     className="h-10 rounded-xl bg-white"
                   />
                   <p className="text-[10px] text-muted-foreground">Original price before discount.</p>
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-1 relative">
                   <label className="text-xs font-medium text-foreground uppercase tracking-wider">Selling Price ₹</label>
                   <Input
                     type="number"
                     placeholder="899"
                     value={form.price}
-                    onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-                    className="h-10 rounded-xl font-bold bg-white border-[hsl(44,80%,46%)]/50 focus:border-[hsl(44,80%,46%)]"
+                    onChange={(e) => {
+                      const newPrice = e.target.value;
+                      let newDiscountLabel = form.discountLabel;
+                      if (form.mrp && newPrice && Number(form.mrp) > Number(newPrice)) {
+                        newDiscountLabel = String(Math.round(((Number(form.mrp) - Number(newPrice)) / Number(form.mrp)) * 100));
+                      }
+                      setForm((f) => ({ ...f, price: newPrice, discountLabel: newDiscountLabel }));
+                    }}
+                    className="h-10 rounded-xl font-bold bg-[#FEF3C7] text-yellow-900 border-yellow-400 focus:border-yellow-500 placeholder:text-yellow-700/50 focus-visible:ring-yellow-400 transition-colors"
                   />
                   <p className="text-[10px] text-muted-foreground">Customers will pay this amount.</p>
+                  {Number(form.mrp) > 0 && Number(form.price) > Number(form.mrp) && (
+                    <p className="text-xs text-red-600 font-medium absolute -bottom-5 left-0">⚠️ Selling Price &gt; Base Price</p>
+                  )}
                 </div>
               </div>
 
@@ -318,7 +339,7 @@ const AdminProducts = () => {
                     <div className="text-xs text-muted-foreground pt-1 flex items-center gap-2">
                       <span>Preview:</span>
                       {form.discountLabel ? (
-                        <span className="bg-[hsl(44,80%,46%)] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                        <span className="bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
                           {/^\d+$/.test(form.discountLabel) ? `${form.discountLabel}% OFF` : form.discountLabel}
                         </span>
                       ) : (
@@ -382,7 +403,7 @@ const AdminProducts = () => {
                             type="button"
                             onClick={() => setForm(f => ({ ...f, badge: opt }))}
                             className={`text-xs py-2 px-3 rounded-lg border transition-all text-left truncate ${form.badge === opt
-                              ? "border-[hsl(44,80%,46%)] bg-[hsl(44,80%,46%)]/5 text-[hsl(44,80%,46%)] font-medium"
+                              ? "border-green-600 bg-green-50 text-green-700 font-bold"
                               : "border-border/40 bg-white text-muted-foreground hover:border-border hover:text-foreground"
                               }`}
                           >
@@ -409,7 +430,7 @@ const AdminProducts = () => {
                     <div className="text-xs text-muted-foreground pt-2 border-t border-border/30 flex items-center gap-2">
                       <span>Preview:</span>
                       {form.badge ? (
-                        <span className="bg-[hsl(44,80%,46%)] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                        <span className="bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
                           {form.badge}
                         </span>
                       ) : (
