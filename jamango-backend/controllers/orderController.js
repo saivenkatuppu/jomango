@@ -134,7 +134,15 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 // @route   GET /api/orders/mine
 // @access  Private
 const getMyOrders = asyncHandler(async (req, res) => {
-    const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
+    const conditions = [{ user: req.user._id }];
+    if (req.user.email) {
+        conditions.push({ customerEmail: req.user.email });
+    }
+    if (req.user.phone) {
+        conditions.push({ customerPhone: req.user.phone });
+    }
+
+    const orders = await Order.find({ $or: conditions }).sort({ createdAt: -1 });
     res.json(orders);
 });
 
@@ -176,10 +184,35 @@ const cancelMyOrder = asyncHandler(async (req, res) => {
     res.json(updated);
 });
 
+// @desc    Get order by ID
+// @route   GET /api/orders/:id
+// @access  Private
+const getMyOrderById = asyncHandler(async (req, res) => {
+    const order = await Order.findById(req.params.id);
+
+    if (order) {
+        // Only allow if user is owner or matches email/phone
+        const isOwner = (order.user && order.user.toString() === req.user._id.toString()) ||
+            order.customerEmail === req.user.email ||
+            order.customerPhone === req.user.phone;
+
+        if (isOwner) {
+            res.json(order);
+        } else {
+            res.status(403);
+            throw new Error('Not authorized to view this order');
+        }
+    } else {
+        res.status(404);
+        throw new Error('Order not found');
+    }
+});
+
 module.exports = {
     createOrder,
     getAdminOrders,
     updateOrderStatus,
     getMyOrders,
     cancelMyOrder,
+    getMyOrderById,
 };

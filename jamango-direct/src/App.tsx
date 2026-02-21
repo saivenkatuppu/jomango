@@ -23,6 +23,7 @@ import { CartProvider } from "./context/CartContext";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderSuccessPage from "./pages/OrderSuccessPage";
 import MyOrdersPage from "./pages/MyOrdersPage";
+import OrderDetailsPage from "./pages/OrderDetailsPage";
 import PrivacyPolicy from "./pages/policies/PrivacyPolicy";
 import TermsOfService from "./pages/policies/TermsOfService";
 
@@ -47,6 +48,7 @@ const App = () => (
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/order-success" element={<OrderSuccessPage />} />
               <Route path="/my-orders" element={<MyOrdersPage />} />
+              <Route path="/my-orders/:orderId" element={<OrderDetailsPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />

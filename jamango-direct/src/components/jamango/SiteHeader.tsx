@@ -21,7 +21,8 @@ const SiteHeader = () => {
   const navigate = useNavigate();
 
   const location = useLocation();
-  const isBlogsPage = location.pathname === "/blogs";
+  const darkRoutes = ["/blogs", "/my-orders", "/order-success", "/checkout"];
+  const isDarkRoute = darkRoutes.includes(location.pathname) || location.pathname.includes("order");
 
   useEffect(() => {
     const handleScroll = () => {
@@ -31,7 +32,7 @@ const SiteHeader = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const useDarkText = scrolled || isBlogsPage;
+  const useDarkText = scrolled || isDarkRoute;
 
   const navLinks = [
     { label: "Home", href: "/" },

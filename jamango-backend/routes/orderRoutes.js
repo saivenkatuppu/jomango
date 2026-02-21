@@ -5,7 +5,9 @@ const {
     getAdminOrders,
     updateOrderStatus,
     getMyOrders,
-    cancelMyOrder
+    getMyOrders,
+    cancelMyOrder,
+    getMyOrderById
 } = require('../controllers/orderController');
 const { protect, adminOrStaff } = require('../middleware/authMiddleware');
 
@@ -14,6 +16,7 @@ router.post('/', createOrder);
 
 // Private — user's own orders (still needs user JWT)
 router.get('/mine', protect, getMyOrders);
+router.get('/:id', protect, getMyOrderById);
 router.put('/:id/cancel', protect, cancelMyOrder);
 
 // Admin / Staff routes
