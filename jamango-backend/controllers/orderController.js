@@ -146,47 +146,7 @@ const getMyOrders = asyncHandler(async (req, res) => {
     res.json(orders);
 });
 
-// @desc    Cancel user's own order
-// @route   PUT /api/orders/:id/cancel
-// @access  Private
-const cancelMyOrder = asyncHandler(async (req, res) => {
-    const order = await Order.findById(req.params.id);
-    const Product = require('../models/Product');
 
-    if (!order) {
-        res.status(404);
-        throw new Error('Order not found');
-    }
-
-    const isOwner = (order.user && order.user.toString() === req.user._id.toString()) ||
-        (req.user.email && order.customerEmail === req.user.email) ||
-        (req.user.phone && order.customerPhone === req.user.phone);
-
-    if (!isOwner) {
-        res.status(403);
-        throw new Error('Not authorized to cancel this order');
-    }
-
-    if (order.status !== 'Pending' && order.status !== 'Confirmed') {
-        res.status(400);
-        throw new Error('Order cannot be cancelled at this stage (Already shipped or delivered)');
-    }
-
-    // inventory restoration logic
-    for (const item of order.items) {
-        const productName = item.variant || item.name;
-        if (productName) {
-            await Product.findOneAndUpdate(
-                { name: productName },
-                { $inc: { stock: item.quantity } }
-            );
-        }
-    }
-
-    order.status = 'Cancelled';
-    const updated = await order.save();
-    res.json(updated);
-});
 
 // @desc    Get order by ID
 // @route   GET /api/orders/:id
@@ -242,7 +202,6 @@ module.exports = {
     getAdminOrders,
     updateOrderStatus,
     getMyOrders,
-    cancelMyOrder,
     getMyOrderById,
     getShippingRate,
 };

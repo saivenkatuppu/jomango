@@ -266,54 +266,7 @@ const AdminOrders = () => {
         )}
       </div>
 
-      {/* Cancelled Orders Section */}
-      <div className="mt-12 bg-card rounded-xl border border-red-200 overflow-hidden shadow-sm">
-        <div className="p-5 border-b border-red-200 bg-red-50/50 flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold text-red-800">Cancelled Orders Log</h2>
-          <span className="text-sm font-medium text-red-600 bg-red-100 px-3 py-1 rounded-full">Inventory Automatically Restored</span>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border bg-secondary/10">
-                <th className="text-left p-4 font-body text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Order ID</th>
-                <th className="text-left p-4 font-body text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Product Name</th>
-                <th className="text-center p-4 font-body text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Qty Cancelled</th>
-                <th className="text-left p-4 font-body text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Cancellation Date & Time</th>
-                <th className="text-left p-4 font-body text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.filter(o => o.status === "Cancelled").map(order =>
-                order.items.map((item, idx) => (
-                  <tr key={`${order._id}-${idx}`} className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors">
-                    <td className="p-4 font-body text-xs font-mono text-muted-foreground">{order._id.slice(-8).toUpperCase()}</td>
-                    <td className="p-4 font-body text-sm font-medium text-foreground whitespace-nowrap">
-                      {item.name} {item.variant}
-                    </td>
-                    <td className="p-4 text-center text-foreground font-medium">{item.quantity}</td>
-                    <td className="p-4 font-body text-xs text-muted-foreground whitespace-nowrap">
-                      {new Date(order.updatedAt || order.createdAt).toLocaleString("en-IN", {
-                        day: "2-digit", month: "short", year: "numeric", hour: '2-digit', minute: '2-digit'
-                      })}
-                    </td>
-                    <td className="p-4 font-body text-xs text-green-700 font-medium whitespace-nowrap flex items-center gap-1">
-                      <CheckCircle className="h-4 w-4" /> Inventory Restored
-                    </td>
-                  </tr>
-                ))
-              )}
-              {orders.filter(o => o.status === "Cancelled").length === 0 && (
-                <tr>
-                  <td colSpan={5} className="p-8 text-center font-body text-muted-foreground">
-                    No cancelled orders found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+
 
       {/* Order Details Modal */}
       {selectedOrder && (

@@ -46,21 +46,7 @@ const OrderDetailsPage = () => {
         }
     };
 
-    const handleCancelOrder = async () => {
-        if (!window.confirm("Are you sure you want to cancel this order?")) return;
 
-        try {
-            await client.put(`/orders/${orderId}/cancel`);
-            toast.success("Your order has been cancelled successfully.", {
-                description: "Inventory has been restored.",
-            });
-            fetchOrderDetails();
-        } catch (error: any) {
-            toast.error("Cancellation Failed", {
-                description: error.response?.data?.message || "Could not cancel order.",
-            });
-        }
-    };
 
     if (!user) {
         return (
@@ -226,16 +212,7 @@ const OrderDetailsPage = () => {
                             Back to Home
                         </Button>
 
-                        {canCancel && (
-                            <Button
-                                variant="destructive"
-                                onClick={handleCancelOrder}
-                                className="w-full sm:w-auto flex items-center gap-2 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border-red-200 border"
-                            >
-                                <XCircle className="h-4 w-4" />
-                                Cancel Order
-                            </Button>
-                        )}
+
 
                         {order.status === "Cancelled" && (
                             <p className="text-sm text-red-500 font-medium flex items-center gap-1.5 w-full sm:w-auto justify-center">

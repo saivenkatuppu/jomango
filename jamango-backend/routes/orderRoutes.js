@@ -5,7 +5,6 @@ const {
     getAdminOrders,
     updateOrderStatus,
     getMyOrders,
-    cancelMyOrder,
     getMyOrderById,
     getShippingRate
 } = require('../controllers/orderController');
@@ -18,7 +17,6 @@ router.post('/shipping-rate', getShippingRate);
 // Private — user's own orders (still needs user JWT)
 router.get('/mine', protect, getMyOrders);
 router.get('/:id', protect, getMyOrderById);
-router.put('/:id/cancel', protect, cancelMyOrder);
 
 // Admin / Staff routes
 router.get('/admin', protect, adminOrStaff, getAdminOrders);
