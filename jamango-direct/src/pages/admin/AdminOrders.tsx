@@ -29,7 +29,7 @@ interface Order {
   orderNotes?: string;
   items: OrderItem[];
   totalAmount: number;
-  paymentMode: "online" | "cod";
+  paymentMode: string;
   paymentStatus: "pending" | "paid" | "failed";
   status: string;
   createdAt: string;
@@ -211,7 +211,7 @@ const AdminOrders = () => {
                     {totalItems} items • {totalBoxes} boxes
                   </td>
                   <td className="p-4">
-                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${order.paymentMode === "cod" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}`}>
+                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700`}>
                       {order.paymentMode.toUpperCase()}
                     </span>
                   </td>
@@ -279,7 +279,7 @@ const AdminOrders = () => {
                   Order {selectedOrder._id.slice(-8).toUpperCase()}
                 </h2>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-medium ${selectedOrder.paymentMode === "cod" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}`}>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-700`}>
                     {selectedOrder.paymentMode.toUpperCase()}
                   </span>
                   <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] whitespace-nowrap font-medium ${statusColors[selectedOrder.status] || "bg-gray-100 text-gray-600"}`}>

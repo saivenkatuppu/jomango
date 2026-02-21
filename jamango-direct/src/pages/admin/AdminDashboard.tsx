@@ -201,11 +201,7 @@ const AdminDashboard = () => {
               <p className="font-display text-2xl font-bold text-blue-700">{data.stats.paidBoxesToday}</p>
               <p className="font-body text-xs text-blue-700/70 mt-1">No collection required</p>
             </div>
-            <div className="bg-card rounded-xl border border-border p-4 bg-orange-50/50">
-              <p className="font-body text-xs text-orange-700/70 mb-1 uppercase tracking-wider font-semibold">COD Boxes Exposure</p>
-              <p className="font-display text-2xl font-bold text-orange-700">{data.stats.codBoxesToday}</p>
-              <p className="font-body text-xs text-orange-700/70 mt-1">Cash to be collected</p>
-            </div>
+
             <div className="bg-card rounded-xl border border-border p-4 bg-red-50/50">
               <p className="font-body text-xs text-red-700/70 mb-1 uppercase tracking-wider font-semibold">Cancelled Orders</p>
               <p className="font-display text-2xl font-bold text-red-700">{data.stats.cancelledToday}</p>
@@ -373,7 +369,7 @@ const AdminDashboard = () => {
                       {order.items.map((i) => `${i.name} ×${i.quantity}`).join(", ")}
                     </td>
                     <td className="p-4">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${order.paymentMode === "cod" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}`}>
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700`}>
                         {order.paymentMode.toUpperCase()}
                       </span>
                     </td>

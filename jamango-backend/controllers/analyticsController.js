@@ -125,7 +125,6 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     }
 
     const boxesToday = todayBoxesResult[0]?.totalBoxes || 0;
-    const codBoxesToday = todayBoxesByPaymentResult.find(r => r._id === 'cod')?.totalBoxes || 0;
     const paidBoxesToday = todayBoxesByPaymentResult.find(r => r._id === 'online')?.totalBoxes || 0;
     const cancelledToday = cancelledTodayResult || 0;
 
@@ -139,7 +138,6 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             todayRevenue,
             avgOrderValue,
             boxesToday,
-            codBoxesToday,
             paidBoxesToday,
             cancelledToday
         },
