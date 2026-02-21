@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
-const { createShiprocketOrder } = require('../utils/shiprocket');
+const { createShiprocketOrder, calculateShippingRate } = require('../utils/shiprocket');
 
 // @desc    Create a new order (from cart)
 // @route   POST /api/orders
@@ -212,6 +212,31 @@ const getMyOrderById = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Calculate live shipping rate
+// @route   POST /api/orders/shipping-rate
+// @access  Public
+const getShippingRate = asyncHandler(async (req, res) => {
+    const { pincode, items } = req.body;
+
+    if (!pincode || pincode.length !== 6) {
+        return res.status(400).json({ message: 'Invalid pincode' });
+    }
+
+    if (!items || items.length === 0) {
+        return res.status(400).json({ message: 'Cart items required' });
+    }
+
+    // Calculate total weight from items array in কেজি
+    const totalWeight = items.reduce((acc, item) => {
+        const w = (item.name || '').match(/(\d+)\s?KG/i);
+        return acc + (w ? parseFloat(w[1]) : 3) * item.quantity;
+    }, 0);
+
+    const shippingCost = await calculateShippingRate(pincode, totalWeight);
+
+    res.json({ shippingCost });
+});
+
 module.exports = {
     createOrder,
     getAdminOrders,
@@ -219,4 +244,5 @@ module.exports = {
     getMyOrders,
     cancelMyOrder,
     getMyOrderById,
+    getShippingRate,
 };

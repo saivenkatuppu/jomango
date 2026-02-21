@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -66,6 +66,8 @@ const CheckoutPage = () => {
     const [loading, setLoading] = useState(false);
     const [codLoading, setCodLoading] = useState(false);
     const [isAddMoreOpen, setIsAddMoreOpen] = useState(false);
+    const [shippingCost, setShippingCost] = useState<number | null>(null);
+    const [shippingLoading, setShippingLoading] = useState(false);
 
     const [formData, setFormData] = useState(() => {
         const saved = localStorage.getItem("savedCheckoutDetails");
@@ -89,6 +91,34 @@ const CheckoutPage = () => {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
+
+    // Calculate dynamic shipping cost
+    useEffect(() => {
+        const fetchShippingCost = async () => {
+            if (formData.zip && formData.zip.length === 6 && cart.length > 0) {
+                setShippingLoading(true);
+                try {
+                    const res = await client.post("/orders/shipping-rate", {
+                        pincode: formData.zip,
+                        items: cart
+                    });
+                    setShippingCost(res.data.shippingCost);
+                } catch (error) {
+                    console.error("Failed to fetch shipping rate", error);
+                    setShippingCost(150); // Fallback standard rate
+                } finally {
+                    setShippingLoading(false);
+                }
+            } else {
+                setShippingCost(null);
+            }
+        };
+
+        const timeoutId = setTimeout(fetchShippingCost, 1000); // 1s debounce
+        return () => clearTimeout(timeoutId);
+    }, [formData.zip, cart]);
+
+    const grandTotal = total + (shippingCost || 0);
 
     const loadRazorpay = () => {
         return new Promise((resolve) => {
@@ -134,9 +164,7 @@ const CheckoutPage = () => {
 
             // 1. Create Order on Backend
             const { data: order } = await client.post("/payments/order", {
-                amount: total, // Backend expects Rupees, logic converts? No, logic in backend: amount * 100. So send Rupees.
-                // Wait, backend logic: const options = { amount: amount * 100 ... }
-                // So sending `total` (in rupees) is correct.
+                amount: grandTotal, // Updated to use grand total including shipping
             });
 
             // 2. Initialize Razorpay Options
@@ -175,7 +203,8 @@ const CheckoutPage = () => {
                                 price: item.price,
                                 quantity: item.quantity,
                             })),
-                            totalAmount: total,
+                            totalAmount: grandTotal,
+                            shippingFee: shippingCost || 0,
                         });
 
                         if (verifyRes.data.success) {
@@ -185,7 +214,7 @@ const CheckoutPage = () => {
                                 time: new Date().toLocaleTimeString('en-IN'),
                                 items: [...cart],
                                 address: `${formData.address}, ${formData.city} - ${formData.zip}`,
-                                total: total,
+                                total: grandTotal,
                                 paymentMode: 'online'
                             };
                             clearCart();
@@ -540,15 +569,20 @@ const CheckoutPage = () => {
                                 </div>
                                 <div className="flex justify-between text-charcoal/70 text-sm">
                                     <span>Shipping</span>
-                                    <span className="text-green-600 font-bold flex items-center gap-1">
-                                        Free
-                                        <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full uppercase tracking-wider font-bold">Express</span>
-                                    </span>
+                                    {shippingLoading ? (
+                                        <span className="text-gray-400 font-medium">Calculating...</span>
+                                    ) : shippingCost === null ? (
+                                        <span className="text-gray-400 font-medium">Enter Pincode</span>
+                                    ) : (
+                                        <span className="text-charcoal font-medium flex items-center gap-1">
+                                            ₹{shippingCost}
+                                        </span>
+                                    )}
                                 </div>
                                 <div className="h-px bg-charcoal/5 my-2 border-t border-dashed border-charcoal/20"></div>
                                 <div className="flex justify-between text-xl font-bold text-[hsl(44,90%,40%)]">
                                     <span>Total Amount</span>
-                                    <span>₹{total}</span>
+                                    <span>₹{grandTotal}</span>
                                 </div>
                             </div>
 
@@ -563,23 +597,14 @@ const CheckoutPage = () => {
                                         "Processing Securely..."
                                     ) : (
                                         <>
-                                            Pay ₹{total}
+                                            Pay ₹{grandTotal}
                                             <ShieldCheck className="w-5 h-5 opacity-80" />
                                         </>
                                     )}
                                 </span>
                             </Button>
 
-                            {/* COD Option */}
-                            <div className="mt-3">
-                                <button
-                                    onClick={handleCOD}
-                                    disabled={codLoading || loading}
-                                    className="w-full h-12 rounded-2xl border-2 border-charcoal/10 text-charcoal/70 hover:border-charcoal/20 hover:text-charcoal hover:bg-stone-50 transition-all font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-                                >
-                                    {codLoading ? "Placing Order..." : "💵 Pay on Delivery (COD)"}
-                                </button>
-                            </div>
+
 
                             <div className="mt-6 flex flex-col items-center gap-3 text-center">
                                 <div className="flex items-center gap-2 text-[10px] sm:text-xs text-charcoal/50 font-medium uppercase tracking-widest bg-stone-50 px-3 py-1.5 rounded-full border border-stone-100">

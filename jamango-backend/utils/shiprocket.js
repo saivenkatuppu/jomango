@@ -49,6 +49,12 @@ const createShiprocketOrder = async (order) => {
             hsn: 441211 // Standard HSN for some wood/fruits, needs update based on exact mango HSN (08045020 or similar)
         }));
 
+        // Calculate weight
+        const totalWeight = order.items.reduce((acc, item) => {
+            const w = item.name.match(/(\d+)\s?KG/i);
+            return acc + (w ? parseFloat(w[1]) : 3) * item.quantity;
+        }, 0);
+
         // 3. Construct Payload
         const payload = {
             order_id: order._id.toString(),
@@ -59,7 +65,7 @@ const createShiprocketOrder = async (order) => {
             billing_address: order.shippingAddress.address,
             billing_city: order.shippingAddress.city,
             billing_pincode: order.shippingAddress.zip,
-            billing_state: "Andhra Pradesh", // Defaulting, ideally should come from address or zip lookup
+            billing_state: order.shippingAddress.state || "Andhra Pradesh",
             billing_country: "India",
             billing_email: order.customerEmail,
             billing_phone: order.customerPhone,
@@ -70,11 +76,7 @@ const createShiprocketOrder = async (order) => {
             length: 30, // Approx box dimensions for 3kg/5kg
             breadth: 20,
             height: 15,
-            weight: order.items.reduce((acc, item) => {
-                // Approximate weight calc: "5 KG Box" -> 5
-                const w = item.name.match(/(\d+)\s?KG/i);
-                return acc + (w ? parseFloat(w[1]) : 3) * item.quantity;
-            }, 0)
+            weight: totalWeight
         };
 
         const response = await axios.post('https://apiv2.shiprocket.in/v1/external/orders/create/adhoc', payload, {
@@ -94,4 +96,39 @@ const createShiprocketOrder = async (order) => {
     }
 };
 
-module.exports = { createShiprocketOrder };
+const calculateShippingRate = async (deliveryPincode, weight) => {
+    try {
+        const token = await getShiprocketToken();
+        const pickupPincode = '517501'; // Jamango Warehouse Pincode (Tirupati default, update if needed)
+
+        const response = await axios.get(`https://apiv2.shiprocket.in/v1/external/courier/serviceability/`, {
+            params: {
+                pickup_postcode: pickupPincode,
+                delivery_postcode: deliveryPincode,
+                weight: weight,
+                cod: 0
+            },
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const data = response.data.data;
+        if (data && data.available_courier_companies && data.available_courier_companies.length > 0) {
+            // Find the cheapest active courier
+            const courier = data.available_courier_companies.reduce((prev, curr) => {
+                return (prev.rate < curr.rate) ? prev : curr;
+            });
+            // Return only the numeric final rate
+            return Math.ceil(courier.rate);
+        } else {
+            // Default rate if no couriers found for pincode (safety fallback)
+            return 150;
+        }
+    } catch (error) {
+        console.error('Shiprocket Rate Calculation Error:', error.response?.data || error.message);
+        return 150; // default fallback
+    }
+};
+
+module.exports = { createShiprocketOrder, calculateShippingRate };
