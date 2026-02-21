@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import SiteHeader from "@/components/jamango/SiteHeader";
 import SiteFooter from "@/components/jamango/SiteFooter";
@@ -61,6 +61,83 @@ const blogPosts: BlogPost[] = [
 
 const Blogs = () => {
     const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+
+    // SEO Optimization
+    useEffect(() => {
+        // Update basic meta tags
+        document.title = selectedPost
+            ? `${selectedPost.title} | JAMANGO Blogs`
+            : "The Mango Chronicles - Discover Carbide-Free Mangoes | JAMANGO";
+
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) {
+            metaDesc.setAttribute("content", selectedPost
+                ? selectedPost.excerpt
+                : "Read the latest stories and guides on naturally ripened, carbide-free Alphonso and Banganapalli mangoes. Learn about from-farm-to-doorstep freshness with JAMANGO.");
+        } else {
+            const newMeta = document.createElement('meta');
+            newMeta.name = "description";
+            newMeta.content = selectedPost
+                ? selectedPost.excerpt
+                : "Read the latest stories and guides on naturally ripened, carbide-free Alphonso and Banganapalli mangoes. Learn about from-farm-to-doorstep freshness with JAMANGO.";
+            document.head.appendChild(newMeta);
+        }
+
+        // Canonical URL
+        let canonical = document.querySelector('link[rel="canonical"]');
+        if (!canonical) {
+            canonical = document.createElement('link');
+            canonical.setAttribute('rel', 'canonical');
+            document.head.appendChild(canonical);
+        }
+        canonical.setAttribute("href", window.location.href);
+
+        // JSON-LD Structured Data
+        let script = document.getElementById('seo-json-ld');
+        if (!script) {
+            script = document.createElement('script');
+            script.id = 'seo-json-ld';
+            script.setAttribute('type', 'application/ld+json');
+            document.head.appendChild(script);
+        }
+
+        const structuredData = selectedPost ? {
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            "headline": selectedPost.title,
+            "image": selectedPost.image,
+            "datePublished": selectedPost.date,
+            "description": selectedPost.excerpt,
+            "author": {
+                "@type": "Organization",
+                "name": "JAMANGO"
+            }
+        } : {
+            "@context": "https://schema.org",
+            "@type": "Blog",
+            "name": "The Mango Chronicles",
+            "description": "Educational articles about natural, carbide-free mango farming and varieties.",
+            "url": window.location.href,
+            "blogPost": blogPosts.map(post => ({
+                "@type": "BlogPosting",
+                "headline": post.title,
+                "datePublished": post.date,
+                "description": post.excerpt,
+                "image": post.image
+            }))
+        };
+
+        script.textContent = JSON.stringify(structuredData);
+
+        return () => {
+            // Cleanup title and description when component unmounts
+            document.title = "JAMANGO - Pure Mangoes";
+            if (metaDesc) metaDesc.setAttribute("content", "Jamango offers premium quality, naturally ripened, carbide-free mangoes.");
+
+            const existingScript = document.getElementById('seo-json-ld');
+            if (existingScript) existingScript.remove();
+        };
+    }, [selectedPost]);
 
     return (
         <div className="min-h-screen flex flex-col bg-[#FBF7F0]">
