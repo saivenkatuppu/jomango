@@ -14,12 +14,12 @@ const { protect, adminOrStaff } = require('../middleware/authMiddleware');
 router.post('/', createOrder);
 router.post('/shipping-rate', getShippingRate);
 
-// Private — user's own orders (still needs user JWT)
-router.get('/mine', protect, getMyOrders);
-router.get('/:id', protect, getMyOrderById);
-
 // Admin / Staff routes
 router.get('/admin', protect, adminOrStaff, getAdminOrders);
 router.put('/admin/:id/status', protect, adminOrStaff, updateOrderStatus);
+
+// Private — user's own orders (still needs user JWT)
+router.get('/mine', protect, getMyOrders);
+router.get('/:id', protect, getMyOrderById);
 
 module.exports = router;
