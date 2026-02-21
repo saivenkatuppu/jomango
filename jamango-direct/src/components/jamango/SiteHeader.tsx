@@ -37,6 +37,7 @@ const SiteHeader = () => {
   const navLinks = [
     { label: "Home", href: "/" },
     { label: "Collection", href: "/#products" },
+    { label: "My Orders", href: "/my-orders" },
     { label: "Delivery", href: "/#delivery" },
     { label: "Our Story", href: "/#story" },
   ];

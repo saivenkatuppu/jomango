@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 
 const LoginPage = () => {
-    const [email, setEmail] = useState("");
+    const [phone, setPhone] = useState("");
     const [password, setPassword] = useState("");
     const { login } = useAuth();
     const navigate = useNavigate();
@@ -19,14 +19,14 @@ const LoginPage = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            await login({ email, password });
+            await login({ phone, password });
             toast.success("Welcome back!", {
                 description: "You have successfully logged in.",
             });
             navigate(from, { replace: true });
         } catch (error: any) {
             toast.error("Login failed", {
-                description: error.response?.data?.message || "Invalid email or password",
+                description: error.response?.data?.message || "Invalid mobile number or password",
             });
         } finally {
             setLoading(false);
@@ -47,12 +47,12 @@ const LoginPage = () => {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-charcoal/80 mb-1">Email</label>
+                        <label className="block text-sm font-medium text-charcoal/80 mb-1">Mobile Number</label>
                         <Input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="hello@example.com"
+                            type="tel"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            placeholder="Enter mobile number"
                             required
                             className="rounded-xl border-stone-200 focus:border-[hsl(44,90%,40%)] focus:ring-[hsl(44,90%,40%)]"
                         />

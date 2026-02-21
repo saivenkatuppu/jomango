@@ -47,6 +47,8 @@ const orderSchema = mongoose.Schema(
         },
         razorpayOrderId: { type: String, default: '' },
         razorpayPaymentId: { type: String, default: '' },
+        shiprocketOrderId: { type: String, default: '' },
+        shiprocketAwb: { type: String, default: '' },
         status: {
             type: String,
             enum: ['Pending', 'Confirmed', 'Out for delivery', 'Delivered', 'Cancelled'],

@@ -9,8 +9,9 @@ const userSchema = mongoose.Schema(
         },
         email: {
             type: String,
-            required: true,
+            required: false, // Make email optional
             unique: true,
+            sparse: true, // Allow multiple nulls/undefined for unique constraint
         },
         password: {
             type: String,
@@ -18,7 +19,8 @@ const userSchema = mongoose.Schema(
         },
         phone: {
             type: String,
-            required: false,
+            required: true, // Make phone mandatory
+            unique: true, // Make phone unique
         },
         isAdmin: {
             type: Boolean,

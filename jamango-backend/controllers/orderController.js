@@ -158,7 +158,11 @@ const cancelMyOrder = asyncHandler(async (req, res) => {
         throw new Error('Order not found');
     }
 
-    if (order.user.toString() !== req.user._id.toString()) {
+    const isOwner = (order.user && order.user.toString() === req.user._id.toString()) ||
+        (req.user.email && order.customerEmail === req.user.email) ||
+        (req.user.phone && order.customerPhone === req.user.phone);
+
+    if (!isOwner) {
         res.status(403);
         throw new Error('Not authorized to cancel this order');
     }
@@ -193,8 +197,8 @@ const getMyOrderById = asyncHandler(async (req, res) => {
     if (order) {
         // Only allow if user is owner or matches email/phone
         const isOwner = (order.user && order.user.toString() === req.user._id.toString()) ||
-            order.customerEmail === req.user.email ||
-            order.customerPhone === req.user.phone;
+            (req.user.email && order.customerEmail === req.user.email) ||
+            (req.user.phone && order.customerPhone === req.user.phone);
 
         if (isOwner) {
             res.json(order);

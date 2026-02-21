@@ -12,6 +12,7 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const slotRoutes = require('./routes/slotRoutes');
 const subscriberRoutes = require('./routes/subscriberRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const webhookRoutes = require('./routes/webhookRoutes');
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/slots', slotRoutes);
 app.use('/api/subscribers', subscriberRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 // Error Middleware
 app.use(notFound);

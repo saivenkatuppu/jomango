@@ -1,10 +1,10 @@
 export interface User {
     _id: string;
     name: string;
-    email: string;
+    phone: string; // Mandatory
+    email?: string; // Optional
     isAdmin: boolean;
     token: string;
-    phone?: string;
     role?: 'admin' | 'staff' | 'user';
     status?: 'active' | 'disabled';
 }
@@ -12,10 +12,10 @@ export interface User {
 export interface AuthResponse {
     _id: string;
     name: string;
-    email: string;
+    phone: string; // Mandatory
+    email?: string; // Optional
     isAdmin: boolean;
     token: string;
-    phone?: string;
     role?: 'admin' | 'staff' | 'user';
     status?: 'active' | 'disabled';
     isImpersonated?: boolean;

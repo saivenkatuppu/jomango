@@ -11,6 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { MessageCircle, ShoppingBag, ArrowRight, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/context/AuthContext";
+import AuthModal from "./AuthModal";
 
 interface OrderModalProps {
     isOpen: boolean;
@@ -72,6 +74,18 @@ const OrderModal = ({ isOpen, onClose, productName = "Premium Mango Box", produc
         }, 1000);
     };
 
+    const { user } = useAuth();
+    const [showAuthModal, setShowAuthModal] = useState(false);
+    const [isPendingOrder, setIsPendingOrder] = useState(false);
+
+    // Watch for login success to trigger order
+    useEffect(() => {
+        if (user && isPendingOrder) {
+            handleWebsiteOrder();
+            setIsPendingOrder(false);
+        }
+    }, [user, isPendingOrder]);
+
     const handleWhatsAppOrder = () => {
         const finalProduct = selectedVariant ? `${productName} (${selectedVariant.name})` : productName;
         const finalPrice = selectedVariant ? selectedVariant.price : productPrice;
@@ -82,6 +96,12 @@ const OrderModal = ({ isOpen, onClose, productName = "Premium Mango Box", produc
     };
 
     const handleWebsiteOrder = () => {
+        if (!user) {
+            setIsPendingOrder(true);
+            setShowAuthModal(true);
+            return;
+        }
+
         const name = productName;
         const variant = selectedVariant ? selectedVariant.name : undefined;
         // Parse price: "₹1,599" -> 1599
@@ -310,8 +330,13 @@ const OrderModal = ({ isOpen, onClose, productName = "Premium Mango Box", produc
                         <span>House of Munagala Guarantee</span>
                     </div>
                 </div>
-
             </DialogContent>
+
+            <AuthModal
+                isOpen={showAuthModal}
+                onClose={() => setShowAuthModal(false)}
+                onSuccess={() => { }} // useEffect in parent handles the transition
+            />
         </Dialog>
     );
 };

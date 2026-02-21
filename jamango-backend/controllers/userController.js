@@ -12,9 +12,14 @@ const generateToken = (id) => {
 // @route   POST /api/users/login
 // @access  Public
 const authUser = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
+    const { email, phone, password } = req.body;
 
-    const user = await User.findOne({ email });
+    let user;
+    if (phone) {
+        user = await User.findOne({ phone });
+    } else if (email) {
+        user = await User.findOne({ email });
+    }
 
     if (user && (await user.matchPassword(password))) {
         if (user.status === 'disabled') {
@@ -25,6 +30,7 @@ const authUser = asyncHandler(async (req, res) => {
             _id: user._id,
             name: user.name,
             email: user.email,
+            phone: user.phone,
             isAdmin: user.isAdmin,
             role: user.role,
             status: user.status,
@@ -32,7 +38,7 @@ const authUser = asyncHandler(async (req, res) => {
         });
     } else {
         res.status(401);
-        throw new Error('Invalid email or password');
+        throw new Error('Invalid credentials');
     }
 });
 
@@ -42,11 +48,16 @@ const authUser = asyncHandler(async (req, res) => {
 const registerUser = asyncHandler(async (req, res) => {
     const { name, email, password, phone } = req.body;
 
-    const userExists = await User.findOne({ email });
+    if (!phone || !password || !name) {
+        res.status(400);
+        throw new Error('Name, Phone, and Password are required');
+    }
+
+    const userExists = await User.findOne({ phone });
 
     if (userExists) {
         res.status(400);
-        throw new Error('User already exists');
+        throw new Error('User with this phone number already exists');
     }
 
     const user = await User.create({
@@ -61,6 +72,7 @@ const registerUser = asyncHandler(async (req, res) => {
             _id: user._id,
             name: user.name,
             email: user.email,
+            phone: user.phone,
             isAdmin: user.isAdmin,
             role: user.role,
             status: user.status,

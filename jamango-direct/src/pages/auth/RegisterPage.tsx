@@ -57,12 +57,12 @@ const RegisterPage = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-charcoal/80 mb-1">Email</label>
+                        <label className="block text-sm font-medium text-charcoal/80 mb-1">Mobile Number</label>
                         <Input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="hello@example.com"
+                            type="tel"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            placeholder="Required for order updates"
                             required
                             className="rounded-xl border-stone-200 focus:border-[hsl(44,90%,40%)] focus:ring-[hsl(44,90%,40%)]"
                         />
@@ -78,12 +78,12 @@ const RegisterPage = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-charcoal/80 mb-1">Phone (Optional)</label>
+                        <label className="block text-sm font-medium text-charcoal/80 mb-1">Email (Optional)</label>
                         <Input
-                            type="tel"
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
-                            placeholder="+91..."
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="hello@example.com"
                             className="rounded-xl border-stone-200 focus:border-[hsl(44,90%,40%)] focus:ring-[hsl(44,90%,40%)]"
                         />
                     </div>
