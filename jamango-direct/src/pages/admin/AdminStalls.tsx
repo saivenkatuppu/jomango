@@ -27,6 +27,7 @@ const AdminStalls = () => {
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingStall, setEditingStall] = useState<any>(null);
+    const [createdCredentials, setCreatedCredentials] = useState<any>(null); // New state for success message
     const [search, setSearch] = useState("");
     const [formData, setFormData] = useState({
         stallName: "",
@@ -91,13 +92,19 @@ const AdminStalls = () => {
             if (editingStall) {
                 await client.put(`/stalls/${editingStall._id}`, formData);
                 toast.success("Stall updated successfully!");
+                setShowAddModal(false);
+                setEditingStall(null);
             } else {
                 const { data } = await client.post("/stalls", formData);
                 toast.success("Stall created successfully!");
-                alert(`Stall Created Successfully!\n\nID: ${data.stall.stallId}\nLogin Mobile: ${data.credentials.username}\nLogin Password: ${data.credentials.password}\n\nPlease share these credentials securely with the stall owner.`);
+                setCreatedCredentials({
+                    stallId: data.stall.stallId,
+                    stallName: data.stall.stallName,
+                    username: data.credentials.username,
+                    password: data.credentials.password
+                });
+                setShowAddModal(false);
             }
-            setShowAddModal(false);
-            setEditingStall(null);
             fetchStalls();
         } catch (error: any) {
             const msg = error.response?.data?.message || "Operation failed";
@@ -110,6 +117,7 @@ const AdminStalls = () => {
     const resetForm = () => {
         setShowAddModal(false);
         setEditingStall(null);
+        setCreatedCredentials(null);
         setFormData({
             stallName: "",
             stallId: "",
@@ -340,6 +348,43 @@ const AdminStalls = () => {
                                 </Button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+            {createdCredentials && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-charcoal/60 backdrop-blur-md overflow-y-auto">
+                    <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border-4 border-yellow-400">
+                        <div className="p-8 text-center space-y-6">
+                            <div className="h-20 w-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto text-yellow-600 animate-bounce">
+                                <CheckCircle2 className="h-10 w-10" />
+                            </div>
+
+                            <div>
+                                <h2 className="text-3xl font-display font-bold text-charcoal">Stall Created!</h2>
+                                <p className="text-muted-foreground mt-2">The stall <b>{createdCredentials.stallName}</b> is now live.</p>
+                            </div>
+
+                            <div className="bg-yellow-50 p-6 rounded-2xl space-y-4 text-left border border-yellow-100">
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-yellow-700">Login Mobile</p>
+                                    <p className="text-xl font-mono font-bold text-charcoal">{createdCredentials.username}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-yellow-700">Login Password</p>
+                                    <p className="text-xl font-mono font-bold text-charcoal">{createdCredentials.password}</p>
+                                </div>
+                            </div>
+
+                            <div className="pt-4">
+                                <Button
+                                    onClick={resetForm}
+                                    className="w-full h-14 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded-xl shadow-lg shadow-yellow-200"
+                                >
+                                    Got it, Thanks!
+                                </Button>
+                                <p className="text-[10px] text-muted-foreground mt-4 uppercase tracking-tighter">Share these credentials with the stall owner securely</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
