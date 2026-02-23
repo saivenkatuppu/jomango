@@ -207,15 +207,13 @@ const AdminStalls = () => {
                         <div className="mt-6 pt-4 flex items-center gap-2 border-t border-charcoal/5">
                             <Button
                                 onClick={() => handleEdit(stall)}
-                                variant="ghost"
-                                className="flex-1 rounded-xl h-10 text-xs font-bold hover:bg-charcoal/5 flex items-center justify-center gap-2 text-charcoal"
+                                className="flex-1 rounded-xl h-10 text-xs font-bold bg-yellow-100 hover:bg-yellow-200 active:bg-yellow-300 text-black flex items-center justify-center gap-2 border-none shadow-none transition-colors"
                             >
                                 <Edit3 className="h-3.5 w-3.5" /> Edit Details
                             </Button>
                             <Button
                                 onClick={() => navigate("/admin/crm")}
-                                variant="ghost"
-                                className="flex-1 rounded-xl h-10 text-xs font-bold hover:bg-yellow-50 text-yellow-700 flex items-center justify-center gap-2"
+                                className="flex-1 rounded-xl h-10 text-xs font-bold bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 text-black flex items-center justify-center gap-2 border-none shadow-none transition-colors"
                             >
                                 <ArrowRight className="h-3.5 w-3.5" /> View CRM
                             </Button>
