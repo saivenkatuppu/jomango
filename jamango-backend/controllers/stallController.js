@@ -38,7 +38,7 @@ const createStall = asyncHandler(async (req, res) => {
     // Create the Stall Owner User Account
     const user = await User.create({
         name: ownerName,
-        email: ownerEmail || `${stallId.toLowerCase()}@jamango.in`,
+        email: ownerMobile, // Using mobile as the primary login ID (Dashboard Access ID)
         phone: ownerMobile,
         password: password || ownerMobile, // Use assigned password or fallback
         role: 'stall_owner',
@@ -117,20 +117,43 @@ const updateStall = asyncHandler(async (req, res) => {
     const stall = await Stall.findById(req.params.id);
 
     if (stall) {
+        if (req.body.stallId && req.body.stallId !== stall.stallId) {
+            const idExists = await Stall.findOne({ stallId: req.body.stallId });
+            if (idExists) {
+                res.status(400);
+                throw new Error('This Stall ID is already taken');
+            }
+        }
+
+        if (req.body.ownerMobile && req.body.ownerMobile !== stall.ownerMobile) {
+            const userExists = await User.findOne({ phone: req.body.ownerMobile });
+            if (userExists) {
+                res.status(400);
+                throw new Error('This mobile number is already in use by another account');
+            }
+        }
+
         stall.stallName = req.body.stallName || stall.stallName;
+        stall.stallId = req.body.stallId || stall.stallId;
         stall.ownerName = req.body.ownerName || stall.ownerName;
+        stall.ownerMobile = req.body.ownerMobile || stall.ownerMobile;
         stall.location = req.body.location || stall.location;
         stall.status = req.body.status || stall.status;
         stall.address = req.body.address || stall.address;
         stall.stallType = req.body.stallType || stall.stallType;
 
-        // If password is provided, update the User account associated with this stall
-        if (req.body.password) {
-            const user = await User.findOne({ assignedStall: stall._id });
-            if (user) {
+        // Sync with the User account associated with this stall
+        const user = await User.findOne({ assignedStall: stall._id });
+        if (user) {
+            user.name = stall.ownerName;
+            user.phone = stall.ownerMobile;
+            user.email = stall.ownerMobile;
+            user.stallId = stall.stallId;
+
+            if (req.body.password) {
                 user.password = req.body.password;
-                await user.save();
             }
+            await user.save();
         }
 
         const updatedStall = await stall.save();

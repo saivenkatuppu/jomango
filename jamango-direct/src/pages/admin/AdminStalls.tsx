@@ -108,12 +108,16 @@ const AdminStalls = () => {
             } else {
                 const { data } = await client.post("/stalls", formData);
                 toast.success("Stall created successfully!");
+
+                // Show success modal with credentials
                 setCreatedCredentials({
                     stallId: data.stall.stallId,
                     stallName: data.stall.stallName,
                     username: data.credentials.username,
                     password: data.credentials.password
                 });
+
+                // Close the form modal AFTER setting credentials
                 setShowAddModal(false);
             }
             fetchStalls();
@@ -266,12 +270,11 @@ const AdminStalls = () => {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-charcoal/60 ml-1">Stall ID (Fixed)</label>
+                                    <label className="text-xs font-bold uppercase tracking-wider text-charcoal/60 ml-1">Stall ID</label>
                                     <Input
                                         required
-                                        disabled={!!editingStall}
                                         placeholder="e.g. ST-KOL-01"
-                                        className={`h-12 rounded-xl font-mono uppercase ${editingStall ? 'bg-charcoal/5' : ''}`}
+                                        className="h-12 rounded-xl font-mono uppercase"
                                         value={formData.stallId}
                                         onChange={(e) => setFormData({ ...formData, stallId: e.target.value.toUpperCase() })}
                                     />
@@ -287,12 +290,14 @@ const AdminStalls = () => {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-charcoal/60 ml-1">Owner Mobile</label>
+                                    <label className="text-xs font-bold uppercase tracking-wider text-charcoal/60 ml-1 flex justify-between">
+                                        Owner Mobile
+                                        <span className="text-[9px] text-yellow-600 font-black tracking-normal lowercase opacity-70">(Used for Login)</span>
+                                    </label>
                                     <Input
                                         required
-                                        disabled={!!editingStall}
-                                        placeholder="Used for Login"
-                                        className={`h-12 rounded-xl ${editingStall ? 'bg-charcoal/5' : ''}`}
+                                        placeholder="10 Digit Number"
+                                        className="h-12 rounded-xl"
                                         value={formData.ownerMobile}
                                         onChange={(e) => setFormData({ ...formData, ownerMobile: e.target.value })}
                                     />
