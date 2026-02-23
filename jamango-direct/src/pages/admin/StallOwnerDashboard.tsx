@@ -72,7 +72,7 @@ const StallOwnerDashboard = () => {
                     <Store className="h-32 w-32" />
                 </div>
                 <div className="relative z-10">
-                    <Badge className="bg-mango text-white border-none mb-3 px-3 py-1 font-black tracking-widest text-[10px] uppercase">Official Stall Owner</Badge>
+                    <Badge className="bg-mango text-black border-none mb-3 px-3 py-1 font-black tracking-widest text-[10px] uppercase">Official Stall Owner</Badge>
                     <h1 className="text-4xl font-display font-bold mb-2">{stallData?.stallName}</h1>
                     <div className="flex flex-wrap items-center gap-4 text-white/60 text-sm font-medium">
                         <span className="flex items-center gap-1.5"><Store className="h-4 w-4" /> {stallData?.stallId}</span>
@@ -93,13 +93,13 @@ const StallOwnerDashboard = () => {
             </div>
 
             <div className="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-charcoal/5">
-                <div className="bg-mango p-8 text-white relative flex justify-between items-center">
+                <div className="bg-mango p-8 text-black relative flex justify-between items-center">
                     <div>
                         <h2 className="text-2xl font-display font-bold">New Customer Entry</h2>
-                        <p className="text-white/80 text-sm font-medium mt-1">Capture details to send discount offers via WhatsApp</p>
+                        <p className="text-black/80 text-sm font-medium mt-1">Capture details to send discount offers via WhatsApp</p>
                     </div>
-                    <div className="h-14 w-14 bg-white/20 rounded-2xl flex items-center justify-center">
-                        <Users className="h-8 w-8 text-white" />
+                    <div className="h-14 w-14 bg-black/10 rounded-2xl flex items-center justify-center">
+                        <Users className="h-8 w-8 text-black" />
                     </div>
                 </div>
 
@@ -143,7 +143,7 @@ const StallOwnerDashboard = () => {
                         </label>
                     </div>
 
-                    <Button type="submit" className="w-full h-16 bg-mango hover:bg-mango-deep text-white rounded-2xl font-black text-xl shadow-xl shadow-mango/20 transition-all active:scale-[0.98] flex items-center gap-3">
+                    <Button type="submit" className="w-full h-16 bg-mango hover:bg-mango-deep text-black rounded-2xl font-black text-xl shadow-xl shadow-mango/20 transition-all active:scale-[0.98] flex items-center gap-3">
                         <PlusCircle className="h-6 w-6" /> Save Customer Record
                     </Button>
                 </form>

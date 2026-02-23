@@ -139,7 +139,7 @@ const AdminStalls = () => {
                 </div>
                 <Button
                     onClick={() => { resetForm(); setShowAddModal(true); }}
-                    className="bg-mango hover:bg-mango-deep text-white rounded-xl px-6 py-6 shadow-lg shadow-mango/20 transition-all active:scale-95 flex items-center gap-2"
+                    className="bg-mango hover:bg-mango-deep text-black rounded-xl px-6 py-6 shadow-lg shadow-mango/20 transition-all active:scale-95 flex items-center gap-2"
                 >
                     <Plus className="h-5 w-5" /> Add New Stall
                 </Button>
@@ -208,7 +208,7 @@ const AdminStalls = () => {
                             <Button
                                 onClick={() => handleEdit(stall)}
                                 variant="ghost"
-                                className="flex-1 rounded-xl h-10 text-xs font-bold hover:bg-charcoal/5 flex items-center justify-center gap-2"
+                                className="flex-1 rounded-xl h-10 text-xs font-bold hover:bg-charcoal/5 flex items-center justify-center gap-2 text-charcoal"
                             >
                                 <Edit3 className="h-3.5 w-3.5" /> Edit Details
                             </Button>
@@ -276,14 +276,14 @@ const AdminStalls = () => {
                                         onChange={(e) => setFormData({ ...formData, ownerMobile: e.target.value })}
                                     />
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-2 md:col-span-2">
                                     <label className="text-xs font-bold uppercase tracking-wider text-charcoal/60 ml-1">
-                                        {editingStall ? "Change Password (Optional)" : "Login Password"}
+                                        {editingStall ? "Change Login Password (Optional)" : "Set Login Password"}
                                     </label>
                                     <Input
                                         required={!editingStall}
                                         type="text"
-                                        placeholder={editingStall ? "Keep empty to stay same" : "Set login password"}
+                                        placeholder={editingStall ? "Keep empty to stay same" : "Create a password for owner login"}
                                         className="h-12 rounded-xl"
                                         value={formData.password}
                                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -299,7 +299,7 @@ const AdminStalls = () => {
                                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                     />
                                 </div>
-                                <div className="space-y-2 md:col-span-2">
+                                <div className="space-y-2">
                                     <label className="text-xs font-bold uppercase tracking-wider text-charcoal/60 ml-1">Stall Type</label>
                                     <select
                                         className="w-full h-12 rounded-xl border border-charcoal/10 bg-white px-3 font-body text-sm"
@@ -327,14 +327,14 @@ const AdminStalls = () => {
                                 <Button
                                     type="button"
                                     variant="ghost"
-                                    className="flex-1 rounded-xl h-12 font-bold"
+                                    className="flex-1 rounded-xl h-12 font-bold text-charcoal"
                                     onClick={resetForm}
                                 >
                                     Cancel
                                 </Button>
                                 <Button
                                     type="submit"
-                                    className="flex-1 bg-mango hover:bg-mango-deep text-white rounded-xl h-12 font-bold shadow-lg shadow-mango/10"
+                                    className="flex-1 bg-mango hover:bg-mango-deep text-black rounded-xl h-12 font-bold shadow-lg shadow-mango/10"
                                 >
                                     {editingStall ? "Update Stall" : "Create Stall"}
                                 </Button>

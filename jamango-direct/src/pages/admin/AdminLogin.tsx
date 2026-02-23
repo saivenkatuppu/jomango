@@ -24,7 +24,7 @@ const MangoIcon = ({ className }: { className?: string }) => (
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"admin" | "staff">("admin");
+  const [role, setRole] = useState<"admin" | "staff" | "stall">("admin");
   const navigate = useNavigate();
   const [animateBg, setAnimateBg] = useState(false);
 
@@ -52,6 +52,9 @@ const AdminLogin = () => {
           await login({ email, password });
           navigate("/admin/dashboard");
         } else if (role === "staff" && isUserStaff) {
+          await login({ email, password });
+          navigate("/admin/dashboard");
+        } else if (role === "stall" && data.role === "stall_owner") {
           await login({ email, password });
           navigate("/admin/dashboard");
         } else {
@@ -176,7 +179,6 @@ const AdminLogin = () => {
               />
               <span className={`font-medium text-sm transition-colors ${role === "admin" ? "text-[hsl(44,80%,46%)]" : "text-charcoal/60 group-hover:text-charcoal"}`}>Admin</span>
             </label>
-            <div className="w-px h-5 bg-charcoal/10" />
             <label className="flex items-center gap-2 cursor-pointer group">
               <input
                 type="radio"
@@ -188,6 +190,18 @@ const AdminLogin = () => {
               />
               <span className={`font-medium text-sm transition-colors ${role === "staff" ? "text-[hsl(44,80%,46%)]" : "text-charcoal/60 group-hover:text-charcoal"}`}>Staff</span>
             </label>
+            <div className="w-px h-5 bg-charcoal/10" />
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="radio"
+                name="role"
+                value="stall"
+                checked={role === "stall"}
+                onChange={() => setRole("stall")}
+                className="w-4 h-4 text-[hsl(44,80%,46%)] border-charcoal/20 focus:ring-[hsl(44,80%,46%)] cursor-pointer"
+              />
+              <span className={`font-medium text-sm transition-colors ${role === "stall" ? "text-[hsl(44,80%,46%)]" : "text-charcoal/60 group-hover:text-charcoal"}`}>Stall</span>
+            </label>
           </div>
 
           <div className="space-y-2">
@@ -196,10 +210,10 @@ const AdminLogin = () => {
               <User className="absolute left-3 top-3 h-5 w-5 text-charcoal/40 group-focus-within:text-[hsl(44,80%,46%)] transition-colors" />
               <Input
                 id="email"
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@jamango.in"
+                placeholder={role === 'stall' ? "Mobile Number" : "admin@jamango.in"}
                 required
                 className="pl-10 h-12 rounded-xl border-charcoal/10 bg-white/50 focus:border-[hsl(44,80%,46%)] focus:ring-[hsl(44,80%,46%)]/20 transition-all font-body text-base"
               />
