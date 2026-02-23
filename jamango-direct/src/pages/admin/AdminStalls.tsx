@@ -34,6 +34,7 @@ const AdminStalls = () => {
         ownerName: "",
         ownerMobile: "",
         ownerEmail: "",
+        password: "", // Added password field
         location: "",
         address: "",
         stallType: "Temporary",
@@ -64,6 +65,7 @@ const AdminStalls = () => {
             ownerName: stall.ownerName,
             ownerMobile: stall.ownerMobile,
             ownerEmail: stall.ownerEmail || "",
+            password: "", // Keep password empty on edit
             location: stall.location,
             address: stall.address,
             stallType: stall.stallType,
@@ -92,7 +94,7 @@ const AdminStalls = () => {
             } else {
                 const { data } = await client.post("/stalls", formData);
                 toast.success("Stall created successfully!");
-                alert(`Stall Created!\n\nID: ${data.stall.stallId}\nLogin Mobile: ${data.credentials.username}\nPassword: ${data.credentials.password}\n\nPlease share these with the owner.`);
+                alert(`Stall Created Successfully!\n\nID: ${data.stall.stallId}\nLogin Mobile: ${data.credentials.username}\nLogin Password: ${data.credentials.password}\n\nPlease share these credentials securely with the stall owner.`);
             }
             setShowAddModal(false);
             setEditingStall(null);
@@ -114,6 +116,7 @@ const AdminStalls = () => {
             ownerName: "",
             ownerMobile: "",
             ownerEmail: "",
+            password: "",
             location: "",
             address: "",
             stallType: "Temporary",
@@ -274,6 +277,19 @@ const AdminStalls = () => {
                                     />
                                 </div>
                                 <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-charcoal/60 ml-1">
+                                        {editingStall ? "Change Password (Optional)" : "Login Password"}
+                                    </label>
+                                    <Input
+                                        required={!editingStall}
+                                        type="text"
+                                        placeholder={editingStall ? "Keep empty to stay same" : "Set login password"}
+                                        className="h-12 rounded-xl"
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
                                     <label className="text-xs font-bold uppercase tracking-wider text-charcoal/60 ml-1">City / Area</label>
                                     <Input
                                         required
@@ -283,7 +299,7 @@ const AdminStalls = () => {
                                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                     />
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-2 md:col-span-2">
                                     <label className="text-xs font-bold uppercase tracking-wider text-charcoal/60 ml-1">Stall Type</label>
                                     <select
                                         className="w-full h-12 rounded-xl border border-charcoal/10 bg-white px-3 font-body text-sm"

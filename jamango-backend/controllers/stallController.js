@@ -12,6 +12,7 @@ const createStall = asyncHandler(async (req, res) => {
         ownerName,
         ownerMobile,
         ownerEmail,
+        password, // Accept password from frontend
         location,
         address,
         stallType,
@@ -37,7 +38,7 @@ const createStall = asyncHandler(async (req, res) => {
         name: ownerName,
         email: ownerEmail || `${stallId.toLowerCase()}@jamango.in`,
         phone: ownerMobile,
-        password: ownerMobile,
+        password: password || ownerMobile, // Use assigned password or fallback
         role: 'stall_owner',
         stallId: stallId,
     });
@@ -65,7 +66,7 @@ const createStall = asyncHandler(async (req, res) => {
                 stall,
                 credentials: {
                     username: user.phone,
-                    password: ownerMobile
+                    password: password || ownerMobile
                 }
             });
         } catch (error) {
@@ -120,6 +121,15 @@ const updateStall = asyncHandler(async (req, res) => {
         stall.status = req.body.status || stall.status;
         stall.address = req.body.address || stall.address;
         stall.stallType = req.body.stallType || stall.stallType;
+
+        // If password is provided, update the User account associated with this stall
+        if (req.body.password) {
+            const user = await User.findOne({ assignedStall: stall._id });
+            if (user) {
+                user.password = req.body.password;
+                await user.save();
+            }
+        }
 
         const updatedStall = await stall.save();
         res.json(updatedStall);
