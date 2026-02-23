@@ -64,7 +64,15 @@ const productSchema = mongoose.Schema(
                 price: Number,
                 date: { type: Date, default: Date.now }
             }
-        ]
+        ],
+        stallId: {
+            type: String, // If this product is specific to a stall
+            required: false,
+        },
+        isGlobal: {
+            type: Boolean,
+            default: true,
+        }
     },
     {
         timestamps: true,

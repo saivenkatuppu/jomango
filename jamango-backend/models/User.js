@@ -29,8 +29,17 @@ const userSchema = mongoose.Schema(
         },
         role: {
             type: String,
-            enum: ['admin', 'staff', 'user'],
+            enum: ['admin', 'staff', 'user', 'stall_owner'],
             default: 'user',
+        },
+        stallId: {
+            type: String, // Link to Stall.stallId
+            required: false,
+        },
+        assignedStall: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Stall',
+            required: false,
         },
         status: {
             type: String,

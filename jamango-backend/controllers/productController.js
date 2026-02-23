@@ -26,6 +26,11 @@ const getAdminProducts = asyncHandler(async (req, res) => {
         });
     }
 
+    if (req.user && req.user.role === 'stall_owner') {
+        // Only show global products or products assigned specifically to this stall
+        products = products.filter(p => p.isGlobal || p.stallId === req.user.stallId);
+    }
+
     res.json(products);
 });
 
@@ -69,7 +74,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     const { name, variety, weight, price, stock, active, description, badge, mrp, showDiscount, discountLabel } = req.body;
     let oldStock = product.stock;
 
-    if (req.user && req.user.role === 'staff') {
+    if (req.user && (req.user.role === 'staff' || req.user.role === 'stall_owner')) {
         if (stock !== undefined && stock !== product.stock) {
             product.stock = stock;
         }

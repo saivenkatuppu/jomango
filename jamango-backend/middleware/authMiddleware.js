@@ -46,4 +46,13 @@ const adminOrStaff = (req, res, next) => {
     }
 };
 
-module.exports = { protect, admin, adminOrStaff };
+const stallOrAdmin = (req, res, next) => {
+    if (req.user && (req.user.role === 'admin' || req.user.role === 'stall_owner')) {
+        next();
+    } else {
+        res.status(403);
+        throw new Error('Not authorized as stall owner or admin');
+    }
+};
+
+module.exports = { protect, admin, adminOrStaff, stallOrAdmin };

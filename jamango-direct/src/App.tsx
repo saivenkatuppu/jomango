@@ -13,6 +13,8 @@ import AdminInventory from "./pages/admin/AdminInventory";
 import AdminSlots from "./pages/admin/AdminSlots";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminContacts from "./pages/admin/AdminContacts";
+import AdminStalls from "./pages/admin/AdminStalls";
+import AdminCRM from "./pages/admin/AdminCRM";
 import AdminStaff from "./pages/admin/AdminStaff";
 import AdminLayout from "./components/admin/AdminLayout";
 import { AuthProvider } from "./context/AuthContext";
@@ -64,6 +66,8 @@ const App = () => (
                 <Route path="/admin/slots" element={<AdminSlots />} />
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />
                 <Route path="/admin/contacts" element={<AdminContacts />} />
+                <Route path="/admin/stalls" element={<AdminStalls />} />
+                <Route path="/admin/crm" element={<AdminCRM />} />
                 <Route path="/admin/staff" element={<AdminStaff />} />
               </Route>
               <Route path="*" element={<NotFound />} />

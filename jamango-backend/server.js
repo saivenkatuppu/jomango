@@ -13,6 +13,8 @@ const slotRoutes = require('./routes/slotRoutes');
 const subscriberRoutes = require('./routes/subscriberRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
+const stallRoutes = require('./routes/stallRoutes');
+const crmRoutes = require('./routes/crmRoutes');
 
 dotenv.config();
 
@@ -38,6 +40,8 @@ app.use('/api/subscribers', subscriberRoutes);
 app.use('/api/notifications', notificationRoutes);
 // Webhook Routes (e.g., Shiprocket tracking)
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/stalls', stallRoutes);
+app.use('/api/crm', crmRoutes);
 
 // Error Middleware
 app.use(notFound);

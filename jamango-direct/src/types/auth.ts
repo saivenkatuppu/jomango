@@ -5,8 +5,10 @@ export interface User {
     email?: string; // Optional
     isAdmin: boolean;
     token: string;
-    role?: 'admin' | 'staff' | 'user';
+    role?: 'admin' | 'staff' | 'user' | 'stall_owner';
     status?: 'active' | 'disabled';
+    stallId?: string;
+    assignedStall?: string;
 }
 
 export interface AuthResponse {
@@ -16,9 +18,11 @@ export interface AuthResponse {
     email?: string; // Optional
     isAdmin: boolean;
     token: string;
-    role?: 'admin' | 'staff' | 'user';
+    role?: 'admin' | 'staff' | 'user' | 'stall_owner';
     status?: 'active' | 'disabled';
     isImpersonated?: boolean;
+    stallId?: string;
+    assignedStall?: string;
 }
 
 export interface DecodedToken {

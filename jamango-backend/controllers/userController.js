@@ -34,6 +34,8 @@ const authUser = asyncHandler(async (req, res) => {
             isAdmin: user.isAdmin,
             role: user.role,
             status: user.status,
+            stallId: user.stallId,
+            assignedStall: user.assignedStall,
             token: generateToken(user._id),
         });
     } else {
@@ -76,6 +78,8 @@ const registerUser = asyncHandler(async (req, res) => {
             isAdmin: user.isAdmin,
             role: user.role,
             status: user.status,
+            stallId: user.stallId,
+            assignedStall: user.assignedStall,
             token: generateToken(user._id),
         });
     } else {

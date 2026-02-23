@@ -3,6 +3,7 @@ import { ShoppingCart, IndianRupee, Clock, CheckCircle, AlertTriangle, RefreshCw
 import { Button } from "@/components/ui/button";
 import client from "@/api/client";
 import { useAuth } from "@/context/AuthContext";
+import StallOwnerDashboard from "./StallOwnerDashboard";
 
 interface Order {
   _id: string;

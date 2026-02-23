@@ -23,6 +23,8 @@ const allNavItems = [
   { label: "Delivery Slots", to: "/admin/slots", icon: Clock, adminOnly: true },
   { label: "Analytics", to: "/admin/analytics", icon: BarChart3, adminOnly: true },
   { label: "User Contacts", to: "/admin/contacts", icon: Users, adminOnly: true },
+  { label: "Stall Management", to: "/admin/stalls", icon: LayoutDashboard, adminOnly: true },
+  { label: "Stall CRM", to: "/admin/crm", icon: Users },
   { label: "Staff Management", to: "/admin/staff", icon: UserCog, adminOnly: true },
 ];
 
