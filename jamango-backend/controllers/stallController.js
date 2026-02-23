@@ -47,7 +47,7 @@ const createStall = asyncHandler(async (req, res) => {
 
     if (user) {
         try {
-            const stall = await Stall.create({
+            const stallData = {
                 stallName,
                 stallId,
                 ownerName,
@@ -56,9 +56,16 @@ const createStall = asyncHandler(async (req, res) => {
                 location,
                 address,
                 stallType,
-                operatingDates,
                 createdBy: req.user._id,
-            });
+            };
+
+            if (operatingDates?.from || operatingDates?.to) {
+                stallData.operatingDates = {};
+                if (operatingDates.from) stallData.operatingDates.from = new Date(operatingDates.from);
+                if (operatingDates.to) stallData.operatingDates.to = new Date(operatingDates.to);
+            }
+
+            const stall = await Stall.create(stallData);
 
             // Link assignedStall back to user
             user.assignedStall = stall._id;
