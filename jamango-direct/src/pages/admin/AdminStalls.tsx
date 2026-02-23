@@ -139,7 +139,7 @@ const AdminStalls = () => {
                 </div>
                 <Button
                     onClick={() => { resetForm(); setShowAddModal(true); }}
-                    className="bg-mango hover:bg-mango-deep text-black rounded-xl px-6 py-6 shadow-lg shadow-mango/20 transition-all active:scale-95 flex items-center gap-2"
+                    className="bg-yellow-400 hover:bg-yellow-500 text-black rounded-xl px-6 py-6 shadow-lg shadow-yellow-200 transition-all active:scale-95 flex items-center gap-2"
                 >
                     <Plus className="h-5 w-5" /> Add New Stall
                 </Button>
@@ -167,7 +167,7 @@ const AdminStalls = () => {
                                 <Store className="h-6 w-6" />
                             </div>
                             <div className="flex gap-2">
-                                <Badge className={stall.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}>
+                                <Badge className={stall.status === 'Active' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' : 'bg-red-100 text-red-700'}>
                                     {stall.status}
                                 </Badge>
                                 <button
@@ -215,7 +215,7 @@ const AdminStalls = () => {
                             <Button
                                 onClick={() => navigate("/admin/crm")}
                                 variant="ghost"
-                                className="flex-1 rounded-xl h-10 text-xs font-bold hover:bg-mango/5 text-mango flex items-center justify-center gap-2"
+                                className="flex-1 rounded-xl h-10 text-xs font-bold hover:bg-yellow-50 text-yellow-700 flex items-center justify-center gap-2"
                             >
                                 <ArrowRight className="h-3.5 w-3.5" /> View CRM
                             </Button>
@@ -334,7 +334,7 @@ const AdminStalls = () => {
                                 </Button>
                                 <Button
                                     type="submit"
-                                    className="flex-1 bg-mango hover:bg-mango-deep text-black rounded-xl h-12 font-bold shadow-lg shadow-mango/10"
+                                    className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-black rounded-xl h-12 font-bold shadow-lg shadow-yellow-100"
                                 >
                                     {editingStall ? "Update Stall" : "Create Stall"}
                                 </Button>
