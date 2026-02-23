@@ -1,6 +1,8 @@
-const asyncHandler = require('express-async-handler');
 const Stall = require('../models/Stall');
 const User = require('../models/User');
+const StallCustomer = require('../models/StallCustomer');
+const Product = require('../models/Product');
+const asyncHandler = require('express-async-handler');
 
 // @desc    Create a new stall and its owner account
 // @route   POST /api/stalls
@@ -146,10 +148,19 @@ const deleteStall = asyncHandler(async (req, res) => {
     const stall = await Stall.findById(req.params.id);
 
     if (stall) {
-        // Find associated user and delete them as well
+        // 1. Delete the Stall Owner User account
         await User.findOneAndDelete({ assignedStall: stall._id });
+
+        // 2. Delete all CRM customers linked to this stall
+        await StallCustomer.deleteMany({ stall: stall._id });
+
+        // 3. Delete any products specific to this stall
+        await Product.deleteMany({ stallId: stall.stallId });
+
+        // 4. Finally delete the stall itself
         await Stall.findByIdAndDelete(stall._id);
-        res.json({ message: 'Stall and owner account deleted successfully' });
+
+        res.json({ message: 'Stall, owner, customers and stall products deleted permanently' });
     } else {
         res.status(404);
         throw new Error('Stall not found');
