@@ -174,7 +174,12 @@ const AdminLogin = () => {
                 name="role"
                 value="admin"
                 checked={role === "admin"}
-                onChange={() => setRole("admin")}
+                onChange={() => {
+                  setRole("admin");
+                  setEmail("");
+                  setPassword("");
+                  setError("");
+                }}
                 className="w-4 h-4 text-[hsl(44,80%,46%)] border-charcoal/20 focus:ring-[hsl(44,80%,46%)] cursor-pointer"
               />
               <span className={`font-medium text-sm transition-colors ${role === "admin" ? "text-[hsl(44,80%,46%)]" : "text-charcoal/60 group-hover:text-charcoal"}`}>Admin</span>
@@ -185,7 +190,12 @@ const AdminLogin = () => {
                 name="role"
                 value="staff"
                 checked={role === "staff"}
-                onChange={() => setRole("staff")}
+                onChange={() => {
+                  setRole("staff");
+                  setEmail("");
+                  setPassword("");
+                  setError("");
+                }}
                 className="w-4 h-4 text-[hsl(44,80%,46%)] border-charcoal/20 focus:ring-[hsl(44,80%,46%)] cursor-pointer"
               />
               <span className={`font-medium text-sm transition-colors ${role === "staff" ? "text-[hsl(44,80%,46%)]" : "text-charcoal/60 group-hover:text-charcoal"}`}>Staff</span>
@@ -197,7 +207,12 @@ const AdminLogin = () => {
                 name="role"
                 value="stall"
                 checked={role === "stall"}
-                onChange={() => setRole("stall")}
+                onChange={() => {
+                  setRole("stall");
+                  setEmail("");
+                  setPassword("");
+                  setError("");
+                }}
                 className="w-4 h-4 text-[hsl(44,80%,46%)] border-charcoal/20 focus:ring-[hsl(44,80%,46%)] cursor-pointer"
               />
               <span className={`font-medium text-sm transition-colors ${role === "stall" ? "text-[hsl(44,80%,46%)]" : "text-charcoal/60 group-hover:text-charcoal"}`}>Stall</span>
