@@ -12,7 +12,9 @@ import {
     Search,
     Trash2,
     Edit3,
-    ArrowRight
+    ArrowRight,
+    Copy,
+    Check
 } from "lucide-react";
 import client from "@/api/client";
 import { Button } from "@/components/ui/button";
@@ -360,11 +362,21 @@ const AdminStalls = () => {
                             </div>
 
                             <div>
-                                <h2 className="text-3xl font-display font-bold text-charcoal">Stall Created!</h2>
-                                <p className="text-muted-foreground mt-2">The stall <b>{createdCredentials.stallName}</b> is now live.</p>
+                                <h2 className="text-3xl font-display font-bold text-charcoal">Successfully Created Your Stall!</h2>
+                                <p className="text-muted-foreground mt-2">The stall <b>{createdCredentials.stallName}</b> is now live and ready for orders.</p>
                             </div>
 
-                            <div className="bg-yellow-50 p-6 rounded-2xl space-y-4 text-left border border-yellow-100">
+                            <div className="bg-yellow-50 p-6 rounded-2xl space-y-4 text-left border border-yellow-200 relative group">
+                                <button
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(`Stall: ${createdCredentials.stallName}\nMobile: ${createdCredentials.username}\nPassword: ${createdCredentials.password}`);
+                                        toast.success("Credentials copied to clipboard!");
+                                    }}
+                                    className="absolute top-4 right-4 p-2 bg-white rounded-lg shadow-sm hover:bg-yellow-100 transition-colors text-yellow-700"
+                                    title="Copy Credentials"
+                                >
+                                    <Copy className="h-4 w-4" />
+                                </button>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-yellow-700">Login Mobile</p>
                                     <p className="text-xl font-mono font-bold text-charcoal">{createdCredentials.username}</p>
@@ -375,14 +387,14 @@ const AdminStalls = () => {
                                 </div>
                             </div>
 
-                            <div className="pt-4">
+                            <div className="pt-4 flex flex-col gap-3">
                                 <Button
                                     onClick={resetForm}
                                     className="w-full h-14 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded-xl shadow-lg shadow-yellow-200"
                                 >
                                     Got it, Thanks!
                                 </Button>
-                                <p className="text-[10px] text-muted-foreground mt-4 uppercase tracking-tighter">Share these credentials with the stall owner securely</p>
+                                <p className="text-[10px] text-muted-foreground uppercase tracking-tighter">Please share these credentials securely with the owner</p>
                             </div>
                         </div>
                     </div>
