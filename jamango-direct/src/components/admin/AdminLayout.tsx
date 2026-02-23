@@ -32,11 +32,12 @@ const AdminLayout = () => {
   const { user, logout, isImpersonating, stopImpersonating } = useAuth();
   const isAdminOrStaff = user?.isAdmin || user?.role === "admin" || user?.role === "staff";
   const isStaff = user?.role === "staff";
-  const location = useLocation();
+  const isStall = user?.role === "stall_owner";
 
-  if (!isAdminOrStaff) return <Navigate to="/admin" replace />;
+  if (!isAdminOrStaff && !isStall) return <Navigate to="/admin" replace />;
 
   const navItems = allNavItems.filter((item) => {
+    if (isStall && item.label !== "Dashboard" && item.label !== "Stall CRM") return false;
     if (isStaff && item.adminOnly) return false;
     return true;
   });

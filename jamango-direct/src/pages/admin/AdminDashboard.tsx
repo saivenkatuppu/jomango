@@ -56,6 +56,9 @@ const AdminDashboard = () => {
 
   const { user } = useAuth();
   const isStaff = user?.role === "staff";
+  const isStall = user?.role === "stall_owner";
+
+  if (isStall) return <StallOwnerDashboard />;
 
   const downloadReport = async () => {
     try {
