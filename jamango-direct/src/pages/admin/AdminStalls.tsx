@@ -27,6 +27,7 @@ const AdminStalls = () => {
     const navigate = useNavigate();
     const [stalls, setStalls] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [stallToDelete, setStallToDelete] = useState<string | null>(null);
@@ -99,6 +100,7 @@ const AdminStalls = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
         try {
             if (editingStall) {
                 await client.put(`/stalls/${editingStall._id}`, formData);
@@ -126,6 +128,8 @@ const AdminStalls = () => {
             toast.error("Database Error", {
                 description: msg,
             });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -360,9 +364,10 @@ const AdminStalls = () => {
                                 </Button>
                                 <Button
                                     type="submit"
-                                    className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-black rounded-xl h-12 font-bold shadow-lg shadow-yellow-100"
+                                    disabled={isSubmitting}
+                                    className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-black rounded-xl h-12 font-bold shadow-lg shadow-yellow-100 disabled:opacity-50"
                                 >
-                                    {editingStall ? "Update Stall" : "Create Stall"}
+                                    {isSubmitting ? "Processing..." : (editingStall ? "Update Stall" : "Create Stall")}
                                 </Button>
                             </div>
                         </form>
