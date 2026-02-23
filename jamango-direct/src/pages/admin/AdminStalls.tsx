@@ -223,9 +223,11 @@ const AdminStalls = () => {
             </div>
 
             {showAddModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/40 backdrop-blur-md overflow-y-auto">
-                    <div className="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-200 my-8">
-                        <div className="p-8 border-b border-charcoal/5 bg-mango/5">
+                <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-charcoal/60 backdrop-blur-sm overflow-y-auto pt-12 md:pt-20">
+                    <div className="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-200 border border-charcoal/10 mb-20">
+                        <div className="p-8 border-b border-charcoal/5 bg-yellow-50 relative">
+                            {/* Decorative line at the very top to ensure clean edge */}
+                            <div className="absolute top-0 left-0 right-0 h-1 bg-yellow-100/50" />
                             <h2 className="text-2xl font-display font-bold text-charcoal">{editingStall ? "Edit Stall" : "Create New Stall"}</h2>
                             <p className="text-muted-foreground text-sm tracking-wide mt-1">{editingStall ? "Update stall details" : "Setup a new offline location and owner account"}</p>
                         </div>
