@@ -6,7 +6,7 @@ const Stall = require('../models/Stall');
 // @route   POST /api/crm/customers
 // @access  Private/StallOwner|Admin
 const addCustomer = asyncHandler(async (req, res) => {
-    const { name, mobile, consent, notes } = req.body;
+    const { name, mobile, consent, notes, email, purchasedVariety, purchasedQuantity } = req.body;
 
     // A stall owner's req.user will have stallId and assignedStall (ObjectId)
     if (!req.user.assignedStall && req.user.role !== 'admin') {
@@ -22,6 +22,9 @@ const addCustomer = asyncHandler(async (req, res) => {
 
     if (customer) {
         customer.name = name || customer.name;
+        customer.email = email || customer.email;
+        customer.purchasedVariety = purchasedVariety || customer.purchasedVariety;
+        customer.purchasedQuantity = purchasedQuantity !== undefined ? purchasedQuantity : customer.purchasedQuantity;
         customer.consent = consent !== undefined ? consent : customer.consent;
         customer.notes = notes || customer.notes;
         await customer.save();
@@ -30,6 +33,9 @@ const addCustomer = asyncHandler(async (req, res) => {
         customer = await StallCustomer.create({
             name,
             mobile,
+            email,
+            purchasedVariety,
+            purchasedQuantity,
             stallId,
             stall: stallObjectId,
             consent,

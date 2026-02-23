@@ -15,6 +15,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
 const stallRoutes = require('./routes/stallRoutes');
 const crmRoutes = require('./routes/crmRoutes');
+const stallMangoRoutes = require('./routes/stallMangoRoutes');
 
 dotenv.config();
 
@@ -42,6 +43,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/stalls', stallRoutes);
 app.use('/api/crm', crmRoutes);
+app.use('/api/stall-mangoes', stallMangoRoutes);
 
 // Error Middleware
 app.use(notFound);

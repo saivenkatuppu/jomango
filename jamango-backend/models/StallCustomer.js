@@ -20,6 +20,15 @@ const stallCustomerSchema = mongoose.Schema(
             ref: 'Stall',
             required: true,
         },
+        email: {
+            type: String,
+        },
+        purchasedVariety: {
+            type: String,
+        },
+        purchasedQuantity: {
+            type: Number,
+        },
         consent: {
             type: Boolean,
             required: true,
