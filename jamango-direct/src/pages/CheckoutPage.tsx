@@ -559,7 +559,7 @@ const CheckoutPage = () => {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.6, delay: 0.3 }}
                     >
-                        <div className="bg-white p-8 rounded-[32px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-[hsl(44,80%,46%)]/10 sticky top-28 bg-[url('/bg-pattern.png')] bg-repeat opacity-95">
+                        <div className="bg-white p-8 rounded-[32px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-[hsl(44,80%,46%)]/10 sticky top-28 opacity-95">
                             <h2 className="font-display text-2xl text-charcoal mb-8">Order Summary</h2>
 
                             <div className="space-y-4 mb-8 bg-[#FBF7F0]/50 p-6 rounded-2xl border border-[hsl(44,30%,90%)]">
