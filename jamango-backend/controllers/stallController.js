@@ -18,15 +18,21 @@ const createStall = asyncHandler(async (req, res) => {
         operatingDates,
     } = req.body;
 
+    // Check if Stall ID exists
     const stallExists = await Stall.findOne({ stallId });
-
     if (stallExists) {
         res.status(400);
-        throw new Error('Stall ID already exists');
+        throw new Error(`Stall ID "${stallId}" is already taken.`);
+    }
+
+    // Check if User Phone exists
+    const userExists = await User.findOne({ phone: ownerMobile });
+    if (userExists) {
+        res.status(400);
+        throw new Error(`Mobile number ${ownerMobile} is already registered to another user/stall.`);
     }
 
     // Create the Stall Owner User Account
-    // password default to mobile number for initial login
     const user = await User.create({
         name: ownerName,
         email: ownerEmail || `${stallId.toLowerCase()}@jamango.in`,
@@ -37,33 +43,40 @@ const createStall = asyncHandler(async (req, res) => {
     });
 
     if (user) {
-        const stall = await Stall.create({
-            stallName,
-            stallId,
-            ownerName,
-            ownerMobile,
-            ownerEmail,
-            location,
-            address,
-            stallType,
-            operatingDates,
-            createdBy: req.user._id,
-        });
+        try {
+            const stall = await Stall.create({
+                stallName,
+                stallId,
+                ownerName,
+                ownerMobile,
+                ownerEmail,
+                location,
+                address,
+                stallType,
+                operatingDates,
+                createdBy: req.user._id,
+            });
 
-        // Link assignedStall back to user
-        user.assignedStall = stall._id;
-        await user.save();
+            // Link assignedStall back to user
+            user.assignedStall = stall._id;
+            await user.save();
 
-        res.status(201).json({
-            stall,
-            credentials: {
-                username: user.phone,
-                password: ownerMobile
-            }
-        });
+            res.status(201).json({
+                stall,
+                credentials: {
+                    username: user.phone,
+                    password: ownerMobile
+                }
+            });
+        } catch (error) {
+            // Rollback user creation if stall creation fails
+            await User.findByIdAndDelete(user._id);
+            res.status(400);
+            throw new Error('Failed to create stall entry: ' + error.message);
+        }
     } else {
         res.status(400);
-        throw new Error('Invalid user data');
+        throw new Error('Invalid stall owner data');
     }
 });
 
@@ -105,10 +118,28 @@ const updateStall = asyncHandler(async (req, res) => {
         stall.ownerName = req.body.ownerName || stall.ownerName;
         stall.location = req.body.location || stall.location;
         stall.status = req.body.status || stall.status;
-        // ... update other fields as needed
+        stall.address = req.body.address || stall.address;
+        stall.stallType = req.body.stallType || stall.stallType;
 
         const updatedStall = await stall.save();
         res.json(updatedStall);
+    } else {
+        res.status(404);
+        throw new Error('Stall not found');
+    }
+});
+
+// @desc    Delete stall
+// @route   DELETE /api/stalls/:id
+// @access  Private/Admin
+const deleteStall = asyncHandler(async (req, res) => {
+    const stall = await Stall.findById(req.params.id);
+
+    if (stall) {
+        // Find associated user and delete them as well
+        await User.findOneAndDelete({ assignedStall: stall._id });
+        await Stall.findByIdAndDelete(stall._id);
+        res.json({ message: 'Stall and owner account deleted successfully' });
     } else {
         res.status(404);
         throw new Error('Stall not found');
@@ -120,4 +151,5 @@ module.exports = {
     getStalls,
     getStallById,
     updateStall,
+    deleteStall,
 };

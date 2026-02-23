@@ -5,6 +5,7 @@ const {
     getStalls,
     getStallById,
     updateStall,
+    deleteStall,
 } = require('../controllers/stallController');
 const { protect, admin, stallOrAdmin } = require('../middleware/authMiddleware');
 
@@ -16,6 +17,7 @@ router.route('/')
 
 router.route('/:id')
     .get(protect, stallOrAdmin, getStallById)
-    .put(protect, admin, updateStall);
+    .put(protect, admin, updateStall)
+    .delete(protect, admin, deleteStall);
 
 module.exports = router;

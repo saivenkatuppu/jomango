@@ -9,18 +9,24 @@ import {
     CheckCircle2,
     XCircle,
     Download,
-    Search
+    Search,
+    Trash2,
+    Edit3,
+    ArrowRight
 } from "lucide-react";
 import client from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const AdminStalls = () => {
+    const navigate = useNavigate();
     const [stalls, setStalls] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
+    const [editingStall, setEditingStall] = useState<any>(null);
     const [search, setSearch] = useState("");
     const [formData, setFormData] = useState({
         stallName: "",
@@ -50,18 +56,69 @@ const AdminStalls = () => {
         }
     };
 
+    const handleEdit = (stall: any) => {
+        setEditingStall(stall);
+        setFormData({
+            stallName: stall.stallName,
+            stallId: stall.stallId,
+            ownerName: stall.ownerName,
+            ownerMobile: stall.ownerMobile,
+            ownerEmail: stall.ownerEmail || "",
+            location: stall.location,
+            address: stall.address,
+            stallType: stall.stallType,
+            operatingDates: stall.operatingDates || { from: "", to: "" }
+        });
+        setShowAddModal(true);
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!window.confirm("Are you sure you want to delete this stall? This will also remove the owner's access account.")) return;
+        try {
+            await client.delete(`/stalls/${id}`);
+            toast.success("Stall deleted successfully");
+            fetchStalls();
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Delete failed");
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const { data } = await client.post("/stalls", formData);
-            toast.success("Stall created successfully!");
-            // Show credentials to admin
-            alert(`Stall Created!\n\nID: ${data.stall.stallId}\nLogin Mobile: ${data.credentials.username}\nPassword: ${data.credentials.password}\n\nPlease share these with the owner.`);
+            if (editingStall) {
+                await client.put(`/stalls/${editingStall._id}`, formData);
+                toast.success("Stall updated successfully!");
+            } else {
+                const { data } = await client.post("/stalls", formData);
+                toast.success("Stall created successfully!");
+                alert(`Stall Created!\n\nID: ${data.stall.stallId}\nLogin Mobile: ${data.credentials.username}\nPassword: ${data.credentials.password}\n\nPlease share these with the owner.`);
+            }
             setShowAddModal(false);
+            setEditingStall(null);
             fetchStalls();
         } catch (error: any) {
-            toast.error(error.response?.data?.message || "Creation failed");
+            const msg = error.response?.data?.message || "Operation failed";
+            toast.error("Database Error", {
+                description: msg,
+            });
         }
+    };
+
+    const resetForm = () => {
+        setShowAddModal(false);
+        setEditingStall(null);
+        setFormData({
+            stallName: "",
+            stallId: "",
+            ownerName: "",
+            ownerMobile: "",
+            ownerEmail: "",
+            location: "",
+            address: "",
+            stallType: "Temporary",
+            operatingDates: { from: "", to: "" }
+        });
     };
 
     const filteredStalls = stalls.filter(s =>
@@ -78,7 +135,7 @@ const AdminStalls = () => {
                     <p className="text-muted-foreground mt-1 text-sm tracking-wide">Manage offline orchard stalls and owners</p>
                 </div>
                 <Button
-                    onClick={() => setShowAddModal(true)}
+                    onClick={() => { resetForm(); setShowAddModal(true); }}
                     className="bg-mango hover:bg-mango-deep text-white rounded-xl px-6 py-6 shadow-lg shadow-mango/20 transition-all active:scale-95 flex items-center gap-2"
                 >
                     <Plus className="h-5 w-5" /> Add New Stall
@@ -106,9 +163,18 @@ const AdminStalls = () => {
                             <div className="h-12 w-12 bg-mango/10 rounded-2xl flex items-center justify-center text-mango">
                                 <Store className="h-6 w-6" />
                             </div>
-                            <Badge className={stall.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}>
-                                {stall.status}
-                            </Badge>
+                            <div className="flex gap-2">
+                                <Badge className={stall.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}>
+                                    {stall.status}
+                                </Badge>
+                                <button
+                                    onClick={() => handleDelete(stall._id)}
+                                    className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                    title="Delete Stall"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </button>
+                            </div>
                         </div>
 
                         <h3 className="text-xl font-bold text-charcoal mb-1">{stall.stallName}</h3>
@@ -136,11 +202,19 @@ const AdminStalls = () => {
                         </div>
 
                         <div className="mt-6 pt-4 flex items-center gap-2 border-t border-charcoal/5">
-                            <Button variant="ghost" className="flex-1 rounded-xl h-10 text-xs font-bold hover:bg-charcoal/5">
-                                Edit Details
+                            <Button
+                                onClick={() => handleEdit(stall)}
+                                variant="ghost"
+                                className="flex-1 rounded-xl h-10 text-xs font-bold hover:bg-charcoal/5 flex items-center justify-center gap-2"
+                            >
+                                <Edit3 className="h-3.5 w-3.5" /> Edit Details
                             </Button>
-                            <Button variant="ghost" className="flex-1 rounded-xl h-10 text-xs font-bold hover:bg-mango/5 text-mango">
-                                View Page
+                            <Button
+                                onClick={() => navigate("/admin/crm")}
+                                variant="ghost"
+                                className="flex-1 rounded-xl h-10 text-xs font-bold hover:bg-mango/5 text-mango flex items-center justify-center gap-2"
+                            >
+                                <ArrowRight className="h-3.5 w-3.5" /> View CRM
                             </Button>
                         </div>
                     </div>
@@ -151,8 +225,8 @@ const AdminStalls = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/40 backdrop-blur-md overflow-y-auto">
                     <div className="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-200 my-8">
                         <div className="p-8 border-b border-charcoal/5 bg-mango/5">
-                            <h2 className="text-2xl font-display font-bold text-charcoal">Create New Stall</h2>
-                            <p className="text-muted-foreground text-sm tracking-wide mt-1">Setup a new offline location and owner account</p>
+                            <h2 className="text-2xl font-display font-bold text-charcoal">{editingStall ? "Edit Stall" : "Create New Stall"}</h2>
+                            <p className="text-muted-foreground text-sm tracking-wide mt-1">{editingStall ? "Update stall details" : "Setup a new offline location and owner account"}</p>
                         </div>
 
                         <form onSubmit={handleSubmit} className="p-8 space-y-6">
@@ -171,8 +245,9 @@ const AdminStalls = () => {
                                     <label className="text-xs font-bold uppercase tracking-wider text-charcoal/60 ml-1">Stall ID (Fixed)</label>
                                     <Input
                                         required
+                                        disabled={!!editingStall}
                                         placeholder="e.g. ST-KOL-01"
-                                        className="h-12 rounded-xl font-mono uppercase"
+                                        className={`h-12 rounded-xl font-mono uppercase ${editingStall ? 'bg-charcoal/5' : ''}`}
                                         value={formData.stallId}
                                         onChange={(e) => setFormData({ ...formData, stallId: e.target.value.toUpperCase() })}
                                     />
@@ -191,8 +266,9 @@ const AdminStalls = () => {
                                     <label className="text-xs font-bold uppercase tracking-wider text-charcoal/60 ml-1">Owner Mobile</label>
                                     <Input
                                         required
+                                        disabled={!!editingStall}
                                         placeholder="Used for Login"
-                                        className="h-12 rounded-xl"
+                                        className={`h-12 rounded-xl ${editingStall ? 'bg-charcoal/5' : ''}`}
                                         value={formData.ownerMobile}
                                         onChange={(e) => setFormData({ ...formData, ownerMobile: e.target.value })}
                                     />
@@ -236,7 +312,7 @@ const AdminStalls = () => {
                                     type="button"
                                     variant="ghost"
                                     className="flex-1 rounded-xl h-12 font-bold"
-                                    onClick={() => setShowAddModal(false)}
+                                    onClick={resetForm}
                                 >
                                     Cancel
                                 </Button>
@@ -244,7 +320,7 @@ const AdminStalls = () => {
                                     type="submit"
                                     className="flex-1 bg-mango hover:bg-mango-deep text-white rounded-xl h-12 font-bold shadow-lg shadow-mango/10"
                                 >
-                                    Create Stall
+                                    {editingStall ? "Update Stall" : "Create Stall"}
                                 </Button>
                             </div>
                         </form>
