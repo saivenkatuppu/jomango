@@ -8,13 +8,13 @@ import {
     Calendar,
     CheckCircle2,
     XCircle,
-    Download,
     Search,
     Trash2,
     Edit3,
     ArrowRight,
     Copy,
-    Check
+    Check,
+    AlertTriangle
 } from "lucide-react";
 import client from "@/api/client";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,8 @@ const AdminStalls = () => {
     const [stalls, setStalls] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [stallToDelete, setStallToDelete] = useState<string | null>(null);
     const [editingStall, setEditingStall] = useState<any>(null);
     const [createdCredentials, setCreatedCredentials] = useState<any>(null); // New state for success message
     const [search, setSearch] = useState("");
@@ -77,11 +79,18 @@ const AdminStalls = () => {
         setShowAddModal(true);
     };
 
-    const handleDelete = async (id: string) => {
-        if (!window.confirm("Are you sure you want to delete this stall? This will also remove the owner's access account.")) return;
+    const handleDelete = (id: string) => {
+        setStallToDelete(id);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!stallToDelete) return;
         try {
-            await client.delete(`/stalls/${id}`);
-            toast.success("Stall deleted successfully");
+            await client.delete(`/stalls/${stallToDelete}`);
+            toast.success("Stall wiped from database");
+            setShowDeleteModal(false);
+            setStallToDelete(null);
             fetchStalls();
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Delete failed");
@@ -120,6 +129,8 @@ const AdminStalls = () => {
         setShowAddModal(false);
         setEditingStall(null);
         setCreatedCredentials(null);
+        setShowDeleteModal(false);
+        setStallToDelete(null);
         setFormData({
             stallName: "",
             stallId: "",
@@ -395,6 +406,40 @@ const AdminStalls = () => {
                                     Got it, Thanks!
                                 </Button>
                                 <p className="text-[10px] text-muted-foreground uppercase tracking-tighter">Please share these credentials securely with the owner</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-charcoal/60 backdrop-blur-md">
+                    <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border-2 border-red-100">
+                        <div className="p-8 text-center space-y-6">
+                            <div className="h-20 w-20 bg-red-100 rounded-full flex items-center justify-center mx-auto text-red-600">
+                                <AlertTriangle className="h-10 w-10" />
+                            </div>
+
+                            <div>
+                                <h2 className="text-2xl font-display font-bold text-charcoal">Wipe Stall Data?</h2>
+                                <p className="text-muted-foreground mt-2 text-sm">
+                                    This will permanently delete the stall, its owner account, and all CRM records. This action cannot be undone.
+                                </p>
+                            </div>
+
+                            <div className="flex gap-3 pt-4">
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => setShowDeleteModal(false)}
+                                    className="flex-1 h-14 rounded-xl font-bold text-charcoal hover:bg-charcoal/5"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={confirmDelete}
+                                    className="flex-1 h-14 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-200"
+                                >
+                                    Yes, Delete
+                                </Button>
                             </div>
                         </div>
                     </div>
