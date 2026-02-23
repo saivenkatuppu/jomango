@@ -125,7 +125,7 @@ const updateStall = asyncHandler(async (req, res) => {
             }
         }
 
-        if (req.body.ownerMobile && req.body.ownerMobile !== stall.ownerMobile) {
+        if (req.body.ownerMobile !== undefined && req.body.ownerMobile !== stall.ownerMobile) {
             const userExists = await User.findOne({ phone: req.body.ownerMobile });
             if (userExists) {
                 res.status(400);
@@ -133,14 +133,14 @@ const updateStall = asyncHandler(async (req, res) => {
             }
         }
 
-        stall.stallName = req.body.stallName || stall.stallName;
-        stall.stallId = req.body.stallId || stall.stallId;
-        stall.ownerName = req.body.ownerName || stall.ownerName;
-        stall.ownerMobile = req.body.ownerMobile || stall.ownerMobile;
-        stall.location = req.body.location || stall.location;
-        stall.status = req.body.status || stall.status;
-        stall.address = req.body.address || stall.address;
-        stall.stallType = req.body.stallType || stall.stallType;
+        if (req.body.stallName !== undefined) stall.stallName = req.body.stallName;
+        if (req.body.stallId !== undefined) stall.stallId = req.body.stallId;
+        if (req.body.ownerName !== undefined) stall.ownerName = req.body.ownerName;
+        if (req.body.ownerMobile !== undefined) stall.ownerMobile = req.body.ownerMobile;
+        if (req.body.location !== undefined) stall.location = req.body.location;
+        if (req.body.status !== undefined) stall.status = req.body.status;
+        if (req.body.address !== undefined) stall.address = req.body.address;
+        if (req.body.stallType !== undefined) stall.stallType = req.body.stallType;
 
         // Sync with the User account associated with this stall
         const user = await User.findOne({ assignedStall: stall._id });
