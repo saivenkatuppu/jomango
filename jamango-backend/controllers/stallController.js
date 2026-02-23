@@ -46,6 +46,7 @@ const createStall = asyncHandler(async (req, res) => {
     });
 
     if (user) {
+        let stall;
         try {
             const stallData = {
                 stallName,
@@ -65,7 +66,7 @@ const createStall = asyncHandler(async (req, res) => {
                 if (operatingDates.to) stallData.operatingDates.to = new Date(operatingDates.to);
             }
 
-            const stall = await Stall.create(stallData);
+            stall = await Stall.create(stallData);
 
             // Link assignedStall back to user
             user.assignedStall = stall._id;
@@ -81,6 +82,9 @@ const createStall = asyncHandler(async (req, res) => {
         } catch (error) {
             // Rollback user creation if stall creation fails
             await User.findByIdAndDelete(user._id);
+            if (stall) {
+                await Stall.findByIdAndDelete(stall._id);
+            }
             res.status(400);
             throw new Error('Failed to create stall entry: ' + error.message);
         }
