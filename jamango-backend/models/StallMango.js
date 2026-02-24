@@ -45,6 +45,34 @@ const stallMangoSchema = mongoose.Schema(
             enum: ['In Stock', 'Sold Out'],
             default: 'In Stock',
         },
+        mrp: {
+            type: Number,
+        },
+        showDiscount: {
+            type: Boolean,
+            default: false,
+        },
+        discountLabel: {
+            type: String,
+            default: '',
+        },
+        description: {
+            type: String,
+            default: '',
+        },
+        showBadge: {
+            type: Boolean,
+            default: false,
+        },
+        badgeType: {
+            type: String,
+            enum: ['preset', 'custom'],
+            default: 'custom',
+        },
+        badge: {
+            type: String,
+            default: '',
+        },
         isGlobalTemplate: {
             type: Boolean,
             default: false,

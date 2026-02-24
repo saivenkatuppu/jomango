@@ -30,6 +30,7 @@ const allNavItems = [
 
 const AdminLayout = () => {
   const { user, logout, isImpersonating, stopImpersonating } = useAuth();
+  const location = useLocation();
   const isAdminOrStaff = user?.isAdmin || user?.role === "admin" || user?.role === "staff";
   const isStaff = user?.role === "staff";
   const isStall = user?.role === "stall_owner";

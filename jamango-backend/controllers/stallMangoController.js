@@ -28,7 +28,7 @@ const getGlobalTemplates = asyncHandler(async (req, res) => {
 // @route   POST /api/stall-mangoes
 // @access  Private
 const addStallMango = asyncHandler(async (req, res) => {
-    const { variety, ripeningType, price, priceUnit, quantity, qualityGrade, status, isGlobalTemplate } = req.body;
+    const { variety, ripeningType, price, priceUnit, quantity, qualityGrade, status, isGlobalTemplate, mrp, showDiscount, discountLabel, description, showBadge, badgeType, badge } = req.body;
 
     if (isGlobalTemplate && req.user.role !== 'admin') {
         res.status(403);
@@ -54,6 +54,13 @@ const addStallMango = asyncHandler(async (req, res) => {
         quantity,
         qualityGrade,
         status,
+        mrp,
+        showDiscount,
+        discountLabel,
+        description,
+        showBadge,
+        badgeType,
+        badge,
         isGlobalTemplate: Boolean(isGlobalTemplate),
     });
 
@@ -88,6 +95,13 @@ const updateStallMango = asyncHandler(async (req, res) => {
     mango.quantity = req.body.quantity !== undefined ? req.body.quantity : mango.quantity;
     mango.qualityGrade = req.body.qualityGrade || mango.qualityGrade;
     mango.status = req.body.status || mango.status;
+    mango.mrp = req.body.mrp !== undefined ? req.body.mrp : mango.mrp;
+    mango.showDiscount = req.body.showDiscount !== undefined ? req.body.showDiscount : mango.showDiscount;
+    mango.discountLabel = req.body.discountLabel !== undefined ? req.body.discountLabel : mango.discountLabel;
+    mango.description = req.body.description !== undefined ? req.body.description : mango.description;
+    mango.showBadge = req.body.showBadge !== undefined ? req.body.showBadge : mango.showBadge;
+    mango.badgeType = req.body.badgeType !== undefined ? req.body.badgeType : mango.badgeType;
+    mango.badge = req.body.badge !== undefined ? req.body.badge : mango.badge;
 
     const updatedMango = await mango.save();
     res.json(updatedMango);

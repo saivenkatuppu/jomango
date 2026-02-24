@@ -21,7 +21,20 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+
+const badgeOptions = [
+    "Best Seller",
+    "Most Popular",
+    "Recommended",
+    "Premium Quality",
+    "Limited Stock",
+    "Hot Deal",
+    "Trending",
+    "Seasonal Pick",
+    "Editor's Choice"
+];
 
 const StallOwnerDashboard = () => {
     const { user } = useAuth();
@@ -53,7 +66,14 @@ const StallOwnerDashboard = () => {
         priceUnit: "per kg",
         quantity: "",
         qualityGrade: "A",
-        status: "In Stock"
+        status: "In Stock",
+        mrp: "",
+        showDiscount: false,
+        discountLabel: "",
+        description: "",
+        showBadge: false,
+        badgeType: "custom",
+        badge: ""
     });
     const [editingMangoId, setEditingMangoId] = useState<string | null>(null);
 
@@ -135,7 +155,10 @@ const StallOwnerDashboard = () => {
                 toast.success("Mango added successfully!");
             }
             setShowForm(false);
-            setMangoForm({ variety: "", ripeningType: "Natural", price: "", priceUnit: "per kg", quantity: "", qualityGrade: "A", status: "In Stock" });
+            setMangoForm({
+                variety: "", ripeningType: "Natural", price: "", priceUnit: "per kg", quantity: "", qualityGrade: "A", status: "In Stock",
+                mrp: "", showDiscount: false, discountLabel: "", description: "", showBadge: false, badgeType: "custom", badge: ""
+            });
             setEditingMangoId(null);
             fetchStallContext();
         } catch (error: any) {
@@ -145,7 +168,10 @@ const StallOwnerDashboard = () => {
 
     const openCreateMango = () => {
         setEditingMangoId(null);
-        setMangoForm({ variety: "", ripeningType: "Natural", price: "", priceUnit: "per kg", quantity: "", qualityGrade: "A", status: "In Stock" });
+        setMangoForm({
+            variety: "", ripeningType: "Natural", price: "", priceUnit: "per kg", quantity: "", qualityGrade: "A", status: "In Stock",
+            mrp: "", showDiscount: false, discountLabel: "", description: "", showBadge: false, badgeType: "custom", badge: ""
+        });
         setShowForm(true);
     };
 
@@ -157,7 +183,14 @@ const StallOwnerDashboard = () => {
             priceUnit: mango.priceUnit,
             quantity: String(mango.quantity),
             qualityGrade: mango.qualityGrade,
-            status: mango.status
+            status: mango.status,
+            mrp: mango.mrp ? String(mango.mrp) : "",
+            showDiscount: mango.showDiscount || false,
+            discountLabel: mango.discountLabel || "",
+            description: mango.description || "",
+            showBadge: mango.showBadge || false,
+            badgeType: mango.badgeType || "custom",
+            badge: mango.badge || ""
         });
         setEditingMangoId(mango._id);
         setShowForm(true);
@@ -179,21 +212,21 @@ const StallOwnerDashboard = () => {
 
     return (
         <div className="space-y-8 max-w-5xl mx-auto pb-12">
-            <div className="bg-gradient-to-br from-charcoal to-black p-8 rounded-[2.5rem] text-white shadow-xl relative overflow-hidden">
+            <div className="bg-gradient-to-br from-yellow-200 via-yellow-100 to-green-100 p-8 rounded-[2.5rem] text-black shadow-lg shadow-yellow-200/50 border border-yellow-300 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-8 opacity-10">
-                    <Store className="h-32 w-32" />
+                    <Leaf className="h-32 w-32 text-green-700" />
                 </div>
                 <div className="relative z-10">
                     <div className="flex justify-between items-start">
                         <div>
-                            <Badge className="bg-mango text-black border-none mb-3 px-3 py-1 font-black tracking-widest text-[10px] uppercase">Official Stall Owner</Badge>
-                            <h1 className="text-4xl font-display font-bold mb-2">{stallData?.stallName}</h1>
-                            <div className="flex flex-wrap items-center gap-4 text-white/60 text-sm font-medium">
+                            <Badge className="bg-green-600 hover:bg-green-700 text-white border-none mb-3 px-3 py-1 font-bold tracking-widest text-[10px] uppercase shadow-sm">Official Stall Owner</Badge>
+                            <h1 className="text-4xl font-display font-black mb-2 text-green-950">{stallData?.stallName}</h1>
+                            <div className="flex flex-wrap items-center gap-4 text-green-800 text-sm font-semibold">
                                 <span className="flex items-center gap-1.5"><Store className="h-4 w-4" /> {stallData?.stallId}</span>
                                 <span className="flex items-center gap-1.5"><Smartphone className="h-4 w-4" /> {stallData?.ownerMobile}</span>
                             </div>
                         </div>
-                        <Badge variant="outline" className={`px-4 py-2 border-white/20 uppercase tracking-widest font-black ${stallData?.status === 'Active' ? 'text-green-400' : 'text-red-400'}`}>
+                        <Badge variant="outline" className={`px-4 py-2 uppercase tracking-widest font-black ${stallData?.status === 'Active' ? 'border-green-600 text-green-700 bg-green-50' : 'border-red-600 text-red-700 bg-red-50'}`}>
                             {stallData?.status}
                         </Badge>
                     </div>
@@ -346,17 +379,194 @@ const StallOwnerDashboard = () => {
                                     </div>
                                     <div className="space-y-1 opacity-50 cursor-not-allowed hidden sm:block">
                                         <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Stall ID</label>
-                                        <Input disabled value={stallData?.stallId || "Auto"} className="h-10 rounded-xl cursor-not-allowed bg-muted" />
+                                        <Input disabled value={stallData?.stallId || "Auto"} className="h-10 rounded-xl cursor-not-allowed bg-[hsl(44,50%,95%)]" />
                                     </div>
 
                                 </div>
 
-                                <div className="flex gap-3 mt-6">
-                                    <Button type="submit" className="flex items-center gap-2">
+                                {/* Pricing Section */}
+                                <div className="bg-[#FEFCE8] p-4 rounded-xl space-y-4 border border-[hsl(44,80%,46%)]/30">
+                                    <h3 className="font-semibold text-sm text-black uppercase tracking-wider">Pricing & Discounts</h3>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="space-y-1 relative">
+                                            <label className="text-xs font-medium text-black uppercase tracking-wider">Base Price (MRP) ₹</label>
+                                            <Input
+                                                type="number"
+                                                placeholder="1000"
+                                                value={mangoForm.mrp}
+                                                onChange={(e) => {
+                                                    const newMrp = e.target.value;
+                                                    let newDiscountLabel = mangoForm.discountLabel;
+                                                    if (newMrp && mangoForm.price && Number(newMrp) > Number(mangoForm.price)) {
+                                                        newDiscountLabel = String(Math.round(((Number(newMrp) - Number(mangoForm.price)) / Number(newMrp)) * 100));
+                                                    }
+                                                    setMangoForm((f) => ({ ...f, mrp: newMrp, discountLabel: newDiscountLabel }));
+                                                }}
+                                                className="h-10 rounded-xl bg-white border-yellow-200"
+                                            />
+                                            <p className="text-[10px] text-muted-foreground">Original price before discount.</p>
+                                        </div>
+
+                                        <div className="space-y-1 relative">
+                                            <label className="text-xs font-medium text-black uppercase tracking-wider">Selling Price ₹</label>
+                                            <Input
+                                                type="number"
+                                                placeholder="899"
+                                                value={mangoForm.price}
+                                                onChange={(e) => {
+                                                    const newPrice = e.target.value;
+                                                    let newDiscountLabel = mangoForm.discountLabel;
+                                                    if (mangoForm.mrp && newPrice && Number(mangoForm.mrp) > Number(newPrice)) {
+                                                        newDiscountLabel = String(Math.round(((Number(mangoForm.mrp) - Number(newPrice)) / Number(mangoForm.mrp)) * 100));
+                                                    }
+                                                    setMangoForm((f) => ({ ...f, price: newPrice, discountLabel: newDiscountLabel }));
+                                                }}
+                                                className="h-10 rounded-xl font-bold bg-[#FEF3C7] text-yellow-900 border-yellow-400 focus:border-yellow-500 placeholder:text-yellow-700/50"
+                                            />
+                                            <p className="text-[10px] text-muted-foreground">Customers will pay this amount.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-4 pt-2">
+                                        <div className="flex items-center gap-3 bg-white p-2 rounded-lg border border-yellow-200">
+                                            <Switch checked={mangoForm.showDiscount} onCheckedChange={(v) => setMangoForm((f) => ({ ...f, showDiscount: v }))} id="show-discount" />
+                                            <label htmlFor="show-discount" className="text-sm font-medium cursor-pointer text-black">Show Discount Badge</label>
+                                        </div>
+                                    </div>
+
+                                    {mangoForm.showDiscount && (
+                                        <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                                            <div className="space-y-1">
+                                                <div className="flex justify-between items-center">
+                                                    <label className="text-xs font-medium text-black uppercase tracking-wider">Discount Label</label>
+                                                    {Number(mangoForm.mrp) > Number(mangoForm.price) && Number(mangoForm.mrp) > 0 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const percent = Math.round(((Number(mangoForm.mrp) - Number(mangoForm.price)) / Number(mangoForm.mrp)) * 100);
+                                                                setMangoForm(f => ({ ...f, discountLabel: String(percent) }));
+                                                            }}
+                                                            className="text-[10px] text-green-700 hover:underline font-medium cursor-pointer"
+                                                        >
+                                                            Auto-apply {Math.round(((Number(mangoForm.mrp) - Number(mangoForm.price)) / Number(mangoForm.mrp)) * 100)}% OFF
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <Input
+                                                    placeholder="e.g. 30 (for 30% OFF), Special Price"
+                                                    value={mangoForm.discountLabel}
+                                                    onChange={(e) => setMangoForm((f) => ({ ...f, discountLabel: e.target.value }))}
+                                                    className="h-10 rounded-xl bg-white border-yellow-200"
+                                                />
+                                                <div className="text-xs text-muted-foreground pt-1 flex items-center gap-2">
+                                                    <span>Preview:</span>
+                                                    {mangoForm.discountLabel ? (
+                                                        <span className="bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                                                            {/^\d+$/.test(mangoForm.discountLabel) ? `${mangoForm.discountLabel}% OFF` : mangoForm.discountLabel}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="italic opacity-50">No label</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-black uppercase tracking-wider">Description</label>
+                                        <Input
+                                            placeholder="Short description..."
+                                            value={mangoForm.description}
+                                            onChange={(e) => setMangoForm((f) => ({ ...f, description: e.target.value }))}
+                                            className="h-10 rounded-xl border-border"
+                                        />
+                                    </div>
+
+                                    {/* Product Badge Section */}
+                                    <div className="space-y-4 border border-[hsl(44,80%,46%)]/30 bg-[#FEFCE8] p-4 rounded-xl">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="font-semibold text-sm text-black uppercase tracking-wider">Product Badge</h3>
+                                            <div className="flex items-center gap-3 bg-white p-1.5 rounded-lg border border-yellow-200">
+                                                <label htmlFor="show-badge" className={`text-xs font-medium cursor-pointer transition-colors ${mangoForm.showBadge ? "text-black" : "text-muted-foreground"}`}>
+                                                    {mangoForm.showBadge ? "Badge ON" : "Badge OFF"}
+                                                </label>
+                                                <Switch checked={mangoForm.showBadge} onCheckedChange={(v) => setMangoForm((f) => ({ ...f, showBadge: v }))} id="show-badge" />
+                                            </div>
+                                        </div>
+
+                                        {mangoForm.showBadge && (
+                                            <div className="animate-in fade-in slide-in-from-top-2 duration-200 space-y-4">
+                                                <div className="flex p-1 bg-white border border-yellow-200 rounded-lg w-fit">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setMangoForm(f => ({ ...f, badgeType: 'preset' }))}
+                                                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${mangoForm.badgeType === 'preset' ? "bg-[hsl(44,80%,46%)]/20 text-[#a38000] shadow-sm" : "text-muted-foreground hover:text-black"}`}
+                                                    >
+                                                        Select Preset
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setMangoForm(f => ({ ...f, badgeType: 'custom' }))}
+                                                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${mangoForm.badgeType === 'custom' ? "bg-[hsl(44,80%,46%)]/20 text-[#a38000] shadow-sm" : "text-muted-foreground hover:text-black"}`}
+                                                    >
+                                                        Custom Text
+                                                    </button>
+                                                </div>
+
+                                                {mangoForm.badgeType === 'preset' && (
+                                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                                        {badgeOptions.map((opt) => (
+                                                            <button
+                                                                key={opt}
+                                                                type="button"
+                                                                onClick={() => setMangoForm(f => ({ ...f, badge: opt }))}
+                                                                className={`text-xs py-2 px-3 rounded-lg border transition-all text-left truncate ${mangoForm.badge === opt
+                                                                    ? "border-green-600 bg-green-50 text-green-700 font-bold"
+                                                                    : "border-yellow-200 bg-white text-muted-foreground hover:border-[hsl(44,80%,46%)] hover:text-black"
+                                                                    }`}
+                                                            >
+                                                                {opt}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                {mangoForm.badgeType === 'custom' && (
+                                                    <div className="space-y-1">
+                                                        <label className="text-xs font-medium text-black uppercase tracking-wider">Custom Badge Text</label>
+                                                        <Input
+                                                            placeholder="e.g. Farm Fresh"
+                                                            value={mangoForm.badge}
+                                                            onChange={(e) => setMangoForm((f) => ({ ...f, badge: e.target.value }))}
+                                                            className="h-10 rounded-xl bg-white border-yellow-200"
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                <div className="text-xs text-muted-foreground pt-2 border-t border-yellow-200 flex items-center gap-2">
+                                                    <span>Preview:</span>
+                                                    {mangoForm.badge ? (
+                                                        <span className="bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                                                            {mangoForm.badge}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="italic opacity-50">No text selected</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4 mt-8">
+                                    <Button type="submit" className="bg-[#cca300] hover:bg-[#b38f00] text-white rounded-full px-6 shadow-md transition-colors flex items-center gap-2">
                                         <Check className="h-4 w-4" />
                                         {editingMangoId ? 'Save Changes' : 'Create Product'}
                                     </Button>
-                                    <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+                                    <Button type="button" variant="outline" onClick={() => setShowForm(false)} className="rounded-full px-6 border-muted-foreground/20 hover:bg-muted font-medium text-foreground">
                                         Cancel
                                     </Button>
                                 </div>
