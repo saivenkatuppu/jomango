@@ -205,12 +205,6 @@ const AdminDashboard = () => {
               <p className="font-display text-2xl font-bold text-blue-700">{data.stats.paidBoxesToday}</p>
               <p className="font-body text-xs text-blue-700/70 mt-1">No collection required</p>
             </div>
-
-            <div className="bg-card rounded-xl border border-border p-4 bg-red-50/50">
-              <p className="font-body text-xs text-red-700/70 mb-1 uppercase tracking-wider font-semibold">Cancelled Orders</p>
-              <p className="font-display text-2xl font-bold text-red-700">{data.stats.cancelledToday}</p>
-              <p className="font-body text-xs text-red-700/70 mt-1">Inventory restored automatically</p>
-            </div>
           </div>
         </div>
       )}

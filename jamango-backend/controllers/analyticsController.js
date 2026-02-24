@@ -25,7 +25,6 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         productBreakdown,
         todayBoxesResult,
         todayBoxesByPaymentResult,
-        cancelledTodayResult,
     ] = await Promise.all([
         // Total orders ever
         Order.countDocuments(),
@@ -87,9 +86,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             { $match: { createdAt: { $gte: startOfToday } } },
             { $unwind: '$items' },
             { $group: { _id: '$paymentMode', totalBoxes: { $sum: '$items.quantity' } } }
-        ]),
-        // Cancelled orders today
-        Order.countDocuments({ status: 'Cancelled', createdAt: { $gte: startOfToday } })
+        ])
     ]);
 
     let totalRevenue = revenueResult[0]?.total || 0;
@@ -126,7 +123,6 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
     const boxesToday = todayBoxesResult[0]?.totalBoxes || 0;
     const paidBoxesToday = todayBoxesByPaymentResult.find(r => r._id === 'online')?.totalBoxes || 0;
-    const cancelledToday = cancelledTodayResult || 0;
 
     res.json({
         stats: {
@@ -138,8 +134,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             todayRevenue,
             avgOrderValue,
             boxesToday,
-            paidBoxesToday,
-            cancelledToday
+            paidBoxesToday
         },
         recentOrders: processedRecentOrders,
         lowStockProducts,
