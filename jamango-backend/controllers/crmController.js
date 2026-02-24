@@ -17,6 +17,12 @@ const addCustomer = asyncHandler(async (req, res) => {
     const stallObjectId = req.body.stallObjectId || req.user.assignedStall;
     const stallId = req.body.stallId || req.user.stallId;
 
+    const stallIdString = stallObjectId?.toString() || '';
+    if (!stallIdString.match(/^[0-9a-fA-F]{24}$/)) {
+        res.status(400);
+        throw new Error('Invalid stall ObjectId');
+    }
+
     // Check if customer already exists for THIS stall
     let customer = await StallCustomer.findOne({ mobile, stall: stallObjectId });
 
@@ -53,17 +59,25 @@ const getCustomers = asyncHandler(async (req, res) => {
     let query = {};
 
     if (req.user.role === 'stall_owner') {
+        const stallIdString = req.user.assignedStall?.toString() || '';
+        if (!stallIdString.match(/^[0-9a-fA-F]{24}$/)) {
+            // Invalid ObjectId, return empty
+            return res.json([]);
+        }
         query = { stall: req.user.assignedStall };
     } else if ((req.user.isAdmin || req.user.role === 'admin') && req.query.stallId) {
-        // Admin filtering by a specific stall's ObjectId
         query = { stall: req.query.stallId };
     }
 
-    const customers = await StallCustomer.find(query)
-        .populate('stall', 'stallName stallId')
-        .sort({ createdAt: -1 });
+    try {
+        const customers = await StallCustomer.find(query)
+            .populate('stall', 'stallName stallId')
+            .sort({ createdAt: -1 });
 
-    res.json(customers);
+        res.json(customers);
+    } catch (e) {
+        res.json([]);
+    }
 });
 
 // @desc    Get customer breakdown/counts for Admin or Stall Owner
@@ -72,43 +86,51 @@ const getCustomers = asyncHandler(async (req, res) => {
 const getCRMStats = asyncHandler(async (req, res) => {
     let matchStage = {};
     if (req.user.role === 'stall_owner') {
+        const stallIdString = req.user.assignedStall?.toString() || '';
+        if (!stallIdString.match(/^[0-9a-fA-F]{24}$/)) {
+            return res.json({ totalCustomers: 0, stallWiseCounts: [] });
+        }
         matchStage = { stall: req.user.assignedStall };
     }
 
-    const totalCustomers = await StallCustomer.countDocuments(matchStage);
+    try {
+        const totalCustomers = await StallCustomer.countDocuments(matchStage);
 
-    const stallWiseCounts = await StallCustomer.aggregate([
-        { $match: matchStage },
-        {
-            $group: {
-                _id: '$stall',
-                count: { $sum: 1 }
+        const stallWiseCounts = await StallCustomer.aggregate([
+            { $match: matchStage },
+            {
+                $group: {
+                    _id: '$stall',
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $lookup: {
+                    from: 'stalls',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'stallInfo'
+                }
+            },
+            {
+                $unwind: '$stallInfo'
+            },
+            {
+                $project: {
+                    stallName: '$stallInfo.stallName',
+                    stallId: '$stallInfo.stallId',
+                    count: 1
+                }
             }
-        },
-        {
-            $lookup: {
-                from: 'stalls',
-                localField: '_id',
-                foreignField: '_id',
-                as: 'stallInfo'
-            }
-        },
-        {
-            $unwind: '$stallInfo'
-        },
-        {
-            $project: {
-                stallName: '$stallInfo.stallName',
-                stallId: '$stallInfo.stallId',
-                count: 1
-            }
-        }
-    ]);
+        ]);
 
-    res.json({
-        totalCustomers,
-        stallWiseCounts
-    });
+        res.json({
+            totalCustomers,
+            stallWiseCounts
+        });
+    } catch (e) {
+        res.json({ totalCustomers: 0, stallWiseCounts: [] });
+    }
 });
 
 module.exports = {
