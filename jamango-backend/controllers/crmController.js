@@ -117,6 +117,7 @@ const getCRMStats = asyncHandler(async (req, res) => {
             },
             {
                 $project: {
+                    _id: 1,
                     stallName: '$stallInfo.stallName',
                     stallId: '$stallInfo.stallId',
                     count: 1
