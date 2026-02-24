@@ -200,28 +200,25 @@ const StallOwnerDashboard = () => {
                 </div>
             </div>
 
-            <div className="flex bg-white rounded-2xl shadow-sm border border-charcoal/5 p-2 gap-2 overflow-x-auto">
-                <Button
-                    variant={activeTab === 'summary' ? 'default' : 'ghost'}
+            <div className="flex border-b border-border mb-8 overflow-x-auto">
+                <button
                     onClick={() => setActiveTab('summary')}
-                    className={`flex-1 min-w-[120px] rounded-xl font-bold ${activeTab === 'summary' ? 'bg-mango text-black hover:bg-mango-deep' : 'text-charcoal/60 hover:bg-charcoal/5'}`}
+                    className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === 'summary' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}`}
                 >
                     Dashboard
-                </Button>
-                <Button
-                    variant={activeTab === 'mangoes' ? 'default' : 'ghost'}
+                </button>
+                <button
                     onClick={() => setActiveTab('mangoes')}
-                    className={`flex-1 min-w-[120px] rounded-xl font-bold ${activeTab === 'mangoes' ? 'bg-mango text-black hover:bg-mango-deep' : 'text-charcoal/60 hover:bg-charcoal/5'}`}
+                    className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === 'mangoes' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}`}
                 >
                     Stock Manager
-                </Button>
-                <Button
-                    variant={activeTab === 'crm' ? 'default' : 'ghost'}
+                </button>
+                <button
                     onClick={() => setActiveTab('crm')}
-                    className={`flex-1 min-w-[120px] rounded-xl font-bold ${activeTab === 'crm' ? 'bg-mango text-black hover:bg-mango-deep' : 'text-charcoal/60 hover:bg-charcoal/5'}`}
+                    className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === 'crm' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}`}
                 >
                     Customer Entry
-                </Button>
+                </button>
             </div>
 
             {activeTab === 'summary' && (
