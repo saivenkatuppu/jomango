@@ -128,7 +128,9 @@ const StallOwnerDashboard = () => {
         try {
             await client.post("/crm/customers", {
                 ...customerForm,
-                purchasedQuantity: customerForm.purchasedQuantity ? Number(customerForm.purchasedQuantity) : undefined
+                purchasedQuantity: customerForm.purchasedQuantity ? Number(customerForm.purchasedQuantity) : undefined,
+                stallObjectId: stallData?._id,
+                stallId: stallData?.stallId
             });
             toast.success("Customer added successfully!");
             setCustomerForm({ name: "", mobile: "", email: "", purchasedVariety: "", purchasedQuantity: "", consent: true, notes: "" });
@@ -685,22 +687,22 @@ const StallOwnerDashboard = () => {
                             </div>
                         </div>
 
-                        <div className="bg-mango/5 p-6 rounded-2xl border border-mango/10">
+                        <div className="bg-yellow-50 p-6 rounded-2xl border border-yellow-200">
                             <label className="flex items-center gap-4 cursor-pointer">
                                 <input
                                     type="checkbox"
-                                    className="h-6 w-6 rounded-lg accent-mango border-mango"
+                                    className="h-6 w-6 rounded-lg accent-green-600 border-green-600"
                                     checked={customerForm.consent}
                                     onChange={(e) => setCustomerForm({ ...customerForm, consent: e.target.checked })}
                                 />
                                 <div className="space-y-0.5">
-                                    <p className="font-bold text-charcoal">Get Consent for Updates</p>
-                                    <p className="text-xs text-charcoal/60">Customer agrees to receive seasonal mango offers on WhatsApp/SMS</p>
+                                    <p className="font-bold text-black">Get Consent for Updates</p>
+                                    <p className="text-xs text-muted-foreground">Customer agrees to receive seasonal mango offers on WhatsApp/SMS</p>
                                 </div>
                             </label>
                         </div>
 
-                        <Button type="submit" className="w-full h-16 bg-mango hover:bg-mango-deep text-black rounded-2xl font-black text-xl shadow-xl shadow-mango/20 transition-all active:scale-[0.98] flex items-center gap-3">
+                        <Button type="submit" className="w-full h-16 bg-[#cca300] hover:bg-[#b38f00] text-white rounded-2xl font-black text-xl shadow-xl shadow-yellow-600/20 transition-all active:scale-[0.98] flex items-center justify-center gap-3">
                             <PlusCircle className="h-6 w-6" /> Save Customer Record
                         </Button>
                     </form>

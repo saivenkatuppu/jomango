@@ -66,13 +66,19 @@ const getCustomers = asyncHandler(async (req, res) => {
     res.json(customers);
 });
 
-// @desc    Get customer breakdown/counts for Admin
+// @desc    Get customer breakdown/counts for Admin or Stall Owner
 // @route   GET /api/crm/stats
-// @access  Private/Admin
+// @access  Private/Admin|StallOwner
 const getCRMStats = asyncHandler(async (req, res) => {
-    const totalCustomers = await StallCustomer.countDocuments();
+    let matchStage = {};
+    if (req.user.role === 'stall_owner') {
+        matchStage = { stall: req.user.assignedStall };
+    }
+
+    const totalCustomers = await StallCustomer.countDocuments(matchStage);
 
     const stallWiseCounts = await StallCustomer.aggregate([
+        { $match: matchStage },
         {
             $group: {
                 _id: '$stall',
