@@ -47,7 +47,7 @@ const adminOrStaff = (req, res, next) => {
 };
 
 const stallOrAdmin = (req, res, next) => {
-    if (req.user && (req.user.role === 'admin' || req.user.role === 'stall_owner')) {
+    if (req.user && (req.user.isAdmin || req.user.role === 'admin' || req.user.role === 'stall_owner')) {
         next();
     } else {
         res.status(403);

@@ -78,7 +78,7 @@ const AdminCRM = () => {
                 <Button
                     onClick={downloadCSV}
                     variant="outline"
-                    className="rounded-xl px-6 py-6 border-charcoal/10 hover:bg-mango/5 text-mango font-bold flex items-center gap-2"
+                    className="rounded-xl px-6 py-6 border-charcoal/10 hover:bg-yellow-50 text-[#cca300] font-bold flex items-center gap-2"
                 >
                     <Download className="h-5 w-5" /> Download Database
                 </Button>
@@ -88,7 +88,7 @@ const AdminCRM = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="bg-white p-6 rounded-3xl border border-charcoal/5 shadow-sm">
                         <div className="flex items-center justify-between mb-2">
-                            <Users className="h-5 w-5 text-mango" />
+                            <Users className="h-5 w-5 text-[#cca300]" />
                             <Badge variant="outline" className="text-[10px] uppercase font-bold text-muted-foreground">Global</Badge>
                         </div>
                         <p className="text-3xl font-bold text-charcoal">{stats.totalCustomers}</p>
@@ -96,7 +96,7 @@ const AdminCRM = () => {
                     </div>
 
                     {stats.stallWiseCounts.map((s: any) => (
-                        <div key={s._id} className="bg-white p-6 rounded-3xl border border-charcoal/5 shadow-sm hover:border-mango/20 transition-all">
+                        <div key={s._id} className="bg-white p-6 rounded-3xl border border-charcoal/5 shadow-sm hover:border-[#cca300]/30 transition-all">
                             <div className="flex items-center justify-between mb-2">
                                 <Layers className="h-5 w-5 text-blue-500" />
                                 <Badge variant="outline" className="text-[10px] uppercase font-bold text-blue-400">Stall</Badge>

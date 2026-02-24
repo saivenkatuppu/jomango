@@ -9,7 +9,7 @@ const addCustomer = asyncHandler(async (req, res) => {
     const { name, mobile, consent, notes, email, purchasedVariety, purchasedQuantity } = req.body;
 
     // A stall owner's req.user will have stallId and assignedStall (ObjectId)
-    if (!req.user.assignedStall && req.user.role !== 'admin') {
+    if (!req.user.assignedStall && !(req.user.isAdmin || req.user.role === 'admin')) {
         res.status(403);
         throw new Error('User is not assigned to any stall');
     }
@@ -54,7 +54,7 @@ const getCustomers = asyncHandler(async (req, res) => {
 
     if (req.user.role === 'stall_owner') {
         query = { stall: req.user.assignedStall };
-    } else if (req.user.role === 'admin' && req.query.stallId) {
+    } else if ((req.user.isAdmin || req.user.role === 'admin') && req.query.stallId) {
         // Admin filtering by a specific stall's ObjectId
         query = { stall: req.query.stallId };
     }
