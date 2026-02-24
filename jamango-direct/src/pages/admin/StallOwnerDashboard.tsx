@@ -11,6 +11,10 @@ import {
     RefreshCw,
     Edit3,
     Trash2,
+    Plus,
+    X,
+    Check,
+    Pencil,
 } from "lucide-react";
 import client from "@/api/client";
 import { useAuth } from "@/context/AuthContext";
@@ -40,6 +44,8 @@ const StallOwnerDashboard = () => {
     // Mango state
     const [mangoes, setMangoes] = useState<any[]>([]);
     const [globalTemplates, setGlobalTemplates] = useState<any[]>([]);
+    const [adminProducts, setAdminProducts] = useState<any[]>([]);
+    const [showForm, setShowForm] = useState(false);
     const [mangoForm, setMangoForm] = useState({
         variety: "",
         ripeningType: "Natural",
@@ -63,14 +69,16 @@ const StallOwnerDashboard = () => {
             const stallRes = await client.get(`/stalls/${user.assignedStall}`);
             setStallData(stallRes.data);
 
-            const [crmRes, mangoRes, templatesRes] = await Promise.all([
+            const [crmRes, mangoRes, templatesRes, productsRes] = await Promise.all([
                 client.get("/crm/customers"),
                 client.get("/stall-mangoes"),
-                client.get("/stall-mangoes/templates")
+                client.get("/stall-mangoes/templates"),
+                client.get("/products")
             ]);
 
             const customers = crmRes.data;
             const myMangoes = mangoRes.data;
+            const allProducts = productsRes.data;
 
             const today = new Date().toDateString();
             const todayCustomers = customers.filter((c: any) => new Date(c.createdAt).toDateString() === today);
@@ -86,6 +94,7 @@ const StallOwnerDashboard = () => {
 
             setMangoes(myMangoes);
             setGlobalTemplates(templatesRes.data);
+            setAdminProducts(allProducts);
 
         } catch (error) {
             toast.error("Failed to load dashboard");
@@ -125,12 +134,19 @@ const StallOwnerDashboard = () => {
                 await client.post("/stall-mangoes", payload);
                 toast.success("Mango added successfully!");
             }
+            setShowForm(false);
             setMangoForm({ variety: "", ripeningType: "Natural", price: "", priceUnit: "per kg", quantity: "", qualityGrade: "A", status: "In Stock" });
             setEditingMangoId(null);
             fetchStallContext();
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to save mango");
         }
+    };
+
+    const openCreateMango = () => {
+        setEditingMangoId(null);
+        setMangoForm({ variety: "", ripeningType: "Natural", price: "", priceUnit: "per kg", quantity: "", qualityGrade: "A", status: "In Stock" });
+        setShowForm(true);
     };
 
     const handleEditMango = (mango: any) => {
@@ -144,6 +160,7 @@ const StallOwnerDashboard = () => {
             status: mango.status
         });
         setEditingMangoId(mango._id);
+        setShowForm(true);
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
@@ -234,151 +251,155 @@ const StallOwnerDashboard = () => {
 
             {activeTab === 'mangoes' && (
                 <div className="space-y-6">
-                    <div className="bg-white rounded-[2rem] shadow-sm border border-charcoal/5 overflow-hidden">
-                        <div className="bg-charcoal/5 p-6 border-b border-charcoal/5">
-                            <h2 className="text-xl font-display font-bold text-charcoal">{editingMangoId ? 'Edit Mango Info' : 'Add New Mango Variety'}</h2>
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 className="font-display text-3xl font-semibold text-foreground">Stock Manager</h2>
+                            <p className="font-body text-muted-foreground mt-1">Manage your stall's available mango varieties</p>
                         </div>
-                        <form onSubmit={handleMangoSubmit} className="p-6 space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-charcoal/60">Variety Name</label>
-                                    <div className="relative">
-                                        <Input
-                                            required
-                                            list="global-varieties"
-                                            placeholder="e.g. Alphonso"
-                                            className="h-12 rounded-xl bg-charcoal/5 border-none font-bold"
-                                            value={mangoForm.variety}
-                                            onChange={(e) => setMangoForm({ ...mangoForm, variety: e.target.value })}
-                                        />
-                                        <datalist id="global-varieties">
-                                            {globalTemplates.map(t => <option key={t._id} value={t.variety} />)}
-                                        </datalist>
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-charcoal/60">Ripening Type</label>
-                                    <select
-                                        className="w-full h-12 rounded-xl bg-charcoal/5 border-none px-3 font-bold text-sm"
-                                        value={mangoForm.ripeningType}
-                                        onChange={(e) => setMangoForm({ ...mangoForm, ripeningType: e.target.value })}
-                                    >
-                                        <option value="Natural">Natural</option>
-                                        <option value="Carbide-Free">Carbide-Free</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-charcoal/60">Quality Grade</label>
-                                    <select
-                                        className="w-full h-12 rounded-xl bg-charcoal/5 border-none px-3 font-bold text-sm"
-                                        value={mangoForm.qualityGrade}
-                                        onChange={(e) => setMangoForm({ ...mangoForm, qualityGrade: e.target.value })}
-                                    >
-                                        <option value="A">A</option>
-                                        <option value="Premium">Premium</option>
-                                        <option value="Export">Export</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-charcoal/60">Price</label>
-                                    <Input
-                                        required
-                                        type="number"
-                                        placeholder="0"
-                                        className="h-12 rounded-xl bg-charcoal/5 border-none font-bold"
-                                        value={mangoForm.price}
-                                        onChange={(e) => setMangoForm({ ...mangoForm, price: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-charcoal/60">Price Unit</label>
-                                    <select
-                                        className="w-full h-12 rounded-xl bg-charcoal/5 border-none px-3 font-bold text-sm"
-                                        value={mangoForm.priceUnit}
-                                        onChange={(e) => setMangoForm({ ...mangoForm, priceUnit: e.target.value })}
-                                    >
-                                        <option value="per kg">per kg</option>
-                                        <option value="per box">per box</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-charcoal/60">Available Quantity</label>
-                                    <Input
-                                        required
-                                        type="number"
-                                        placeholder="Current stock"
-                                        className="h-12 rounded-xl bg-charcoal/5 border-none font-bold"
-                                        value={mangoForm.quantity}
-                                        onChange={(e) => setMangoForm({ ...mangoForm, quantity: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-charcoal/60">Status</label>
-                                    <select
-                                        className="w-full h-12 rounded-xl bg-charcoal/5 border-none px-3 font-bold text-sm"
-                                        value={mangoForm.status}
-                                        onChange={(e) => setMangoForm({ ...mangoForm, status: e.target.value })}
-                                    >
-                                        <option value="In Stock">In Stock</option>
-                                        <option value="Sold Out">Sold Out</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div className="flex gap-4 pt-2">
-                                {editingMangoId && (
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        onClick={() => { setEditingMangoId(null); setMangoForm({ variety: "", ripeningType: "Natural", price: "", priceUnit: "per kg", quantity: "", qualityGrade: "A", status: "In Stock" }); }}
-                                        className="rounded-xl h-12"
-                                    >
-                                        Cancel
-                                    </Button>
-                                )}
-                                <Button type="submit" className="flex-1 h-12 bg-charcoal hover:bg-black text-mango rounded-xl font-black shadow-lg">
-                                    {editingMangoId ? 'Update Stock Entry' : 'Add to Stock List'}
-                                </Button>
-                            </div>
-                        </form>
+                        <div className="flex gap-2">
+                            <Button size="sm" onClick={openCreateMango} className="flex items-center gap-2">
+                                <Plus className="h-4 w-4" /> Add Product
+                            </Button>
+                        </div>
                     </div>
 
-                    <div className="bg-white rounded-[2rem] shadow-sm border border-charcoal/5 overflow-hidden">
-                        <div className="p-6 border-b border-charcoal/5 bg-charcoal text-white flex justify-between items-center">
-                            <h2 className="text-lg font-display font-bold text-mango">Current Stall Inventory</h2>
-                            <Badge variant="outline" className="border-white/20">{mangoes.length} Varieties</Badge>
-                        </div>
-                        <div className="divide-y divide-charcoal/5">
-                            {mangoes.map(mango => (
-                                <div key={mango._id} className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-charcoal/[0.02]">
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <h3 className="font-bold text-lg text-charcoal">{mango.variety}</h3>
-                                            <Badge variant="outline" className="text-[10px] uppercase bg-charcoal/5">{mango.qualityGrade}</Badge>
-                                            <Badge className={`text-[10px] uppercase font-black tracking-widest ${mango.status === 'In Stock' ? 'bg-green-100 text-green-700 hover:bg-green-100' : 'bg-red-100 text-red-700 hover:bg-red-100'}`}>
-                                                {mango.status}
-                                            </Badge>
-                                        </div>
-                                        <div className="text-sm text-charcoal/60 flex items-center gap-3">
-                                            <span className="flex items-center gap-1"><Leaf className="h-3.5 w-3.5" />{mango.ripeningType}</span>
-                                            <span>₹{mango.price} {mango.priceUnit}</span>
-                                            <span className="font-bold text-charcoal">Stock: {mango.quantity}</span>
-                                        </div>
+                    {showForm && (
+                        <div className="mb-8 bg-card border border-border rounded-2xl p-6 shadow-sm">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="font-display text-xl font-semibold">{editingMangoId ? "Edit Stock Entry" : "New Stock Entry"}</h2>
+                                <button type="button" onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground">
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleMangoSubmit} className="space-y-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Variety Name</label>
+                                        <select
+                                            required
+                                            className="w-full h-10 rounded-xl bg-white border border-input px-3 font-medium text-sm"
+                                            value={mangoForm.variety}
+                                            onChange={(e) => setMangoForm({ ...mangoForm, variety: e.target.value })}
+                                            disabled={!!editingMangoId}
+                                        >
+                                            <option value="" disabled>Select variety...</option>
+                                            {adminProducts.map(p => (
+                                                <option key={p._id} value={p.variety}>{p.name} ({p.variety})</option>
+                                            ))}
+                                        </select>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <Button variant="outline" size="sm" onClick={() => handleEditMango(mango)} className="rounded-lg h-9 w-9 p-0 border-charcoal/10 hover:bg-charcoal/5 text-charcoal">
-                                            <Edit3 className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="outline" size="sm" onClick={() => handleDeleteMango(mango._id)} className="rounded-lg h-9 w-9 p-0 border-red-100 text-red-500 hover:bg-red-50 hover:text-red-700">
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Selling Price ₹</label>
+                                        <Input
+                                            required
+                                            type="number"
+                                            placeholder="899"
+                                            value={mangoForm.price}
+                                            onChange={(e) => setMangoForm({ ...mangoForm, price: e.target.value })}
+                                            className="h-10 rounded-xl font-bold bg-[#FEF3C7] text-yellow-900 border-yellow-400 focus:border-yellow-500 placeholder:text-yellow-700/50"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Price Unit</label>
+                                        <select
+                                            className="w-full h-10 rounded-xl bg-white border border-input px-3 font-medium text-sm"
+                                            value={mangoForm.priceUnit}
+                                            onChange={(e) => setMangoForm({ ...mangoForm, priceUnit: e.target.value })}
+                                        >
+                                            <option value="per kg">per kg</option>
+                                            <option value="per box">per box</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Available Quantity (Stock)</label>
+                                        <Input
+                                            required
+                                            type="number"
+                                            placeholder="50"
+                                            value={mangoForm.quantity}
+                                            onChange={(e) => setMangoForm({ ...mangoForm, quantity: e.target.value })}
+                                            className="h-10 rounded-xl"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</label>
+                                        <select
+                                            className="w-full h-10 rounded-xl bg-white border border-input px-3 font-medium text-sm"
+                                            value={mangoForm.status}
+                                            onChange={(e) => setMangoForm({ ...mangoForm, status: e.target.value })}
+                                        >
+                                            <option value="In Stock">In Stock</option>
+                                            <option value="Sold Out">Sold Out</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Locked Fields UI */}
+                                    <div className="space-y-1 opacity-50 cursor-not-allowed">
+                                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Ripening Type</label>
+                                        <Input disabled value="Natural" className="h-10 rounded-xl cursor-not-allowed bg-muted" />
+                                    </div>
+                                    <div className="space-y-1 opacity-50 cursor-not-allowed">
+                                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Quality Grade</label>
+                                        <Input disabled value="A" className="h-10 rounded-xl cursor-not-allowed bg-muted" />
+                                    </div>
+                                    <div className="space-y-1 opacity-50 cursor-not-allowed hidden sm:block">
+                                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Stall ID</label>
+                                        <Input disabled value={stallData?.stallId || "Auto"} className="h-10 rounded-xl cursor-not-allowed bg-muted" />
+                                    </div>
+
+                                </div>
+
+                                <div className="flex gap-3 mt-6">
+                                    <Button type="submit" className="flex items-center gap-2">
+                                        <Check className="h-4 w-4" />
+                                        {editingMangoId ? 'Save Changes' : 'Create Product'}
+                                    </Button>
+                                    <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+                                        Cancel
+                                    </Button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    <div className="space-y-4">
+                        {mangoes.length === 0 && (
+                            <div className="p-12 text-center font-body text-muted-foreground">
+                                No mangoes added to your stall yet.
+                            </div>
+                        )}
+                        {mangoes.map(mango => (
+                            <div key={mango._id} className="bg-card rounded-xl border border-border p-6 flex items-center justify-between gap-4">
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-3 mb-1 flex-wrap">
+                                        <h3 className="font-display text-lg font-semibold text-foreground">{mango.variety}</h3>
+                                        <span className={`text-xs px-2 py-0.5 rounded-full font-body ${mango.status === 'In Stock' ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground opacity-60 italic"}`}>
+                                            {mango.status}
+                                        </span>
+                                    </div>
+                                    <p className="font-body text-sm text-muted-foreground">Grade: {mango.qualityGrade} · {mango.ripeningType}</p>
+                                    <div className="flex items-center gap-6 mt-2 font-body text-sm">
+                                        <span className="text-foreground font-medium">₹{mango.price} {mango.priceUnit}</span>
+                                        <span className={`${mango.quantity < 10 ? "text-red-600 font-semibold" : "text-muted-foreground"}`}>
+                                            {mango.quantity} in stock{mango.quantity < 10 && mango.quantity > 0 ? " ⚠️ Low" : mango.quantity === 0 ? " — Out of stock" : ""}
+                                        </span>
                                     </div>
                                 </div>
-                            ))}
-                            {mangoes.length === 0 && (
-                                <div className="p-12 text-center text-muted-foreground">No mangoes added to your stall yet!</div>
-                            )}
-                        </div>
+                                <div className="flex items-center gap-3 shrink-0">
+                                    <Button variant="outline" size="icon" onClick={() => handleEditMango(mango)}>
+                                        <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="outline" size="icon" className="text-red-500 hover:text-red-700 hover:border-red-300" onClick={() => handleDeleteMango(mango._id)}>
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}
