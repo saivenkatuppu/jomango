@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
+const Stall = require('../models/Stall');
 
 const protect = asyncHandler(async (req, res, next) => {
     let token;
@@ -47,12 +48,30 @@ const adminOrStaff = (req, res, next) => {
 };
 
 const stallOrAdmin = (req, res, next) => {
-    if (req.user && (req.user.isAdmin || req.user.role === 'admin' || req.user.role === 'stall_owner')) {
+    if (req.user && (req.user.isAdmin || req.user.role === 'admin' || req.user.role === 'stall_owner' || req.user.role === 'staff')) {
         next();
     } else {
         res.status(403);
-        throw new Error('Not authorized as stall owner or admin');
+        throw new Error('Not authorized as stall owner, staff or admin');
     }
 };
 
-module.exports = { protect, admin, adminOrStaff, stallOrAdmin };
+const checkStallLock = asyncHandler(async (req, res, next) => {
+    // Admins are never blocked by stall locks
+    if (req.user && (req.user.isAdmin || req.user.role === 'admin')) {
+        return next();
+    }
+
+    // Check if the user is a stall owner and has an assigned stall
+    if (req.user && req.user.role === 'stall_owner' && req.user.assignedStall) {
+        const stall = await Stall.findById(req.user.assignedStall);
+        if (stall && stall.isLocked) {
+            res.status(403);
+            throw new Error('Your stall is currently locked by the administrator. Operations are read-only.');
+        }
+    }
+
+    next();
+});
+
+module.exports = { protect, admin, adminOrStaff, stallOrAdmin, checkStallLock };

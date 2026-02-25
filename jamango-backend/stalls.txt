@@ -1,0 +1,58 @@
+﻿[dotenv@17.3.1] injecting env (10) from .env -- tip: ÔÜÖ´©Å  specify custom .env file path with { path: '/custom/path/.env' }
+
+====== STALL OWNER ACCOUNTS ======
+Stall ID/Name: sai (SAI123)
+Name: saiii
+Login Email/Mobile: 1111111111
+Password: password123
+----------------------------------
+Stall ID/Name: Pune Orchard Hub (ST-PUN-01)
+Name: Aditya
+Login Email/Mobile: 9800000001
+Password: password123
+----------------------------------
+Stall ID/Name: Mumbai Mango Point (ST-MUM-01)
+Name: Sagar
+Login Email/Mobile: 9800000002
+Password: password123
+----------------------------------
+Stall ID/Name: Nashik Fresh Store (ST-NSK-01)
+Name: Rahul
+Login Email/Mobile: 9800000003
+Password: password123
+----------------------------------
+Stall ID/Name: Bangalore Fruit Zone (ST-BNG-01)
+Name: Kiran
+Login Email/Mobile: 9800000004
+Password: password123
+----------------------------------
+Stall ID/Name: Hyderabad Jamango (ST-HYD-01)
+Name: Venkatesh
+Login Email/Mobile: 9800000005
+Password: password123
+----------------------------------
+Stall ID/Name: Delhi Orchard Express (ST-DEL-01)
+Name: Amit
+Login Email/Mobile: 9800000006
+Password: password123
+----------------------------------
+Stall ID/Name: Ahmedabad King Store (ST-AHM-01)
+Name: Jigar
+Login Email/Mobile: 9800000007
+Password: password123
+----------------------------------
+Stall ID/Name: Surat Mango Mart (ST-SUR-01)
+Name: Pratik
+Login Email/Mobile: 9800000008
+Password: password123
+----------------------------------
+Stall ID/Name: Nagpur Orange City Stall (ST-NAG-01)
+Name: Manoj
+Login Email/Mobile: 9800000009
+Password: password123
+----------------------------------
+Stall ID/Name: Goa Beach Orchard (ST-GOA-01)
+Name: Ricardo
+Login Email/Mobile: 9800000010
+Password: password123
+----------------------------------

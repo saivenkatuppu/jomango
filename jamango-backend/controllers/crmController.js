@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const StallCustomer = require('../models/StallCustomer');
 const Stall = require('../models/Stall');
+const StallMango = require('../models/StallMango');
 
 // @desc    Add a new customer from a stall
 // @route   POST /api/crm/customers
@@ -34,7 +35,6 @@ const addCustomer = asyncHandler(async (req, res) => {
         customer.consent = consent !== undefined ? consent : customer.consent;
         customer.notes = notes || customer.notes;
         await customer.save();
-        res.status(200).json(customer);
     } else {
         customer = await StallCustomer.create({
             name,
@@ -48,8 +48,19 @@ const addCustomer = asyncHandler(async (req, res) => {
             notes,
             type: 'New'
         });
-        res.status(201).json(customer);
     }
+
+    // Deduct from Stall Inventory automatically if a variety and quantity were logged
+    const qtyPurchased = Number(purchasedQuantity);
+    if (purchasedVariety && !isNaN(qtyPurchased) && qtyPurchased > 0) {
+        const stallMango = await StallMango.findOne({ stall: stallObjectId, variety: purchasedVariety });
+        if (stallMango) {
+            stallMango.quantity = Math.max(0, stallMango.quantity - qtyPurchased);
+            await stallMango.save();
+        }
+    }
+
+    res.status(customer.isNew ? 201 : 200).json(customer);
 });
 
 // @desc    Get customers (Stall specific or all for Admin)
@@ -113,7 +124,10 @@ const getCRMStats = asyncHandler(async (req, res) => {
                 }
             },
             {
-                $unwind: '$stallInfo'
+                $unwind: {
+                    path: '$stallInfo',
+                    preserveNullAndEmptyArrays: true
+                }
             },
             {
                 $project: {

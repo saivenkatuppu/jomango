@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getDashboardStats, getSalesReport } = require('../controllers/analyticsController');
+const { getDashboardStats, getSalesReport, getStallInventory } = require('../controllers/analyticsController');
 
 const { protect, adminOrStaff } = require('../middleware/authMiddleware');
 
@@ -9,5 +9,8 @@ router.get('/stats', protect, adminOrStaff, getDashboardStats);
 
 // GET /api/analytics/report
 router.get('/report', protect, adminOrStaff, getSalesReport);
+
+// GET /api/analytics/stall-inventory
+router.get('/stall-inventory', protect, adminOrStaff, getStallInventory);
 
 module.exports = router;

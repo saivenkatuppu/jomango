@@ -21,6 +21,9 @@ const stallMangoSchema = mongoose.Schema(
             enum: ['Natural', 'Carbide-Free', 'Other'],
             default: 'Natural',
         },
+        weight: {
+            type: Number,
+        },
         price: {
             type: Number,
             required: true,

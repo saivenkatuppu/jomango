@@ -220,7 +220,7 @@ const AdminLogin = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-charcoal/80 font-medium">Dashboard Access ID</Label>
+            <Label htmlFor="email" className="text-charcoal/80 font-medium">Access ID (Email or Phone)</Label>
             <div className="relative group">
               <User className="absolute left-3 top-3 h-5 w-5 text-charcoal/40 group-focus-within:text-[hsl(44,80%,46%)] transition-colors" />
               <Input
@@ -228,7 +228,7 @@ const AdminLogin = () => {
                 type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={role === 'stall' ? "Mobile Number" : "admin@jamango.in"}
+                placeholder={role === 'stall' ? "Email or Mobile Number" : "admin@jamango.in"}
                 required
                 className="pl-10 h-12 rounded-xl border-charcoal/10 bg-white/50 focus:border-[hsl(44,80%,46%)] focus:ring-[hsl(44,80%,46%)]/20 transition-all font-body text-base"
               />

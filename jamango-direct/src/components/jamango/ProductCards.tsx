@@ -33,25 +33,40 @@ interface ModalVariant {
   discountLabel?: string;
   showBadge?: boolean;
   badgeType?: string;
+  weight?: number;
 }
 
 interface ProductCardProps {
   title: string;
   subTitle: string;
-  price: string;
-  mrp?: string;
-  showDiscount?: boolean;
-  discountLabel?: string;
   tagline: string;
   isBestSeller?: boolean;
   isNew?: boolean;
   badge?: string;
   allOutOfStock?: boolean;
-  onOrder: () => void;
+  variants: ModalVariant[];
+  onOrder: (variant: ModalVariant) => void;
   delay?: number;
 }
 
-const ProductCard = ({ title, subTitle, price, mrp, showDiscount, discountLabel, tagline, isBestSeller, isNew, badge, allOutOfStock, onOrder, delay = 0 }: ProductCardProps) => {
+const ProductCard = ({ title, subTitle, tagline, isBestSeller, isNew, badge, allOutOfStock, variants, onOrder, delay = 0 }: ProductCardProps) => {
+  const [selectedVariant, setSelectedVariant] = useState(variants[0]);
+
+  useEffect(() => {
+    if (variants && variants.length > 0) {
+      const inStock = variants.find(v => v.stock > 0);
+      setSelectedVariant(inStock || variants[0]);
+    }
+  }, [variants]);
+
+  if (!selectedVariant) return null;
+
+  const currentOutOfStock = selectedVariant.stock === 0;
+  const showDiscount = selectedVariant.showDiscount;
+  const discountLabel = selectedVariant.discountLabel;
+  const price = selectedVariant.price;
+  const mrp = selectedVariant.mrp;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -105,22 +120,41 @@ const ProductCard = ({ title, subTitle, price, mrp, showDiscount, discountLabel,
         <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/40 shadow-sm z-20">
           <p className="text-[9px] font-semibold uppercase tracking-wider text-charcoal/80 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-[hsl(44,90%,50%)]"></span>
-            Select Variety
+            Premium Harvest
           </p>
         </div>
       </div>
 
       <div className="p-8 flex flex-col flex-grow">
-        <div className="flex justify-between items-end mb-3">
-          <h3 className="font-display text-2xl font-medium text-charcoal tracking-wide leading-none">{title}</h3>
-          <div className="flex flex-col items-end leading-none">
-            <span className="text-[10px] text-stone-400 font-medium uppercase tracking-wider mb-0.5">Starts from</span>
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-3">
+              <h3 className="font-display text-2xl font-medium text-charcoal tracking-wide leading-none">{title}</h3>
+              {variants.length > 0 && (
+                <div className="flex bg-stone-100/80 rounded-lg p-0.5 border border-stone-200/50">
+                  {variants.map(v => (
+                    <button
+                      key={v.name}
+                      onClick={(e) => { e.stopPropagation(); setSelectedVariant(v); }}
+                      className={`px-3 py-1 rounded-md text-[11px] font-black uppercase tracking-wider transition-all ${selectedVariant.name === v.name
+                          ? 'bg-white text-charcoal shadow-sm scale-100'
+                          : 'text-stone-400 hover:text-charcoal scale-95'
+                        }`}
+                    >
+                      {v.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-col items-end leading-none ml-2 shrink-0">
+            <span className="text-[10px] text-stone-400 font-medium uppercase tracking-wider mb-0.5">Price</span>
             <div className="flex items-center gap-2">
-              {/* Strikethrough MRP if discount active */}
               {showDiscount && mrp && (
                 <span className="text-xs text-stone-400 line-through decoration-stone-400/50">{mrp}</span>
               )}
-              <span className={`font-display text-xl font-medium tracking-tight ${showDiscount ? 'text-red-600' : 'text-[hsl(44,80%,40%)] opacity-90'}`}>
+              <span className={`font-display text-xl font-medium tracking-tight ${showDiscount ? 'text-red-600' : 'text-charcoal'}`}>
                 {price}
               </span>
             </div>
@@ -144,15 +178,15 @@ const ProductCard = ({ title, subTitle, price, mrp, showDiscount, discountLabel,
           </div>
 
           <button
-            onClick={allOutOfStock ? undefined : onOrder}
-            disabled={allOutOfStock}
-            className={`w-full py-3.5 font-medium text-sm rounded-2xl border-t transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden ${allOutOfStock
-              ? 'bg-gray-200 text-gray-400 cursor-not-allowed border-gray-200'
-              : 'bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] text-[#FDFBF7] shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_16px_rgba(0,0,0,0.12)] border-white/5'
+            onClick={currentOutOfStock ? undefined : () => onOrder(selectedVariant)}
+            disabled={currentOutOfStock}
+            className={`w-full py-3.5 font-bold tracking-widest text-sm rounded-2xl border transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden uppercase ${currentOutOfStock
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200'
+              : 'bg-[hsl(44,85%,55%)] hover:bg-[hsl(44,90%,50%)] text-charcoal shadow-[0_4px_12px_rgba(255,180,0,0.2)] hover:shadow-[0_8px_16px_rgba(255,180,0,0.3)] border-[hsl(44,90%,50%)]'
               }`}
           >
-            <span className="relative z-10 tracking-widest uppercase text-xs">
-              {allOutOfStock ? 'Currently Unavailable' : 'Secure Your Harvest'}
+            <span className="relative z-10">
+              {currentOutOfStock ? 'Currently Unavailable' : 'Order Now'}
             </span>
           </button>
         </div>
@@ -161,14 +195,9 @@ const ProductCard = ({ title, subTitle, price, mrp, showDiscount, discountLabel,
   );
 };
 
-// Group DB products by weight (box size) so each box size = one card with variants
-function groupByWeight(products: DBProduct[]): {
+function groupByVariety(products: DBProduct[]): {
   title: string;
   subTitle: string;
-  price: string;
-  mrp?: string;
-  showDiscount?: boolean;
-  discountLabel?: string;
   tagline: string;
   isBestSeller: boolean;
   isNew: boolean;
@@ -176,60 +205,45 @@ function groupByWeight(products: DBProduct[]): {
   allOutOfStock: boolean;
   variants: ModalVariant[];
 }[] {
-  const weightMap: Record<number, DBProduct[]> = {};
+  const varietyMap: Record<string, DBProduct[]> = {};
   products.forEach((p) => {
-    if (!weightMap[p.weight]) weightMap[p.weight] = [];
-    weightMap[p.weight].push(p);
+    if (!varietyMap[p.variety]) varietyMap[p.variety] = [];
+    varietyMap[p.variety].push(p);
   });
 
-  return Object.entries(weightMap)
-    .sort(([a], [b]) => Number(a) - Number(b))
-    .map(([weight, items]) => {
-      const inStockItems = items.filter((i) => i.stock > 0);
-      const itemsToConsider = inStockItems.length > 0 ? inStockItems : items;
+  return Object.entries(varietyMap).map(([variety, items]) => {
+    items.sort((a, b) => a.weight - b.weight);
 
-      // Calculate min price
-      const minPriceItem = itemsToConsider.reduce((prev, curr) => (prev.price < curr.price ? prev : curr), itemsToConsider[0]);
+    const isBestSeller = items.some((i) => i.showBadge && (i.badge?.toLowerCase().includes("best") || i.badge?.toLowerCase().includes("seller")));
+    const isNew = items.some((i) => i.showBadge && i.badge?.toLowerCase().includes("new"));
+    const badgeItem = items.find(i => i.showBadge && i.badge);
+    const allOutOfStock = items.every(i => i.stock === 0);
 
-      // Find badge (first one that has showBadge=true)
-      const badgeItem = items.find(i => i.showBadge && i.badge);
+    const baseTagline = "Farm fresh mangoes delivered to your doorstep.";
 
-      // Determine discount visibility: Respect explicit toggle, but if discount label exists, assume they want to show it
-      const hasDiscount = minPriceItem.showDiscount || (!!minPriceItem.discountLabel && minPriceItem.discountLabel.length > 0);
-
-      const mangoCount = Number(weight) === 3 ? "6–9" : Number(weight) === 5 ? "10–14" : `~${Math.round(Number(weight) * 2.5)}`;
-
-      return {
-        title: `${weight} KG Box`,
-        subTitle: `${mangoCount} Mangoes • Naturally Ripened`,
-        price: `₹${minPriceItem.price.toLocaleString("en-IN")}`,
-        mrp: minPriceItem.mrp ? `₹${minPriceItem.mrp.toLocaleString("en-IN")}` : undefined,
-        showDiscount: hasDiscount,
-        discountLabel: minPriceItem.discountLabel,
-        tagline:
-          Number(weight) <= 3
-            ? "Perfect for small families or personal indulgence."
-            : "The ideal choice for sharing the sweetness.",
-        // Only show if showBadge is true
-        isBestSeller: items.some((i) => i.showBadge && (i.badge?.toLowerCase().includes("best") || i.badge?.toLowerCase().includes("seller"))),
-        isNew: items.some((i) => i.showBadge && i.badge?.toLowerCase().includes("new")),
-        badge: badgeItem ? badgeItem.badge : undefined,
-        allOutOfStock: items.every((i) => i.stock === 0),
-        variants: items.map((i) => ({
-          name: `${i.variety} (${weight}KG)`,
-          price: `₹${i.price.toLocaleString("en-IN")}`,
-          mrp: i.mrp ? `₹${i.mrp.toLocaleString("en-IN")}` : undefined,
-          showDiscount: i.showDiscount,
-          discountLabel: i.discountLabel,
-          // Only pass badge if showBadge is true
-          badge: i.showBadge ? i.badge : undefined,
-          description: i.description || undefined,
-          stock: i.stock,
-          showBadge: i.showBadge,
-          badgeType: i.badgeType,
-        })),
-      };
-    });
+    return {
+      title: variety,
+      subTitle: "Naturally Ripened • Grade A",
+      tagline: items[0].description || baseTagline,
+      isBestSeller,
+      isNew,
+      badge: badgeItem ? badgeItem.badge : undefined,
+      allOutOfStock,
+      variants: items.map(i => ({
+        name: `${i.weight}kg`,
+        price: `₹${i.price.toLocaleString("en-IN")}`,
+        mrp: i.mrp ? `₹${i.mrp.toLocaleString("en-IN")}` : undefined,
+        weight: i.weight,
+        stock: i.stock,
+        showDiscount: i.showDiscount,
+        discountLabel: i.discountLabel,
+        badge: i.showBadge ? i.badge : undefined,
+        showBadge: i.showBadge,
+        badgeType: i.badgeType,
+        description: i.description,
+      }))
+    };
+  });
 }
 
 const ProductCards = () => {
@@ -249,7 +263,7 @@ const ProductCards = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const grouped = groupByWeight(products);
+  const grouped = groupByVariety(products);
 
   return (
     <section id="products" className="section-padding bg-[#FBF7F0] relative">
@@ -263,10 +277,10 @@ const ProductCards = () => {
             viewport={{ once: true }}
             className="font-display text-4xl md:text-5xl text-charcoal mb-4"
           >
-            Choose Your <span className="text-[hsl(44,80%,46%)] italic">Box Size</span>
+            Choose Your <span className="text-[hsl(44,80%,46%)] italic">Variety</span>
           </motion.h2>
           <p className="text-muted-foreground text-sm font-medium uppercase tracking-widest">
-            Select variety after choosing a box
+            Select size options below
           </p>
         </div>
 
@@ -302,11 +316,11 @@ const ProductCards = () => {
                 key={product.title}
                 {...product}
                 delay={index * 0.1}
-                onOrder={() =>
+                onOrder={(variant) =>
                   setSelectedProduct({
-                    name: product.title,
-                    price: product.price,
-                    variants: product.variants,
+                    name: `${product.title} (${variant.name})`,
+                    price: variant.price,
+                    variants: [],
                   })
                 }
               />

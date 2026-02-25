@@ -18,6 +18,8 @@ const buttonVariants = cva(
         hero: "bg-primary text-primary-foreground font-semibold hover:bg-[hsl(43,96%,52%)] hover:shadow-xl hover:scale-[1.03] active:scale-[0.98] active:shadow-md",
         whatsapp: "bg-whatsapp text-accent-foreground font-semibold hover:bg-[hsl(142,70%,36%)] hover:shadow-xl hover:scale-[1.03] active:scale-[0.98] active:shadow-md",
         "outline-warm": "border-2 border-primary/30 text-foreground bg-transparent hover:bg-primary/5 hover:border-primary/50 hover:shadow-sm font-medium active:scale-[0.98]",
+        mango: "bg-yellow-400 text-black font-bold hover:bg-yellow-500 hover:text-black hover:shadow-lg transition-all active:scale-[0.95]",
+        nature: "bg-green-500 text-white font-bold hover:bg-green-600 hover:text-black hover:shadow-lg transition-all active:scale-[0.95]",
       },
       size: {
         default: "h-10 px-4 py-2",

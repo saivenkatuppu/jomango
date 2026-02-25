@@ -16,12 +16,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
 const AdminCRM = () => {
     const [stats, setStats] = useState<any>(null);
     const [customers, setCustomers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
+    const [selectedStallId, setSelectedStallId] = useState<string>("all");
+    const [stallSearch, setStallSearch] = useState("");
+    const [isStallModalOpen, setIsStallModalOpen] = useState(false);
+    const [modalStallSearch, setModalStallSearch] = useState("");
 
     useEffect(() => {
         fetchData();
@@ -43,10 +54,24 @@ const AdminCRM = () => {
         }
     };
 
-    const filteredCustomers = customers.filter(c =>
-        c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.mobile.includes(search)
-    );
+    const todayCount = customers.filter(c =>
+        new Date(c.createdAt).toDateString() === new Date().toDateString()
+    ).length;
+
+    const filteredCustomers = customers.filter(c => {
+        const matchesSearch = (c.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
+            (c.mobile || "").includes(search);
+        const matchesStall = selectedStallId === "all" || c.stall?._id === selectedStallId;
+        return matchesSearch && matchesStall;
+    });
+
+    const filteredStalls = stats?.stallWiseCounts?.filter((s: any) =>
+        (s.stallName?.toLowerCase() || "").includes(stallSearch.toLowerCase())
+    ) || [];
+
+    const modalFilteredStalls = stats?.stallWiseCounts?.filter((s: any) =>
+        (s.stallName?.toLowerCase() || "").includes(modalStallSearch.toLowerCase())
+    ) || [];
 
     const downloadCSV = () => {
         const headers = ["Name", "Mobile", "Consent", "Stall", "Join Date", "Count Type"];
@@ -85,26 +110,149 @@ const AdminCRM = () => {
             </div>
 
             {stats && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="bg-white p-6 rounded-3xl border border-charcoal/5 shadow-sm">
-                        <div className="flex items-center justify-between mb-2">
-                            <Users className="h-5 w-5 text-[#cca300]" />
-                            <Badge variant="outline" className="text-[10px] uppercase font-bold text-muted-foreground">Global</Badge>
+                <div className="space-y-8">
+                    {/* Summary Section - Scalable Metrics */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-white p-8 rounded-[2rem] border border-charcoal/5 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                            <div className="absolute -right-4 -top-4 opacity-[0.03] group-hover:scale-110 transition-transform duration-500">
+                                <Users className="h-32 w-32 text-charcoal" />
+                            </div>
+                            <p className="text-4xl font-black text-charcoal">{stats.totalCustomers}</p>
+                            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mt-2">Total Unique Customers</p>
                         </div>
-                        <p className="text-3xl font-bold text-charcoal">{stats.totalCustomers}</p>
-                        <p className="text-xs text-muted-foreground mt-1 font-medium">Total Unique Customers</p>
+
+                        <div className="bg-white p-8 rounded-[2rem] border border-charcoal/5 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                            <div className="absolute -right-4 -top-4 opacity-[0.03] group-hover:scale-110 transition-transform duration-500">
+                                <Layers className="h-32 w-32 text-charcoal" />
+                            </div>
+                            <p className="text-4xl font-black text-blue-600">{stats.stallWiseCounts.length}</p>
+                            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mt-2">Active Stalls</p>
+                        </div>
+
+                        <div className="bg-white p-8 rounded-[2rem] border border-charcoal/5 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                            <div className="absolute -right-4 -top-4 opacity-[0.03] group-hover:scale-110 transition-transform duration-500">
+                                <Calendar className="h-32 w-32 text-charcoal" />
+                            </div>
+                            <p className="text-4xl font-black text-green-600">+{todayCount}</p>
+                            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mt-2">Today's New Discovery</p>
+                        </div>
                     </div>
 
-                    {stats.stallWiseCounts.map((s: any) => (
-                        <div key={s._id} className="bg-white p-6 rounded-3xl border border-charcoal/5 shadow-sm hover:border-[#cca300]/30 transition-all">
-                            <div className="flex items-center justify-between mb-2">
-                                <Layers className="h-5 w-5 text-blue-500" />
-                                <Badge variant="outline" className="text-[10px] uppercase font-bold text-blue-400">Stall</Badge>
+                    {/* Highly Scalable Stall Filter */}
+                    <div className="bg-white p-8 rounded-[2.5rem] border border-charcoal/5 shadow-sm space-y-4">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="space-y-1">
+                                <h3 className="font-bold text-charcoal">Filter by Source Stall</h3>
+                                <p className="text-xs text-muted-foreground">Select a specific stall or search through {stats.stallWiseCounts.length} active locations</p>
                             </div>
-                            <p className="text-3xl font-bold text-charcoal">{s.count}</p>
-                            <p className="text-xs text-muted-foreground mt-1 font-medium truncate">{s.stallName}</p>
+                            <div className="relative w-full max-w-sm">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-charcoal/20" />
+                                <Input
+                                    placeholder="Search stall name..."
+                                    className="pl-12 h-12 rounded-2xl bg-charcoal/5 border-none font-medium"
+                                    value={stallSearch}
+                                    onChange={(e) => setStallSearch(e.target.value)}
+                                />
+                            </div>
                         </div>
-                    ))}
+
+                        <div className="flex flex-wrap gap-2 pt-2 items-center">
+                            <Button
+                                onClick={() => setSelectedStallId("all")}
+                                variant={selectedStallId === "all" ? "mango" : "outline"}
+                                className={`h-11 rounded-xl px-6 font-bold text-xs uppercase tracking-widest transition-all ${selectedStallId === "all"
+                                    ? "shadow-lg shadow-yellow-200 border-none"
+                                    : "border-charcoal/10 hover:bg-yellow-400 hover:text-black"
+                                    }`}
+                            >
+                                All stalls
+                            </Button>
+                            {/* Show only top 6 or search results if actively searching */}
+                            {(stallSearch ? filteredStalls : stats.stallWiseCounts.slice(0, 6)).map((s: any) => (
+                                <Button
+                                    key={s._id}
+                                    onClick={() => setSelectedStallId(s._id)}
+                                    variant={selectedStallId === s._id ? "mango" : "outline"}
+                                    className={`h-11 rounded-xl px-6 font-bold text-xs uppercase tracking-widest transition-all ${selectedStallId === s._id
+                                        ? "shadow-lg shadow-yellow-200 border-none"
+                                        : "border-charcoal/10 hover:bg-yellow-400 hover:text-black"
+                                        }`}
+                                >
+                                    {s.stallName || "Deleted Store"} ({s.count})
+                                </Button>
+                            ))}
+
+                            {/* View All Button */}
+                            <Dialog open={isStallModalOpen} onOpenChange={setIsStallModalOpen}>
+                                <DialogTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        className="text-xs font-black uppercase tracking-widest text-primary hover:bg-yellow-400 hover:text-black px-4 py-2 transition-colors flex items-center gap-1.5 ml-2"
+                                    >
+                                        View all stores
+                                        <Layers className="h-3 w-3" />
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col p-0 overflow-hidden bg-white border-none rounded-[2.5rem]">
+                                    <DialogHeader className="p-8 pb-4 border-b border-charcoal/5">
+                                        <DialogTitle className="text-2xl font-black text-charcoal">All Partner Stores</DialogTitle>
+                                        <p className="text-sm text-muted-foreground">Select a stall to filter your customer directory</p>
+                                    </DialogHeader>
+                                    <div className="p-8 pt-6 space-y-6 flex-1 overflow-hidden flex flex-col">
+                                        <div className="relative">
+                                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-charcoal/20" />
+                                            <Input
+                                                placeholder="Search by stall name or location..."
+                                                className="pl-12 h-14 rounded-2xl bg-charcoal/5 border-none font-bold text-lg"
+                                                value={modalStallSearch}
+                                                onChange={(e) => setModalStallSearch(e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div className="flex-1 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
+                                            {modalFilteredStalls.map((s: any) => (
+                                                <button
+                                                    key={s._id}
+                                                    onClick={() => {
+                                                        setSelectedStallId(s._id);
+                                                        setIsStallModalOpen(false);
+                                                    }}
+                                                    className={`w-full flex items-center justify-between p-5 rounded-2xl border transition-all ${selectedStallId === s._id
+                                                        ? 'bg-mango/10 border-mango text-black shadow-sm'
+                                                        : 'bg-white border-charcoal/5 hover:border-mango/30 hover:bg-charcoal/[0.02]'
+                                                        }`}
+                                                >
+                                                    <div className="flex items-center gap-4 text-left">
+                                                        <div className={`h-12 w-12 rounded-xl flex items-center justify-center font-black text-lg ${selectedStallId === s._id ? 'bg-mango text-black' : 'bg-charcoal/5 text-charcoal'}`}>
+                                                            {s.stallName?.charAt(0) || "?"}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-bold text-lg">{s.stallName || "Deleted Store"}</p>
+                                                            <p className="text-xs text-muted-foreground uppercase font-black tracking-widest">{s.stallId || "Unknown ID"}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <Badge variant="outline" className="border-charcoal/10 font-bold px-3 py-1">
+                                                            {s.count} Customers
+                                                        </Badge>
+                                                        {selectedStallId === s._id && (
+                                                            <CheckCircle2 className="h-5 w-5 text-mango" />
+                                                        )}
+                                                    </div>
+                                                </button>
+                                            ))}
+                                            {modalFilteredStalls.length === 0 && (
+                                                <div className="py-20 text-center space-y-3 opacity-40">
+                                                    <Layers className="h-12 w-12 mx-auto text-charcoal/20" />
+                                                    <p className="font-display font-medium text-xl">No stalls found matching your search</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+                    </div>
                 </div>
             )}
 

@@ -5,7 +5,7 @@ const {
     getCustomers,
     getCRMStats,
 } = require('../controllers/crmController');
-const { protect, admin, stallOrAdmin } = require('../middleware/authMiddleware');
+const { protect, admin, stallOrAdmin, checkStallLock } = require('../middleware/authMiddleware');
 
 router.route('/customers')
     .post(protect, stallOrAdmin, addCustomer)

@@ -36,9 +36,11 @@ const createStall = asyncHandler(async (req, res) => {
     }
 
     // Create the Stall Owner User Account
+    const loginId = (ownerEmail && ownerEmail.includes('@')) ? ownerEmail : ownerMobile;
+
     const user = await User.create({
         name: ownerName,
-        email: ownerMobile, // Using mobile as the primary login ID (Dashboard Access ID)
+        email: loginId,
         phone: ownerMobile,
         password: password || ownerMobile, // Use assigned password or fallback
         role: 'stall_owner',
@@ -75,7 +77,7 @@ const createStall = asyncHandler(async (req, res) => {
             res.status(201).json({
                 stall,
                 credentials: {
-                    username: user.phone,
+                    username: user.email,
                     password: password || ownerMobile
                 }
             });
@@ -98,7 +100,16 @@ const createStall = asyncHandler(async (req, res) => {
 // @route   GET /api/stalls
 // @access  Private/Admin
 const getStalls = asyncHandler(async (req, res) => {
-    const stalls = await Stall.find({}).sort({ createdAt: -1 });
+    const stalls = await Stall.find({}).sort({ createdAt: -1 }).lean();
+
+    // Attach ownerUserId for each stall by finding the user with matching stallId
+    for (let stall of stalls) {
+        const user = await User.findOne({ stallId: stall.stallId, role: 'stall_owner' });
+        if (user) {
+            stall.ownerUserId = user._id;
+        }
+    }
+
     res.json(stalls);
 });
 
@@ -201,10 +212,27 @@ const deleteStall = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Toggle stall lock status
+// @route   PUT /api/stalls/:id/lock
+// @access  Private/Admin
+const toggleStallLock = asyncHandler(async (req, res) => {
+    const stall = await Stall.findById(req.params.id);
+
+    if (stall) {
+        stall.isLocked = !stall.isLocked;
+        const updatedStall = await stall.save();
+        res.json(updatedStall);
+    } else {
+        res.status(404);
+        throw new Error('Stall not found');
+    }
+});
+
 module.exports = {
     createStall,
     getStalls,
     getStallById,
     updateStall,
     deleteStall,
+    toggleStallLock,
 };

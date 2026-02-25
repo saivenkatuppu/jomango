@@ -7,16 +7,16 @@ const {
     updateStallMango,
     deleteStallMango,
 } = require('../controllers/stallMangoController');
-const { protect, admin, stallOrAdmin } = require('../middleware/authMiddleware');
+const { protect, admin, stallOrAdmin, checkStallLock } = require('../middleware/authMiddleware');
 
 router.route('/')
     .get(protect, stallOrAdmin, getStallMangoes)
-    .post(protect, stallOrAdmin, addStallMango);
+    .post(protect, stallOrAdmin, checkStallLock, addStallMango);
 
 router.get('/templates', protect, stallOrAdmin, getGlobalTemplates);
 
 router.route('/:id')
-    .put(protect, stallOrAdmin, updateStallMango)
-    .delete(protect, stallOrAdmin, deleteStallMango);
+    .put(protect, stallOrAdmin, checkStallLock, updateStallMango)
+    .delete(protect, stallOrAdmin, checkStallLock, deleteStallMango);
 
 module.exports = router;

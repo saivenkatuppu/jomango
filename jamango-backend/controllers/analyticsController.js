@@ -2,6 +2,9 @@ const asyncHandler = require('express-async-handler');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const InventoryLog = require('../models/InventoryLog');
+const Stall = require('../models/Stall');
+const StallMango = require('../models/StallMango');
+const StallCustomer = require('../models/StallCustomer');
 
 // @desc    Get dashboard stats + recent orders
 // @route   GET /api/admin/stats
@@ -225,7 +228,141 @@ const getSalesReport = asyncHandler(async (req, res) => {
     res.json(reportRows);
 });
 
+const getStallInventory = asyncHandler(async (req, res) => {
+    const { timeRange } = req.query; // 'today', 'week', 'month', 'season'
+
+    let matchStage = {};
+    const now = new Date();
+    if (timeRange === 'today') {
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        matchStage.createdAt = { $gte: startOfToday };
+    } else if (timeRange === 'week') {
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - 7);
+        matchStage.createdAt = { $gte: startOfWeek };
+    } else if (timeRange === 'month') {
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        matchStage.createdAt = { $gte: startOfMonth };
+    }
+
+    const isStaff = req.user && req.user.role === 'staff';
+
+    const stalls = await Stall.find({ status: 'Active' }).select('stallName stallId _id location');
+    const stallMangoes = await StallMango.find({});
+
+    const salesAgg = await StallCustomer.aggregate([
+        { $match: { ...matchStage, purchasedVariety: { $exists: true, $ne: '' } } },
+        {
+            $group: {
+                _id: { stall: '$stall', variety: '$purchasedVariety' },
+                unitsSold: { $sum: { $ifNull: ['$purchasedQuantity', 1] } }
+            }
+        }
+    ]);
+
+    const trendAgg = await StallCustomer.aggregate([
+        { $match: { ...matchStage, purchasedVariety: { $exists: true, $ne: '' } } },
+        {
+            $group: {
+                _id: {
+                    date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: '+05:30' } },
+                    stall: '$stall',
+                    variety: '$purchasedVariety'
+                },
+                sold: { $sum: { $ifNull: ['$purchasedQuantity', 1] } }
+            }
+        },
+        { $sort: { '_id.date': 1 } }
+    ]);
+
+    let totalStockAvailable = 0;
+    let totalUnitsSold = 0;
+    let totalRevenue = 0;
+    let stallsWithInventory = new Set();
+
+    const stallsData = stalls.map(stall => {
+        const sMangoes = stallMangoes.filter(m => String(m.stall) === String(stall._id));
+        let stallStock = 0;
+        let stallSold = 0;
+        let stallRevenue = 0;
+
+        const varieties = sMangoes.map(m => {
+            const saleRec = salesAgg.find(s => String(s._id.stall) === String(stall._id) && s._id.variety === m.variety);
+            const unitsSold = saleRec ? saleRec.unitsSold : 0;
+            const revenue = unitsSold * m.price;
+
+            stallStock += m.quantity;
+            stallSold += unitsSold;
+            stallRevenue += revenue;
+            totalStockAvailable += m.quantity;
+            totalUnitsSold += unitsSold;
+            totalRevenue += revenue;
+
+            if (m.quantity > 0) stallsWithInventory.add(String(stall._id));
+
+            return {
+                variety: m.variety,
+                currentStock: m.quantity,
+                unitsSold,
+                priceUnit: m.priceUnit,
+                ...(isStaff ? {} : { price: m.price, revenue })
+            };
+        });
+
+        // Add contribution percentages
+        varieties.forEach(v => {
+            v.contribution = stallSold > 0 ? Math.round((v.unitsSold / stallSold) * 100) : 0;
+        });
+
+        return {
+            _id: stall._id,
+            stallId: stall.stallId,
+            stallName: stall.stallName,
+            location: stall.location,
+            totalStockAvailable: stallStock,
+            totalUnitsSold: stallSold,
+            ...(isStaff ? {} : { totalRevenue: stallRevenue }),
+            varieties: varieties.sort((a, b) => b.unitsSold - a.unitsSold)
+        };
+    });
+
+    const trendsMap = {};
+    trendAgg.forEach(t => {
+        const date = t._id.date;
+        if (!date) return;
+        const stallId = String(t._id.stall);
+        const variety = t._id.variety;
+        const sold = t.sold;
+
+        const sm = stallMangoes.find(m => String(m.stall) === stallId && m.variety === variety);
+        const price = sm ? sm.price : 0;
+        const revenue = sold * price;
+
+        if (!trendsMap[date]) {
+            trendsMap[date] = { date, totalSold: 0, ...(isStaff ? {} : { totalRevenue: 0 }) };
+        }
+        trendsMap[date].totalSold += sold;
+        if (!isStaff) {
+            trendsMap[date].totalRevenue += revenue;
+        }
+    });
+
+    const trends = Object.values(trendsMap).sort((a, b) => a.date.localeCompare(b.date));
+
+    res.json({
+        summary: {
+            totalStockAvailable,
+            totalUnitsSold,
+            activeStallsWithInventory: stallsWithInventory.size,
+            ...(isStaff ? {} : { totalRevenue })
+        },
+        stalls: stallsData.sort((a, b) => b.totalUnitsSold - a.totalUnitsSold),
+        trends
+    });
+});
+
 module.exports = {
     getDashboardStats,
     getSalesReport,
+    getStallInventory,
 };

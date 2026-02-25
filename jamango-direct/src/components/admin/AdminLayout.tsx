@@ -10,7 +10,8 @@ import {
   Leaf,
   Users,
   ShieldAlert,
-  UserCog
+  UserCog,
+  Store
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -24,13 +25,17 @@ const allNavItems = [
   { label: "Analytics", to: "/admin/analytics", icon: BarChart3, adminOnly: true },
   { label: "User Contacts", to: "/admin/contacts", icon: Users, adminOnly: true },
   { label: "Stall Management", to: "/admin/stalls", icon: LayoutDashboard, adminOnly: true },
+  { label: "Stall Inventory", to: "/admin/stall-inventory", icon: Store, adminOnly: false },
   { label: "Stall CRM", to: "/admin/crm", icon: Users },
   { label: "Staff Management", to: "/admin/staff", icon: UserCog, adminOnly: true },
 ];
 
 const AdminLayout = () => {
-  const { user, logout, isImpersonating, stopImpersonating } = useAuth();
+  const { user, logout, isImpersonating, stopImpersonating, isLoading } = useAuth();
   const location = useLocation();
+
+  if (isLoading) return <div className="min-h-screen bg-heritage-pattern flex items-center justify-center font-sans text-charcoal">Loading...</div>;
+
   const isAdminOrStaff = user?.isAdmin || user?.role === "admin" || user?.role === "staff";
   const isStaff = user?.role === "staff";
   const isStall = user?.role === "stall_owner";
@@ -110,7 +115,7 @@ const AdminLayout = () => {
           <div className="bg-yellow-100 border-b border-yellow-300 px-6 py-3 flex items-center justify-between shadow-sm sticky top-0 z-50">
             <div className="flex items-center gap-2 text-yellow-800 font-medium">
               <ShieldAlert className="h-5 w-5" />
-              <span>You are viewing as Staff ({user?.name})</span>
+              <span>You are viewing as {user?.role === 'stall_owner' ? 'Stall Owner' : 'Staff'} ({user?.name})</span>
             </div>
             <button
               onClick={stopImpersonating}

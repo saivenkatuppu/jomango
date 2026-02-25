@@ -7,7 +7,7 @@ const {
     createStaff,
     updateStaff,
     deleteStaff,
-    impersonateStaff
+    impersonateUser
 } = require('../controllers/userController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -23,6 +23,7 @@ router.route('/staff/:id')
     .put(protect, admin, updateStaff)
     .delete(protect, admin, deleteStaff);
 
-router.post('/staff/:id/impersonate', protect, admin, impersonateStaff);
+// User access routes
+router.post('/:id/impersonate', protect, admin, impersonateUser);
 
 module.exports = router;

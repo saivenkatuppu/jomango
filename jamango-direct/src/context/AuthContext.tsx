@@ -7,7 +7,7 @@ interface AuthContextType {
     login: (data: any) => Promise<void>;
     register: (data: any) => Promise<void>;
     logout: () => void;
-    impersonate: (staffId: string) => Promise<void>;
+    impersonate: (userId: string) => Promise<void>;
     stopImpersonating: () => void;
     isImpersonating: boolean;
     isLoading: boolean;
@@ -39,7 +39,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { data } = await client.post<AuthResponse>('/users/login', credentials);
         localStorage.setItem('user', JSON.stringify(data));
         localStorage.setItem('token', data.token);
+        localStorage.removeItem('adminUser');
+        localStorage.removeItem('adminToken');
         setUser(data);
+        setIsImpersonating(false);
     };
 
     const register = async (userData: any) => {
@@ -58,12 +61,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsImpersonating(false);
     };
 
-    const impersonate = async (staffId: string) => {
+    const impersonate = async (userId: string) => {
         // save admin state
         localStorage.setItem('adminUser', localStorage.getItem('user') || '');
         localStorage.setItem('adminToken', localStorage.getItem('token') || '');
 
-        const { data } = await client.post<AuthResponse>(`/users/staff/${staffId}/impersonate`);
+        const { data } = await client.post<AuthResponse>(`/users/${userId}/impersonate`);
         localStorage.setItem('user', JSON.stringify(data));
         localStorage.setItem('token', data.token);
         setUser(data);

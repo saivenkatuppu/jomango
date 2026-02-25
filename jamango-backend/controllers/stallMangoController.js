@@ -28,7 +28,7 @@ const getGlobalTemplates = asyncHandler(async (req, res) => {
 // @route   POST /api/stall-mangoes
 // @access  Private
 const addStallMango = asyncHandler(async (req, res) => {
-    const { variety, ripeningType, price, priceUnit, quantity, qualityGrade, status, isGlobalTemplate, mrp, showDiscount, discountLabel, description, showBadge, badgeType, badge } = req.body;
+    const { variety, ripeningType, price, priceUnit, weight, quantity, qualityGrade, status, isGlobalTemplate, mrp, showDiscount, discountLabel, description, showBadge, badgeType, badge } = req.body;
 
     if (isGlobalTemplate && req.user.role !== 'admin') {
         res.status(403);
@@ -51,6 +51,7 @@ const addStallMango = asyncHandler(async (req, res) => {
         ripeningType,
         price,
         priceUnit,
+        weight,
         quantity,
         qualityGrade,
         status,
@@ -92,6 +93,7 @@ const updateStallMango = asyncHandler(async (req, res) => {
     mango.ripeningType = req.body.ripeningType || mango.ripeningType;
     mango.price = req.body.price !== undefined ? req.body.price : mango.price;
     mango.priceUnit = req.body.priceUnit || mango.priceUnit;
+    mango.weight = req.body.weight !== undefined ? req.body.weight : mango.weight;
     mango.quantity = req.body.quantity !== undefined ? req.body.quantity : mango.quantity;
     mango.qualityGrade = req.body.qualityGrade || mango.qualityGrade;
     mango.status = req.body.status || mango.status;

@@ -9,16 +9,16 @@ const {
     getInventoryLogs,
 } = require('../controllers/productController');
 
-const { protect, admin, adminOrStaff } = require('../middleware/authMiddleware');
+const { protect, admin, adminOrStaff, stallOrAdmin, checkStallLock } = require('../middleware/authMiddleware');
 
 // Public
 router.get('/', getProducts);
 
-// Admin / Staff routes
-router.get('/admin', protect, adminOrStaff, getAdminProducts);
+// Admin / Staff / Stall routes
+router.get('/admin', protect, stallOrAdmin, getAdminProducts);
 router.get('/admin/inventory-logs', protect, adminOrStaff, getInventoryLogs);
 router.post('/admin', protect, admin, createProduct);
-router.put('/admin/:id', protect, adminOrStaff, updateProduct);
+router.put('/admin/:id', protect, stallOrAdmin, checkStallLock, updateProduct);
 router.delete('/admin/:id', protect, admin, deleteProduct);
 
 module.exports = router;

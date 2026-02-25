@@ -51,6 +51,10 @@ const stallSchema = mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
             required: true,
+        },
+        isLocked: {
+            type: Boolean,
+            default: false,
         }
     },
     {

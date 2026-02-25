@@ -12,13 +12,16 @@ const generateToken = (id) => {
 // @route   POST /api/users/login
 // @access  Public
 const authUser = asyncHandler(async (req, res) => {
-    const { email, phone, password } = req.body;
+    const { email, phone, identifier, password } = req.body;
 
     let user;
-    if (phone) {
-        user = await User.findOne({ phone });
-    } else if (email) {
-        user = await User.findOne({ email });
+    const loginId = identifier || email || phone;
+
+    if (loginId) {
+        // Try to find user by either email or phone
+        user = await User.findOne({
+            $or: [{ email: loginId }, { phone: loginId }]
+        });
     }
 
     if (user && (await user.matchPassword(password))) {
@@ -179,30 +182,32 @@ const deleteStaff = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    Impersonate staff (Admin only)
-// @route   POST /api/users/staff/:id/impersonate
+// @desc    Impersonate any user (Admin only)
+// @route   POST /api/users/:id/impersonate
 // @access  Private/Admin
-const impersonateStaff = asyncHandler(async (req, res) => {
-    const staff = await User.findById(req.params.id);
+const impersonateUser = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id);
 
-    if (staff && staff.role === 'staff') {
-        if (staff.status === 'disabled') {
+    if (user && (user.role === 'staff' || user.role === 'stall_owner')) {
+        if (user.status === 'disabled') {
             res.status(403);
-            throw new Error('Staff account is disabled');
+            throw new Error('Account is disabled');
         }
         res.json({
-            _id: staff._id,
-            name: staff.name,
-            email: staff.email,
-            isAdmin: staff.isAdmin,
-            role: staff.role,
-            status: staff.status,
-            token: generateToken(staff._id),
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            isAdmin: user.isAdmin,
+            role: user.role,
+            status: user.status,
+            stallId: user.stallId,
+            assignedStall: user.assignedStall,
+            token: generateToken(user._id),
             isImpersonated: true
         });
     } else {
         res.status(404);
-        throw new Error('Staff not found');
+        throw new Error('User not found or cannot be impersonated');
     }
 });
 
@@ -213,5 +218,5 @@ module.exports = {
     createStaff,
     updateStaff,
     deleteStaff,
-    impersonateStaff
+    impersonateUser
 };

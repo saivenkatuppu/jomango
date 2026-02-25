@@ -14,7 +14,9 @@ import {
     ArrowRight,
     Copy,
     Check,
-    AlertTriangle
+    AlertTriangle,
+    Lock,
+    Unlock
 } from "lucide-react";
 import client from "@/api/client";
 import { Button } from "@/components/ui/button";
@@ -22,9 +24,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const AdminStalls = () => {
     const navigate = useNavigate();
+    const { impersonate } = useAuth();
     const [stalls, setStalls] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,6 +67,20 @@ const AdminStalls = () => {
         }
     };
 
+    const handleImpersonate = async (userId: string | undefined) => {
+        if (!userId) {
+            toast.error("Cannot find the stall owner account.");
+            return;
+        }
+        try {
+            await impersonate(userId);
+            toast.success("Logging in as stall owner...");
+            navigate("/admin/dashboard");
+        } catch (error) {
+            toast.error("Failed to login as this stall owner");
+        }
+    };
+
     const handleEdit = (stall: any) => {
         setEditingStall(stall);
         setFormData({
@@ -95,6 +113,17 @@ const AdminStalls = () => {
             fetchStalls();
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Delete failed");
+        }
+    };
+
+    const handleToggleLock = async (stallId: string, currentLockStatus: boolean) => {
+        try {
+            await client.put(`/stalls/${stallId}/lock`);
+            toast.success(currentLockStatus ? "Stall unlocked successfully!" : "Stall locked successfully!");
+            fetchStalls();
+        } catch (error: any) {
+            console.error("Lock error:", error);
+            toast.error(error.response?.data?.message || "Failed to update lock status");
         }
     };
 
@@ -168,7 +197,8 @@ const AdminStalls = () => {
                 </div>
                 <Button
                     onClick={() => { resetForm(); setShowAddModal(true); }}
-                    className="bg-yellow-400 hover:bg-yellow-500 text-black rounded-xl px-6 py-6 shadow-lg shadow-yellow-200 transition-all active:scale-95 flex items-center gap-2"
+                    variant="mango"
+                    className="rounded-xl px-6 py-6 shadow-lg shadow-yellow-200 active:scale-95 flex items-center gap-2"
                 >
                     <Plus className="h-5 w-5" /> Add New Stall
                 </Button>
@@ -197,8 +227,15 @@ const AdminStalls = () => {
                             </div>
                             <div className="flex gap-2">
                                 <Badge className={stall.status === 'Active' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' : 'bg-red-100 text-red-700'}>
-                                    {stall.status}
+                                    {stall.isLocked ? "LOCKED" : stall.status}
                                 </Badge>
+                                <button
+                                    onClick={() => handleToggleLock(stall._id, !!stall.isLocked)}
+                                    className={`p-1.5 rounded-lg transition-colors ${stall.isLocked ? "text-amber-600 bg-amber-50 hover:bg-amber-100" : "text-charcoal/40 hover:text-charcoal hover:bg-charcoal/5"}`}
+                                    title={stall.isLocked ? "Unlock Stall" : "Lock Stall"}
+                                >
+                                    {stall.isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                                </button>
                                 <button
                                     onClick={() => handleDelete(stall._id)}
                                     className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -233,19 +270,29 @@ const AdminStalls = () => {
                             )}
                         </div>
 
-                        <div className="mt-6 pt-4 flex items-center gap-2 border-t border-charcoal/5">
+                        <div className="mt-6 pt-4 flex flex-col gap-2 border-t border-charcoal/5">
                             <Button
-                                onClick={() => handleEdit(stall)}
-                                className="flex-1 rounded-xl h-10 text-xs font-bold bg-yellow-100 hover:bg-yellow-200 active:bg-yellow-300 text-black flex items-center justify-center gap-2 border-none shadow-none transition-colors"
+                                onClick={() => handleImpersonate(stall.ownerUserId)}
+                                className="w-full rounded-xl h-10 text-xs font-bold bg-charcoal hover:bg-black text-white flex items-center justify-center gap-2 transition-colors"
                             >
-                                <Edit3 className="h-3.5 w-3.5" /> Edit Details
+                                <Store className="h-3.5 w-3.5" /> Open Stall
                             </Button>
-                            <Button
-                                onClick={() => navigate("/admin/crm")}
-                                className="flex-1 rounded-xl h-10 text-xs font-bold bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 text-black flex items-center justify-center gap-2 border-none shadow-none transition-colors"
-                            >
-                                <ArrowRight className="h-3.5 w-3.5" /> View CRM
-                            </Button>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    onClick={() => handleEdit(stall)}
+                                    variant="outline"
+                                    className="flex-1 rounded-xl h-10 text-xs font-bold hover:bg-yellow-400 hover:text-black transition-colors"
+                                >
+                                    <Edit3 className="h-3.5 w-3.5" /> Edit Details
+                                </Button>
+                                <Button
+                                    onClick={() => navigate("/admin/crm")}
+                                    variant="mango"
+                                    className="flex-1 rounded-xl h-10 text-xs font-bold active:bg-yellow-600 transition-colors"
+                                >
+                                    <ArrowRight className="h-3.5 w-3.5" /> View CRM
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 ))}
@@ -268,7 +315,7 @@ const AdminStalls = () => {
                                     <Input
                                         required
                                         placeholder="e.g. Pune Highway Stall 1"
-                                        className="h-12 rounded-xl"
+                                        className="h-12 rounded-xl bg-gray-100 border-gray-200 focus:bg-white focus:ring-2 focus:ring-yellow-400 transition-all"
                                         value={formData.stallName}
                                         onChange={(e) => setFormData({ ...formData, stallName: e.target.value })}
                                     />
@@ -278,7 +325,7 @@ const AdminStalls = () => {
                                     <Input
                                         required
                                         placeholder="e.g. ST-KOL-01"
-                                        className="h-12 rounded-xl font-mono uppercase"
+                                        className="h-12 rounded-xl font-mono uppercase bg-gray-100 border-gray-200 focus:bg-white focus:ring-2 focus:ring-yellow-400 transition-all"
                                         value={formData.stallId}
                                         onChange={(e) => setFormData({ ...formData, stallId: e.target.value.toUpperCase() })}
                                     />
@@ -288,9 +335,21 @@ const AdminStalls = () => {
                                     <Input
                                         required
                                         placeholder="Full Name"
-                                        className="h-12 rounded-xl"
+                                        className="h-12 rounded-xl bg-gray-100 border-gray-200 focus:bg-white focus:ring-2 focus:ring-yellow-400 transition-all"
                                         value={formData.ownerName}
                                         onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-charcoal/60 ml-1 flex justify-between">
+                                        Owner Email
+                                        <span className="text-[9px] text-yellow-600 font-black tracking-normal lowercase opacity-70">(Used for Login)</span>
+                                    </label>
+                                    <Input
+                                        placeholder="email@example.com"
+                                        className="h-12 rounded-xl bg-gray-100 border-gray-200 focus:bg-white focus:ring-2 focus:ring-yellow-400 transition-all"
+                                        value={formData.ownerEmail}
+                                        onChange={(e) => setFormData({ ...formData, ownerEmail: e.target.value })}
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -301,7 +360,7 @@ const AdminStalls = () => {
                                     <Input
                                         required
                                         placeholder="10 Digit Number"
-                                        className="h-12 rounded-xl"
+                                        className="h-12 rounded-xl bg-gray-100 border-gray-200 focus:bg-white focus:ring-2 focus:ring-yellow-400 transition-all"
                                         value={formData.ownerMobile}
                                         onChange={(e) => setFormData({ ...formData, ownerMobile: e.target.value })}
                                     />
@@ -314,7 +373,7 @@ const AdminStalls = () => {
                                         required={!editingStall}
                                         type="text"
                                         placeholder={editingStall ? "Keep empty to stay same" : "Create a password for owner login"}
-                                        className="h-12 rounded-xl"
+                                        className="h-12 rounded-xl bg-gray-100 border-gray-200 focus:bg-white focus:ring-2 focus:ring-yellow-400 transition-all"
                                         value={formData.password}
                                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                     />
@@ -324,7 +383,7 @@ const AdminStalls = () => {
                                     <Input
                                         required
                                         placeholder="e.g. Ratnagiri"
-                                        className="h-12 rounded-xl"
+                                        className="h-12 rounded-xl bg-gray-100 border-gray-200 focus:bg-white focus:ring-2 focus:ring-yellow-400 transition-all"
                                         value={formData.location}
                                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                     />
@@ -332,7 +391,7 @@ const AdminStalls = () => {
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold uppercase tracking-wider text-charcoal/60 ml-1">Stall Type</label>
                                     <select
-                                        className="w-full h-12 rounded-xl border border-charcoal/10 bg-white px-3 font-body text-sm"
+                                        className="w-full h-12 rounded-xl bg-gray-100 border-gray-200 px-3 font-body text-sm outline-none focus:bg-white focus:ring-2 focus:ring-yellow-400 transition-all"
                                         value={formData.stallType}
                                         onChange={(e) => setFormData({ ...formData, stallType: e.target.value })}
                                     >
@@ -346,7 +405,7 @@ const AdminStalls = () => {
                                 <label className="text-xs font-bold uppercase tracking-wider text-charcoal/60 ml-1">Full Address</label>
                                 <textarea
                                     required
-                                    className="w-full min-h-[100px] rounded-xl border border-charcoal/10 bg-white p-3 font-body text-sm focus:outline-none focus:ring-1 focus:ring-mango"
+                                    className="w-full min-h-[100px] rounded-xl bg-gray-100 border-gray-200 p-3 font-body text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all"
                                     placeholder="Detailed navigation instructions..."
                                     value={formData.address}
                                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
@@ -357,7 +416,7 @@ const AdminStalls = () => {
                                 <Button
                                     type="button"
                                     variant="ghost"
-                                    className="flex-1 rounded-xl h-12 font-bold text-charcoal"
+                                    className="flex-1 rounded-xl h-12 font-bold bg-gray-100 text-charcoal hover:bg-gray-200"
                                     onClick={resetForm}
                                 >
                                     Cancel
@@ -390,7 +449,7 @@ const AdminStalls = () => {
                             <div className="bg-yellow-50 p-6 rounded-2xl space-y-4 text-left border border-yellow-200 relative group">
                                 <button
                                     onClick={() => {
-                                        navigator.clipboard.writeText(`Stall: ${createdCredentials.stallName}\nMobile: ${createdCredentials.username}\nPassword: ${createdCredentials.password}`);
+                                        navigator.clipboard.writeText(`Stall: ${createdCredentials.stallName}\nLogin ID: ${createdCredentials.username}\nPassword: ${createdCredentials.password}`);
                                         toast.success("Credentials copied to clipboard!");
                                     }}
                                     className="absolute top-4 right-4 p-2 bg-white rounded-lg shadow-sm hover:bg-yellow-100 transition-colors text-yellow-700"
@@ -399,7 +458,7 @@ const AdminStalls = () => {
                                     <Copy className="h-4 w-4" />
                                 </button>
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-yellow-700">Login Mobile</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-yellow-700">Dashboard Access ID</p>
                                     <p className="text-xl font-mono font-bold text-charcoal">{createdCredentials.username}</p>
                                 </div>
                                 <div className="space-y-1">
@@ -423,8 +482,8 @@ const AdminStalls = () => {
             )}
             {showDeleteModal && (
                 <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-charcoal/60 backdrop-blur-md">
-                    <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border-2 border-red-100">
-                        <div className="p-8 text-center space-y-6">
+                    <div className="bg-red-50/50 rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border-2 border-red-200 backdrop-blur-xl">
+                        <div className="p-8 text-center space-y-6 bg-white/60">
                             <div className="h-20 w-20 bg-red-100 rounded-full flex items-center justify-center mx-auto text-red-600">
                                 <AlertTriangle className="h-10 w-10" />
                             </div>
@@ -440,7 +499,7 @@ const AdminStalls = () => {
                                 <Button
                                     variant="ghost"
                                     onClick={() => setShowDeleteModal(false)}
-                                    className="flex-1 h-14 rounded-xl font-bold text-charcoal hover:bg-charcoal/5"
+                                    className="flex-1 h-14 rounded-xl font-bold text-charcoal bg-white/50 hover:bg-white/80 border border-red-100"
                                 >
                                     Cancel
                                 </Button>

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 
 const LoginPage = () => {
-    const [phone, setPhone] = useState("");
+    const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
     const { login } = useAuth();
     const navigate = useNavigate();
@@ -19,14 +19,14 @@ const LoginPage = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            await login({ phone, password });
+            await login({ identifier, password });
             toast.success("Welcome back!", {
                 description: "You have successfully logged in.",
             });
             navigate(from, { replace: true });
         } catch (error: any) {
             toast.error("Login failed", {
-                description: error.response?.data?.message || "Invalid mobile number or password",
+                description: error.response?.data?.message || "Invalid Access ID or password",
             });
         } finally {
             setLoading(false);
@@ -47,12 +47,12 @@ const LoginPage = () => {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-charcoal/80 mb-1">Mobile Number</label>
+                        <label className="block text-sm font-medium text-charcoal/80 mb-1">Access ID (Email or Phone)</label>
                         <Input
-                            type="tel"
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
-                            placeholder="Enter mobile number"
+                            type="text"
+                            value={identifier}
+                            onChange={(e) => setIdentifier(e.target.value)}
+                            placeholder="Enter email or phone number"
                             required
                             className="rounded-xl border-stone-200 focus:border-[hsl(44,90%,40%)] focus:ring-[hsl(44,90%,40%)]"
                         />
