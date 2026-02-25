@@ -43,7 +43,7 @@ const AdminLayout = () => {
   if (!isAdminOrStaff && !isStall) return <Navigate to="/admin" replace />;
 
   const navItems = allNavItems.filter((item) => {
-    if (isStall && item.label !== "Dashboard" && item.label !== "Stall CRM") return false;
+    if (isStall && item.label !== "Dashboard") return false;
     if (isStaff && item.adminOnly) return false;
     return true;
   });
@@ -127,13 +127,13 @@ const AdminLayout = () => {
         )}
 
         <div className="flex-1 p-8 lg:p-12 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto w-full">
-          {(!isStaff || !allNavItems.find(item => location.pathname.startsWith(item.to))?.adminOnly) ? (
+          {(!isStaff || !allNavItems.find(item => location.pathname.startsWith(item.to))?.adminOnly) && (!isStall || location.pathname === '/admin/dashboard') ? (
             <Outlet />
           ) : (
             <div className="flex flex-col items-center justify-center p-20 text-center animate-in fade-in duration-500">
               <ShieldAlert className="h-20 w-20 text-red-500 mb-6 drop-shadow-md" />
               <h1 className="text-4xl font-display font-bold text-charcoal mb-3">403 Access Denied</h1>
-              <p className="text-lg text-muted-foreground font-body max-w-md">Your staff account does not have permission to access the <strong>{allNavItems.find(item => location.pathname.startsWith(item.to))?.label}</strong> module.</p>
+              <p className="text-lg text-muted-foreground font-body max-w-md">Your account does not have permission to access the <strong>{allNavItems.find(item => location.pathname.startsWith(item.to))?.label || 'requested'}</strong> module.</p>
               <Link to="/admin/dashboard" className="mt-8 px-6 py-3 bg-[hsl(44,80%,46%)] text-white hover:bg-[hsl(44,90%,40%)] rounded-xl font-bold transition-colors shadow-lg shadow-[hsl(44,80%,46%)]/20">
                 Return to Dashboard
               </Link>

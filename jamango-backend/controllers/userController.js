@@ -65,12 +65,16 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new Error('User with this phone number already exists');
     }
 
-    const user = await User.create({
+    const userData = {
         name,
-        email,
         password,
         phone,
-    });
+    };
+    if (email && email.trim() !== '') {
+        userData.email = email;
+    }
+
+    const user = await User.create(userData);
 
     if (user) {
         res.status(201).json({
