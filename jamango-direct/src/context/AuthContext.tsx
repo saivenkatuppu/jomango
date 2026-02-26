@@ -16,24 +16,22 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const [user, setUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isImpersonating, setIsImpersonating] = useState(false);
+    const [user, setUser] = useState<User | null>(() => {
+        const storedUser = localStorage.getItem('user');
+        return storedUser ? JSON.parse(storedUser) : null;
+    });
+    const [isLoading, setIsLoading] = useState(false);
+    const [isImpersonating, setIsImpersonating] = useState(() => {
+        return !!localStorage.getItem('adminUser');
+    });
 
     useEffect(() => {
-        // Check localStorage on mount
-        const storedUser = localStorage.getItem('user');
+        // Validation check (optional): Ensure token exists if user exists
         const token = localStorage.getItem('token');
-        const adminUser = localStorage.getItem('adminUser');
-
-        if (storedUser && token) {
-            setUser(JSON.parse(storedUser));
+        if (user && !token) {
+            logout();
         }
-        if (adminUser) {
-            setIsImpersonating(true);
-        }
-        setIsLoading(false);
-    }, []);
+    }, [user]);
 
     const login = async (credentials: any) => {
         const { data } = await client.post<AuthResponse>('/users/login', credentials);

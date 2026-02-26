@@ -47,7 +47,8 @@ const AdminCRM = () => {
             ]);
             setStats(statsRes.data);
             setCustomers(customersRes.data);
-        } catch (error) {
+        } catch (error: any) {
+            console.error("Fetch CRM Error:", error.response?.data || error.message);
             toast.error("Failed to load CRM data");
         } finally {
             setLoading(false);

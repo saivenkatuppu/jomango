@@ -40,6 +40,7 @@ const AdminStaff = () => {
             const { data } = await client.get("/users/staff");
             setStaffs(data);
         } catch (err: any) {
+            console.error("Fetch Staff Error:", err.response?.data || err.message);
             setError(err.response?.data?.message || "Failed to load staff list");
         } finally {
             setLoading(false);

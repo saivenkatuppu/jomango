@@ -97,6 +97,7 @@ const AdminDashboard = () => {
       const { data: res } = await client.get("/analytics/stats");
       setData(res);
     } catch (err: any) {
+      console.error("Fetch Stats Error:", err.response?.data || err.message);
       setError(err.response?.data?.message || "Failed to load dashboard data");
     } finally {
       setLoading(false);

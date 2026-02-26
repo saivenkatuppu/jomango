@@ -60,8 +60,11 @@ const AdminStalls = () => {
             setLoading(true);
             const { data } = await client.get("/stalls");
             setStalls(data);
-        } catch (error) {
-            toast.error("Failed to fetch stalls");
+        } catch (error: any) {
+            console.error("Fetch Stalls Error:", error.response?.data || error.message);
+            toast.error("Failed to fetch stalls", {
+                description: error.response?.data?.message || "Check your connection or permissions."
+            });
         } finally {
             setLoading(false);
         }
