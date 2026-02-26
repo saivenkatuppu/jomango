@@ -94,19 +94,19 @@ const AdminDashboard = () => {
     }
   };
 
-  const fetchStats = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const { data: res } = await client.get(`/analytics/stats?startDate=${startDate}&endDate=${endDate}`);
-      setData(res);
-    } catch (err: any) {
-      console.error("Fetch Stats Error:", err.response?.data || err.message);
-      setError(err.response?.data?.message || "Failed to load dashboard data");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    const fetchStats = useCallback(async () => {
+        setLoading(true);
+        setError("");
+        try {
+            const { data: res } = await client.get(`/analytics/stats?startDate=${startDate}&endDate=${endDate}`);
+            setData(res);
+        } catch (err: any) {
+            console.error("Fetch Stats Error:", err.response?.data || err.message);
+            setError(err.response?.data?.message || "Failed to load dashboard data");
+        } finally {
+            setLoading(false);
+        }
+    }, [startDate, endDate]);
 
   // Initial load uses the default 'today' dates
   useEffect(() => {
