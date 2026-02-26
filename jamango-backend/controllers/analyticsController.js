@@ -39,6 +39,11 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const trendStart = isCustomRange ? rangeStart : startOfWeek;
     const trendEnd = isCustomRange ? rangeEnd : new Date(now.setHours(23, 59, 59, 999));
 
+    console.log('[API getDashboardStats] user:', req.user?.email, req.user?.role);
+    console.log('[API getDashboardStats] query:', req.query);
+    console.log('[API getDashboardStats] rangeStart:', rangeStart);
+    console.log('[API getDashboardStats] rangeEnd:', rangeEnd);
+
     const [
         totalOrders,
         todayOrders,
@@ -61,9 +66,9 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         Order.countDocuments({ status: 'Pending', createdAt: { $gte: rangeStart, $lte: rangeEnd } }),
         // Delivered in range
         Order.countDocuments({ status: 'Delivered', createdAt: { $gte: rangeStart, $lte: rangeEnd } }),
-        // Total revenue in range (paid orders, not cancelled)
+        // Total revenue ALL TIME (paid orders, not cancelled)
         Order.aggregate([
-            { $match: { paymentStatus: 'paid', status: { $ne: 'Cancelled' }, createdAt: { $gte: rangeStart, $lte: rangeEnd } } },
+            { $match: { paymentStatus: 'paid', status: { $ne: 'Cancelled' } } },
             { $group: { _id: null, total: { $sum: '$totalAmount' } } },
         ]),
         // Keep the old 'todayRevenue' purely for legacy reasons if frontend relies on exactly today, but rename it conceptually if we want
@@ -152,7 +157,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const boxesToday = todayBoxesResult[0]?.totalBoxes || 0;
     const paidBoxesToday = todayBoxesByPaymentResult.find(r => r._id === 'online')?.totalBoxes || 0;
 
-    res.json({
+    const payload = {
         stats: {
             totalOrders,
             todayOrders,
@@ -168,7 +173,10 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         lowStockProducts,
         weeklyOrders: processedWeeklyOrders,
         productBreakdown: processedProductBreakdown,
-    });
+    };
+
+    console.log('[API getDashboardStats] Response stats:', payload.stats);
+    res.json(payload);
 });
 
 // @desc    Download Sales & Inventory Report
