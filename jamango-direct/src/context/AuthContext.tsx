@@ -50,8 +50,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         // Validation check (optional): Ensure token exists if user exists
-        const token = localStorage.getItem('token');
-        if (user && !token) {
+        const activeRole = sessionStorage.getItem('active_role');
+        let activeToken = localStorage.getItem('token');
+
+        if (activeRole === 'admin') activeToken = localStorage.getItem('adminToken');
+        else if (activeRole === 'staff') activeToken = localStorage.getItem('staffToken');
+        else if (activeRole === 'stall') activeToken = localStorage.getItem('stallToken');
+
+        if (user && !activeToken) {
             logout();
         }
     }, [user]);
