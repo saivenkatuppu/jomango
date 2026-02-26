@@ -7,9 +7,19 @@ const client = axios.create({
 // Add a request interceptor to attach the token
 client.interceptors.request.use(
     (config) => {
+        const isAdminRoute = window.location.pathname.startsWith('/admin');
         const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+        const adminToken = localStorage.getItem('adminToken');
+
+        // If we are on an admin route, prioritize the adminToken (which could be the impersonated token)
+        // If no adminToken exists, fallback to standard token
+        let activeToken = token;
+        if (isAdminRoute && adminToken) {
+            activeToken = adminToken;
+        }
+
+        if (activeToken) {
+            config.headers.Authorization = `Bearer ${activeToken}`;
         }
         return config;
     },

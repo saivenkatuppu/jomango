@@ -16,13 +16,24 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+    const isAdminRoute = window.location.pathname.startsWith('/admin');
+
     const [user, setUser] = useState<User | null>(() => {
-        const storedUser = localStorage.getItem('user');
+        let storedUser = null;
+        if (isAdminRoute) {
+            storedUser = localStorage.getItem('adminUser');
+            if (!storedUser) {
+                storedUser = localStorage.getItem('user'); // Fallback for backwards compatibility or active impersonation using old standard
+            }
+        } else {
+            storedUser = localStorage.getItem('user');
+        }
         return storedUser ? JSON.parse(storedUser) : null;
     });
+
     const [isLoading, setIsLoading] = useState(false);
     const [isImpersonating, setIsImpersonating] = useState(() => {
-        return !!localStorage.getItem('adminUser');
+        return !!localStorage.getItem('originalAdminUser');
     });
 
     useEffect(() => {
@@ -35,10 +46,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const login = async (credentials: any) => {
         const { data } = await client.post<AuthResponse>('/users/login', credentials);
-        localStorage.setItem('user', JSON.stringify(data));
-        localStorage.setItem('token', data.token);
-        localStorage.removeItem('adminUser');
-        localStorage.removeItem('adminToken');
+
+        const isUserAdminOrStaff = data.isAdmin || data.role === "admin" || data.role === "staff" || data.role === "stall_owner";
+
+        if (window.location.pathname.startsWith('/admin')) {
+            localStorage.setItem('adminUser', JSON.stringify(data));
+            localStorage.setItem('adminToken', data.token);
+            // Don't wipe 'user' and 'token' (store tokens) here, so store sessions survive
+            localStorage.removeItem('originalAdminUser');
+            localStorage.removeItem('originalAdminToken');
+        } else {
+            localStorage.setItem('user', JSON.stringify(data));
+            localStorage.setItem('token', data.token);
+        }
+
         setUser(data);
         setIsImpersonating(false);
     };
@@ -51,35 +72,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const logout = () => {
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-        localStorage.removeItem('adminUser');
-        localStorage.removeItem('adminToken');
+        if (window.location.pathname.startsWith('/admin')) {
+            localStorage.removeItem('adminUser');
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('originalAdminUser');
+            localStorage.removeItem('originalAdminToken');
+            // We do NOT remove 'user'/'token' so the consumer session stays alive in another tab
+        } else {
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+        }
         setUser(null);
         setIsImpersonating(false);
     };
 
     const impersonate = async (userId: string) => {
         // save admin state
-        localStorage.setItem('adminUser', localStorage.getItem('user') || '');
-        localStorage.setItem('adminToken', localStorage.getItem('token') || '');
+        localStorage.setItem('originalAdminUser', localStorage.getItem('adminUser') || '');
+        localStorage.setItem('originalAdminToken', localStorage.getItem('adminToken') || '');
 
         const { data } = await client.post<AuthResponse>(`/users/${userId}/impersonate`);
-        localStorage.setItem('user', JSON.stringify(data));
-        localStorage.setItem('token', data.token);
+
+        // Temporarily override admin token with impersonated token
+        localStorage.setItem('adminUser', JSON.stringify(data));
+        localStorage.setItem('adminToken', data.token);
+
         setUser(data);
         setIsImpersonating(true);
     };
 
     const stopImpersonating = () => {
-        const adminUser = localStorage.getItem('adminUser');
-        const adminToken = localStorage.getItem('adminToken');
-        if (adminUser && adminToken) {
-            localStorage.setItem('user', adminUser);
-            localStorage.setItem('token', adminToken);
-            localStorage.removeItem('adminUser');
-            localStorage.removeItem('adminToken');
-            setUser(JSON.parse(adminUser));
+        const originalAdminUser = localStorage.getItem('originalAdminUser');
+        const originalAdminToken = localStorage.getItem('originalAdminToken');
+        if (originalAdminUser && originalAdminToken) {
+            localStorage.setItem('adminUser', originalAdminUser);
+            localStorage.setItem('adminToken', originalAdminToken);
+            localStorage.removeItem('originalAdminUser');
+            localStorage.removeItem('originalAdminToken');
+            setUser(JSON.parse(originalAdminUser));
             setIsImpersonating(false);
         } else {
             logout();
