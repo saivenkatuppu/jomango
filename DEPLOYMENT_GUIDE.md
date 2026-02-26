@@ -29,6 +29,10 @@ Hosted on a free tier service like Render.
     *   `RAZORPAY_KEY_ID`: `rzp_test_...`
     *   `RAZORPAY_KEY_SECRET`: `...`
     *   `NODE_ENV`: `production`
+    *   `AWS_S3_BUCKET_NAME`: `your-bucket-name`
+    *   `AWS_REGION`: `ap-south-1`
+    *   `AWS_ACCESS_KEY_ID`: `...`
+    *   `AWS_SECRET_ACCESS_KEY`: `...`
 7.  Click **Create Web Service**.
 8.  **Wait**: Once deployed, copy the **URL** (e.g., `https://jamango-backend.onrender.com`). You will need this for the frontend.
 
