@@ -79,6 +79,10 @@ const stallMangoSchema = mongoose.Schema(
         isGlobalTemplate: {
             type: Boolean,
             default: false,
+        },
+        image: {
+            type: String,
+            default: '',
         }
     },
     {

@@ -92,9 +92,11 @@ const StallOwnerDashboard = () => {
         description: "",
         showBadge: false,
         badgeType: "custom",
-        badge: ""
+        badge: "",
+        image: ""
     });
     const [editingMangoId, setEditingMangoId] = useState<string | null>(null);
+    const [uploadingImage, setUploadingImage] = useState(false);
 
     useEffect(() => {
         fetchStallContext();
@@ -186,7 +188,7 @@ const StallOwnerDashboard = () => {
             setShowForm(false);
             setMangoForm({
                 variety: "", ripeningType: "Natural", price: "", priceUnit: "per kg", weight: 3, quantity: "", qualityGrade: "A", status: "In Stock",
-                mrp: "", showDiscount: false, discountLabel: "", description: "", showBadge: false, badgeType: "custom", badge: ""
+                mrp: "", showDiscount: false, discountLabel: "", description: "", showBadge: false, badgeType: "custom", badge: "", image: ""
             });
             setEditingMangoId(null);
             fetchStallContext();
@@ -195,12 +197,28 @@ const StallOwnerDashboard = () => {
         }
     };
 
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append("image", file);
+        try {
+            setUploadingImage(true);
+            const res = await client.post("/upload", formData, { headers: { "Content-Type": "multipart/form-data" } });
+            setMangoForm(f => ({ ...f, image: res.data }));
+        } catch (err) {
+            toast.error("Image upload failed");
+        } finally {
+            setUploadingImage(false);
+        }
+    };
+
     const openCreateMango = () => {
         setEditingMangoId(null);
         setActiveTab('mangoes');
         setMangoForm({
             variety: "", ripeningType: "Natural", price: "", priceUnit: "per kg", weight: 3, quantity: "", qualityGrade: "A", status: "In Stock",
-            mrp: "", showDiscount: false, discountLabel: "", description: "", showBadge: false, badgeType: "custom", badge: ""
+            mrp: "", showDiscount: false, discountLabel: "", description: "", showBadge: false, badgeType: "custom", badge: "", image: ""
         });
         setShowForm(true);
         window.scrollTo({ top: 400, behavior: "smooth" });
@@ -222,7 +240,8 @@ const StallOwnerDashboard = () => {
             description: mango.description || "",
             showBadge: mango.showBadge || false,
             badgeType: mango.badgeType || "custom",
-            badge: mango.badge || ""
+            badge: mango.badge || "",
+            image: mango.image || ""
         });
         setEditingMangoId(mango._id);
         setShowForm(true);
@@ -474,6 +493,21 @@ const StallOwnerDashboard = () => {
                                                 <option key={p._id} value={p.variety}>{p.variety}</option>
                                             ))}
                                         </select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] uppercase font-black tracking-widest text-charcoal/40 ml-1">Variety Image</label>
+                                        <div className="flex gap-2 items-center">
+                                            <Input 
+                                               type="file" 
+                                               accept="image/*" 
+                                               onChange={handleImageUpload} 
+                                               disabled={uploadingImage} 
+                                               className="h-10 rounded-xl bg-white flex-1 relative file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-mango/20 file:text-mango-deep hover:file:bg-mango/40 transition-all cursor-pointer" 
+                                            />
+                                            {uploadingImage && <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />}
+                                        </div>
+                                        {mangoForm.image && <div className="text-[10px] text-green-600 flex items-center gap-1 mt-1 font-bold"><Check className="h-3 w-3" /> Image Uploaded</div>}
                                     </div>
 
                                     <div className={`grid ${mangoForm.priceUnit === 'per box' ? 'grid-cols-3' : 'grid-cols-2'} gap-4`}>

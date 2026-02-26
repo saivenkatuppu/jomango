@@ -38,7 +38,7 @@ const getAdminProducts = asyncHandler(async (req, res) => {
 // @route   POST /api/admin/products
 // @access  Private/Admin
 const createProduct = asyncHandler(async (req, res) => {
-    const { name, variety, weight, price, stock, active, description, badge, mrp, showDiscount, discountLabel, showBadge, badgeType } = req.body;
+    const { name, variety, weight, price, stock, active, description, badge, mrp, showDiscount, discountLabel, showBadge, badgeType, image } = req.body;
 
     const product = await Product.create({
         name,
@@ -54,7 +54,8 @@ const createProduct = asyncHandler(async (req, res) => {
         mrp: mrp || undefined,
         showDiscount: showDiscount || false,
         discountLabel: discountLabel || '',
-        priceHistory: [{ price, date: Date.now() }]
+        priceHistory: [{ price, date: Date.now() }],
+        image: image || ''
     });
 
     res.status(201).json(product);
@@ -71,7 +72,7 @@ const updateProduct = asyncHandler(async (req, res) => {
         throw new Error('Product not found');
     }
 
-    const { name, variety, weight, price, stock, active, description, badge, mrp, showDiscount, discountLabel } = req.body;
+    const { name, variety, weight, price, stock, active, description, badge, mrp, showDiscount, discountLabel, image } = req.body;
     let oldStock = product.stock;
 
     if (req.user && (req.user.role === 'staff' || req.user.role === 'stall_owner')) {
@@ -103,6 +104,7 @@ const updateProduct = asyncHandler(async (req, res) => {
         const { showBadge, badgeType } = req.body;
         product.showBadge = showBadge !== undefined ? showBadge : product.showBadge;
         product.badgeType = badgeType ?? product.badgeType;
+        product.image = image !== undefined ? image : product.image;
     }
 
     const updated = await product.save();

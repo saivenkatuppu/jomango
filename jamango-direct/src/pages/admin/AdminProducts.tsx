@@ -20,6 +20,7 @@ interface Product {
   discountLabel?: string;
   showBadge?: boolean;
   badgeType?: string;
+  image?: string;
 }
 
 const badgeOptions = [
@@ -47,7 +48,8 @@ const emptyForm = {
   showDiscount: false,
   discountLabel: "",
   showBadge: false,
-  badgeType: "custom"
+  badgeType: "custom",
+  image: ""
 };
 
 const AdminProducts = () => {
@@ -59,6 +61,7 @@ const AdminProducts = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<typeof emptyForm>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // ... fetchProducts ...
   // copy fetchProducts logic just to be safe if context requires large chunks, but here I can skip if I use precise Targeting
@@ -102,7 +105,8 @@ const AdminProducts = () => {
       showDiscount: p.showDiscount || false,
       discountLabel: p.discountLabel || "",
       showBadge: p.showBadge || false,
-      badgeType: p.badgeType || "custom"
+      badgeType: p.badgeType || "custom",
+      image: p.image || ""
     });
     setShowForm(true);
   };
@@ -130,7 +134,8 @@ const AdminProducts = () => {
       showDiscount: form.showDiscount,
       discountLabel: form.discountLabel,
       showBadge: form.showBadge,
-      badgeType: form.badgeType
+      badgeType: form.badgeType,
+      image: form.image
     };
     try {
       if (editingId) {
@@ -145,6 +150,26 @@ const AdminProducts = () => {
       alert(err.response?.data?.message || "Save failed");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      setUploadingImage(true);
+      const res = await client.post("/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      setForm((f) => ({ ...f, image: res.data }));
+    } catch (err) {
+      alert("Image upload failed");
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -226,6 +251,26 @@ const AdminProducts = () => {
                   className="h-10 rounded-xl"
                 />
               </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Product Image</label>
+                <div className="flex items-center gap-3">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploadingImage}
+                    className="h-10 rounded-xl flex-1"
+                  />
+                  {uploadingImage && <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />}
+                </div>
+                {form.image && (
+                  <div className="mt-2 text-xs text-green-600 truncate flex items-center gap-1">
+                    <Check className="h-3 w-3" /> Image uploaded
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Variety</label>
                 <Input

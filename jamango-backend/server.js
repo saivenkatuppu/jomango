@@ -16,6 +16,8 @@ const webhookRoutes = require('./routes/webhookRoutes');
 const stallRoutes = require('./routes/stallRoutes');
 const crmRoutes = require('./routes/crmRoutes');
 const stallMangoRoutes = require('./routes/stallMangoRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
+const path = require('path');
 
 dotenv.config();
 
@@ -44,6 +46,10 @@ app.use('/api/webhooks', webhookRoutes);
 app.use('/api/stalls', stallRoutes);
 app.use('/api/crm', crmRoutes);
 app.use('/api/stall-mangoes', stallMangoRoutes);
+app.use('/api/upload', uploadRoutes);
+
+const uploadPath = path.join(__dirname, 'uploads');
+app.use('/uploads', express.static(uploadPath));
 
 // Error Middleware
 app.use(notFound);

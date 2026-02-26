@@ -72,6 +72,10 @@ const productSchema = mongoose.Schema(
         isGlobal: {
             type: Boolean,
             default: true,
+        },
+        image: {
+            type: String,
+            default: '',
         }
     },
     {

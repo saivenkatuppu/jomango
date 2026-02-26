@@ -20,6 +20,7 @@ interface DBProduct {
   discountLabel?: string;
   showBadge?: boolean;
   badgeType?: string;
+  image?: string;
 }
 
 
@@ -37,6 +38,7 @@ interface ProductCardProps {
   weight: number;
   showDiscount?: boolean;
   discountLabel?: string;
+  image?: string;
   onOrder: () => void;
   delay?: number;
 }
@@ -54,6 +56,7 @@ const ProductCard = ({
   weight,
   showDiscount,
   discountLabel,
+  image,
   onOrder,
   delay = 0
 }: ProductCardProps) => {
@@ -100,13 +103,19 @@ const ProductCard = ({
         )}
       </div>
 
-      <div className="aspect-[16/11] overflow-hidden relative">
+      <div className="aspect-[16/11] overflow-hidden relative bg-stone-100">
         <div className="absolute inset-0 bg-stone-100/40 mix-blend-multiply z-10" />
         <img
-          src={mangoBoxImage}
+          src={image ? image : mangoBoxImage}
           alt={title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out"
           loading="lazy"
+          onError={(e) => {
+            // Fallback inside error handler to ensure no broken image icon 
+            // if URL is invalid.
+            (e.target as HTMLImageElement).src = mangoBoxImage;
+            (e.target as HTMLImageElement).onerror = null; // prevent infinite loop
+          }}
         />
         <div className="absolute bottom-4 left-5 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/40 shadow-sm z-20">
           <p className="text-[10px] font-bold uppercase tracking-wider text-charcoal/80 flex items-center gap-1.5">
@@ -304,6 +313,7 @@ const ProductCards = () => {
                   weight={p.weight}
                   showDiscount={p.showDiscount}
                   discountLabel={p.discountLabel}
+                  image={p.image}
                   delay={index * 0.1}
                   onOrder={() =>
                     setSelectedProduct({
