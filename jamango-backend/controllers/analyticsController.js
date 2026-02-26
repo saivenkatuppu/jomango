@@ -66,15 +66,14 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         Order.countDocuments({ status: 'Pending', createdAt: { $gte: rangeStart, $lte: rangeEnd } }),
         // Delivered in range
         Order.countDocuments({ status: 'Delivered', createdAt: { $gte: rangeStart, $lte: rangeEnd } }),
-        // Total revenue ALL TIME (paid orders, not cancelled)
+        // Total revenue ALL TIME (all valid orders, not cancelled)
         Order.aggregate([
-            { $match: { paymentStatus: 'paid', status: { $ne: 'Cancelled' } } },
+            { $match: { status: { $ne: 'Cancelled' } } },
             { $group: { _id: null, total: { $sum: '$totalAmount' } } },
         ]),
-        // Keep the old 'todayRevenue' purely for legacy reasons if frontend relies on exactly today, but rename it conceptually if we want
-        // Let's make "todayRevenueResult" the revenue for the *selected range* so the frontend variable name still works
+        // Selected Dates Revenue
         Order.aggregate([
-            { $match: { paymentStatus: 'paid', createdAt: { $gte: rangeStart, $lte: rangeEnd }, status: { $ne: 'Cancelled' } } },
+            { $match: { createdAt: { $gte: rangeStart, $lte: rangeEnd }, status: { $ne: 'Cancelled' } } },
             { $group: { _id: null, total: { $sum: '$totalAmount' } } },
         ]),
         // Recent 5 orders inside the range
@@ -124,7 +123,9 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
     let totalRevenue = revenueResult[0]?.total || 0;
     let todayRevenue = todayRevenueResult[0]?.total || 0;
-    let avgOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
+    
+    // Dynamically calculate average based on the selected dates range instead of all time
+    let avgOrderValue = todayOrders > 0 ? Math.round(todayRevenue / todayOrders) : 0;
 
     let processedRecentOrders = recentOrders;
     let processedWeeklyOrders = weeklyOrders;
