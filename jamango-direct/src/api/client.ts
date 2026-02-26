@@ -12,6 +12,8 @@ client.interceptors.request.use(
 
         if (activeRole === 'admin') {
             activeToken = localStorage.getItem('adminToken');
+        } else if (activeRole === 'staff') {
+            activeToken = localStorage.getItem('staffToken');
         } else if (activeRole === 'stall') {
             activeToken = localStorage.getItem('stallToken');
         } else if (activeRole === 'customer') {
@@ -22,6 +24,7 @@ client.interceptors.request.use(
         // fallback heuristically to whichever token actually exists in local storage
         if (!activeToken) {
             activeToken = localStorage.getItem('adminToken') ||
+                localStorage.getItem('staffToken') ||
                 localStorage.getItem('stallToken') ||
                 localStorage.getItem('token');
         }

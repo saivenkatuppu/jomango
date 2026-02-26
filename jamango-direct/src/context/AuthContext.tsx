@@ -20,9 +20,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         let activeRole = sessionStorage.getItem('active_role');
         let storedUser = null;
 
-        // If no active role in this tab, try to inherit an existing session from local storage prioritizing admin > stall > customer
+        // If no active role in this tab, try to inherit an existing session from local storage prioritizing admin > staff > stall > customer
         if (!activeRole) {
             if (localStorage.getItem('adminUser')) activeRole = 'admin';
+            else if (localStorage.getItem('staffUser')) activeRole = 'staff';
             else if (localStorage.getItem('stallUser')) activeRole = 'stall';
             else if (localStorage.getItem('user')) activeRole = 'customer';
 
@@ -31,6 +32,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (activeRole === 'admin') {
             storedUser = localStorage.getItem('adminUser') || localStorage.getItem('originalAdminUser'); // fallback for mid-impersonation
+        } else if (activeRole === 'staff') {
+            storedUser = localStorage.getItem('staffUser');
         } else if (activeRole === 'stall') {
             storedUser = localStorage.getItem('stallUser');
         } else {
@@ -56,12 +59,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const login = async (credentials: any) => {
         const { data } = await client.post<AuthResponse>('/users/login', credentials);
 
-        const isUserAdminOrStaff = data.isAdmin || data.role === "admin" || data.role === "staff";
+        const isAdmin = data.isAdmin || data.role === "admin";
+        const isStaff = data.role === "staff";
 
-        if (isUserAdminOrStaff) {
+        if (isAdmin) {
             localStorage.setItem('adminUser', JSON.stringify(data));
             localStorage.setItem('adminToken', data.token);
             sessionStorage.setItem('active_role', 'admin');
+        } else if (isStaff) {
+            localStorage.setItem('staffUser', JSON.stringify(data));
+            localStorage.setItem('staffToken', data.token);
+            sessionStorage.setItem('active_role', 'staff');
         } else if (data.role === "stall_owner") {
             localStorage.setItem('stallUser', JSON.stringify(data));
             localStorage.setItem('stallToken', data.token);
@@ -91,6 +99,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             localStorage.removeItem('adminToken');
             localStorage.removeItem('originalAdminUser');
             localStorage.removeItem('originalAdminToken');
+        } else if (activeRole === 'staff') {
+            localStorage.removeItem('staffUser');
+            localStorage.removeItem('staffToken');
         } else if (activeRole === 'stall') {
             localStorage.removeItem('stallUser');
             localStorage.removeItem('stallToken');
