@@ -320,7 +320,7 @@ const CheckoutPage = () => {
             <div className="min-h-screen bg-[#FBF7F0] flex flex-col items-center justify-center p-4">
                 <ShoppingBag className="h-16 w-16 text-charcoal/20 mb-4" />
                 <h2 className="text-2xl font-display text-charcoal mb-2">Your cart is empty</h2>
-                <Button onClick={() => navigate("/")} variant="outline">
+                <Button onClick={() => navigate("/#products")} variant="outline">
                     Return to Shop
                 </Button>
             </div>
@@ -338,7 +338,7 @@ const CheckoutPage = () => {
             >
                 <div className="max-w-6xl mx-auto px-4 md:px-8 h-20 flex items-center justify-between">
                     <button
-                        onClick={() => navigate("/")}
+                        onClick={() => navigate("/#products")}
                         className="group flex items-center gap-2 text-charcoal/70 hover:text-charcoal transition-colors px-3 py-1.5 rounded-full hover:bg-white/50"
                     >
                         <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform border border-stone-200/50">
