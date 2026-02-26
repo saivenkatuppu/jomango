@@ -41,7 +41,8 @@ router.post('/', upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).send({ message: 'No file uploaded' });
     }
-    const envPath = process.env.PUBLIC_URL || `${req.protocol}://${req.get('host')}`;
+    const protocol = req.headers['x-forwarded-proto'] || (req.hostname === 'localhost' ? 'http' : 'https');
+    const envPath = process.env.PUBLIC_URL || `${protocol}://${req.get('host')}`;
     const fileUrl = `${envPath}/uploads/${req.file.filename}`;
     res.json(fileUrl);
 });
