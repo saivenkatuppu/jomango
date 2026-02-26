@@ -7,15 +7,23 @@ const client = axios.create({
 // Add a request interceptor to attach the token
 client.interceptors.request.use(
     (config) => {
-        const isAdminRoute = window.location.pathname.startsWith('/admin');
-        const token = localStorage.getItem('token');
-        const adminToken = localStorage.getItem('adminToken');
+        const activeRole = sessionStorage.getItem('active_role');
+        let activeToken = null;
 
-        // If we are on an admin route, prioritize the adminToken (which could be the impersonated token)
-        // If no adminToken exists, fallback to standard token
-        let activeToken = token;
-        if (isAdminRoute && adminToken) {
-            activeToken = adminToken;
+        if (activeRole === 'admin') {
+            activeToken = localStorage.getItem('adminToken');
+        } else if (activeRole === 'stall') {
+            activeToken = localStorage.getItem('stallToken');
+        } else if (activeRole === 'customer') {
+            activeToken = localStorage.getItem('token');
+        }
+
+        // If no active role yet (like on first load before initialization finishes), 
+        // fallback heuristically to whichever token actually exists in local storage
+        if (!activeToken) {
+            activeToken = localStorage.getItem('adminToken') ||
+                localStorage.getItem('stallToken') ||
+                localStorage.getItem('token');
         }
 
         if (activeToken) {

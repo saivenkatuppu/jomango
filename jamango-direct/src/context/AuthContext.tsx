@@ -16,18 +16,27 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const isAdminRoute = window.location.pathname.startsWith('/admin');
-
     const [user, setUser] = useState<User | null>(() => {
+        let activeRole = sessionStorage.getItem('active_role');
         let storedUser = null;
-        if (isAdminRoute) {
-            storedUser = localStorage.getItem('adminUser');
-            if (!storedUser) {
-                storedUser = localStorage.getItem('user'); // Fallback for backwards compatibility or active impersonation using old standard
-            }
+
+        // If no active role in this tab, try to inherit an existing session from local storage prioritizing admin > stall > customer
+        if (!activeRole) {
+            if (localStorage.getItem('adminUser')) activeRole = 'admin';
+            else if (localStorage.getItem('stallUser')) activeRole = 'stall';
+            else if (localStorage.getItem('user')) activeRole = 'customer';
+
+            if (activeRole) sessionStorage.setItem('active_role', activeRole);
+        }
+
+        if (activeRole === 'admin') {
+            storedUser = localStorage.getItem('adminUser') || localStorage.getItem('originalAdminUser'); // fallback for mid-impersonation
+        } else if (activeRole === 'stall') {
+            storedUser = localStorage.getItem('stallUser');
         } else {
             storedUser = localStorage.getItem('user');
         }
+
         return storedUser ? JSON.parse(storedUser) : null;
     });
 
@@ -47,17 +56,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const login = async (credentials: any) => {
         const { data } = await client.post<AuthResponse>('/users/login', credentials);
 
-        const isUserAdminOrStaff = data.isAdmin || data.role === "admin" || data.role === "staff" || data.role === "stall_owner";
+        const isUserAdminOrStaff = data.isAdmin || data.role === "admin" || data.role === "staff";
 
-        if (window.location.pathname.startsWith('/admin')) {
+        if (isUserAdminOrStaff) {
             localStorage.setItem('adminUser', JSON.stringify(data));
             localStorage.setItem('adminToken', data.token);
-            // Don't wipe 'user' and 'token' (store tokens) here, so store sessions survive
-            localStorage.removeItem('originalAdminUser');
-            localStorage.removeItem('originalAdminToken');
+            sessionStorage.setItem('active_role', 'admin');
+        } else if (data.role === "stall_owner") {
+            localStorage.setItem('stallUser', JSON.stringify(data));
+            localStorage.setItem('stallToken', data.token);
+            sessionStorage.setItem('active_role', 'stall');
         } else {
             localStorage.setItem('user', JSON.stringify(data));
             localStorage.setItem('token', data.token);
+            sessionStorage.setItem('active_role', 'customer');
         }
 
         setUser(data);
@@ -72,16 +84,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const logout = () => {
-        if (window.location.pathname.startsWith('/admin')) {
+        const activeRole = sessionStorage.getItem('active_role');
+
+        if (activeRole === 'admin') {
             localStorage.removeItem('adminUser');
             localStorage.removeItem('adminToken');
             localStorage.removeItem('originalAdminUser');
             localStorage.removeItem('originalAdminToken');
-            // We do NOT remove 'user'/'token' so the consumer session stays alive in another tab
+        } else if (activeRole === 'stall') {
+            localStorage.removeItem('stallUser');
+            localStorage.removeItem('stallToken');
         } else {
             localStorage.removeItem('user');
             localStorage.removeItem('token');
         }
+
+        sessionStorage.removeItem('active_role');
         setUser(null);
         setIsImpersonating(false);
     };
@@ -94,6 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { data } = await client.post<AuthResponse>(`/users/${userId}/impersonate`);
 
         // Temporarily override admin token with impersonated token
+        // Keep the tab role as 'admin' so it correctly knows to fetch the overridden admin token
         localStorage.setItem('adminUser', JSON.stringify(data));
         localStorage.setItem('adminToken', data.token);
 
