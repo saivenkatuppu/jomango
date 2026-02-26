@@ -54,6 +54,10 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const getTodayStr = () => new Date().toISOString().split('T')[0];
+  const [startDate, setStartDate] = useState(getTodayStr());
+  const [endDate, setEndDate] = useState(getTodayStr());
+
   const { user } = useAuth();
   const isStaff = user?.role === "staff";
   const isStall = user?.role === "stall_owner";
@@ -94,7 +98,7 @@ const AdminDashboard = () => {
     setLoading(true);
     setError("");
     try {
-      const { data: res } = await client.get("/analytics/stats");
+      const { data: res } = await client.get(`/analytics/stats?startDate=${startDate}&endDate=${endDate}`);
       setData(res);
     } catch (err: any) {
       console.error("Fetch Stats Error:", err.response?.data || err.message);
@@ -104,9 +108,11 @@ const AdminDashboard = () => {
     }
   }, []);
 
+  // Initial load uses the default 'today' dates
   useEffect(() => {
     fetchStats();
-  }, [fetchStats]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const fmt = (n: number) =>
     n >= 100000
@@ -118,25 +124,25 @@ const AdminDashboard = () => {
   const statCards = data
     ? [
       {
-        label: "Today's Orders",
+        label: "Orders in Range",
         value: String(data.stats.todayOrders),
         icon: ShoppingCart,
         sub: `${data.stats.totalOrders} total all time`,
       },
       ...(!isStaff ? [{
-        label: "Revenue Today",
+        label: "Total Revenue (Selected Dates)",
         value: fmt(data.stats.todayRevenue),
         icon: IndianRupee,
         sub: `Avg order: ${fmt(data.stats.avgOrderValue)}`,
       }] : []),
       {
-        label: "Pending Orders",
+        label: "Pending in Date Range",
         value: String(data.stats.pendingOrders),
         icon: Clock,
         sub: "Awaiting confirmation",
       },
       {
-        label: "Delivered Today",
+        label: "Delivered in Date Range",
         value: String(data.stats.deliveredToday),
         icon: CheckCircle,
         sub: !isStaff ? `Total revenue: ${fmt(data.stats.totalRevenue)}` : "Successfully delivered",
@@ -153,14 +159,31 @@ const AdminDashboard = () => {
             {loading ? "Loading..." : "Live data from your store"}
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3 items-center mt-4 sm:mt-0">
+          <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-md border text-sm shadow-sm">
+            <input
+              type="date"
+              value={startDate}
+              onChange={e => setStartDate(e.target.value)}
+              className="outline-none bg-transparent text-charcoal cursor-pointer"
+            />
+            <span className="text-muted-foreground font-medium text-xs">TO</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={e => setEndDate(e.target.value)}
+              className="outline-none bg-transparent text-charcoal cursor-pointer"
+            />
+          </div>
+          <Button variant="mango" size="sm" onClick={fetchStats} disabled={loading} className="font-bold">
+            {loading ? "Loading..." : "Apply Range"}
+          </Button>
           <Button variant="outline" size="sm" onClick={downloadReport} className="flex items-center gap-2">
             <Download className="h-4 w-4" />
-            Download Report
+            <span className="hidden sm:inline">Report</span>
           </Button>
           <Button variant="outline" size="sm" onClick={fetchStats} disabled={loading} className="flex items-center gap-2">
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            Refresh
           </Button>
         </div>
       </div>
@@ -191,18 +214,18 @@ const AdminDashboard = () => {
           ))}
       </div>
 
-      {/* Today's Deep Dive Grid */}
+      {/* Selected Range Deep Dive Grid */}
       {data && (
         <div className="mb-8">
-          <h2 className="font-display text-lg font-semibold text-foreground mb-4">Today's Performance Overview</h2>
+          <h2 className="font-display text-lg font-semibold text-foreground mb-4">Selected Date Range Overview</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-card rounded-xl border border-border p-4 bg-secondary/10">
-              <p className="font-body text-xs text-muted-foreground mb-1 uppercase tracking-wider font-semibold">Boxes Ordered Today</p>
+              <p className="font-body text-xs text-muted-foreground mb-1 uppercase tracking-wider font-semibold">Total Boxes Sold</p>
               <p className="font-display text-2xl font-bold text-foreground">{data.stats.boxesToday}</p>
               <p className="font-body text-xs text-muted-foreground mt-1">Total physical units moved</p>
             </div>
             <div className="bg-card rounded-xl border border-border p-4 bg-blue-50/50">
-              <p className="font-body text-xs text-blue-700/70 mb-1 uppercase tracking-wider font-semibold">Pre-Paid Boxes</p>
+              <p className="font-body text-xs text-blue-700/70 mb-1 uppercase tracking-wider font-semibold">Pre-Paid Orders</p>
               <p className="font-display text-2xl font-bold text-blue-700">{data.stats.paidBoxesToday}</p>
               <p className="font-body text-xs text-blue-700/70 mt-1">No collection required</p>
             </div>
@@ -232,7 +255,7 @@ const AdminDashboard = () => {
           {/* Top Selling Items */}
           <div className="bg-card rounded-xl border border-border">
             <div className="p-5 border-b border-border">
-              <h2 className="font-display text-lg font-semibold text-foreground">Top Performing Items</h2>
+              <h2 className="font-display text-lg font-semibold text-foreground">Top Items for Selected Dates</h2>
             </div>
             <div className="p-5 space-y-4">
               {data.productBreakdown.length > 0 ? (
@@ -271,7 +294,7 @@ const AdminDashboard = () => {
           {/* Weekly Trend */}
           <div className="bg-card rounded-xl border border-border">
             <div className="p-5 border-b border-border">
-              <h2 className="font-display text-lg font-semibold text-foreground">7-Day Sales Trend</h2>
+              <h2 className="font-display text-lg font-semibold text-foreground">Sales Trend (Range)</h2>
             </div>
             <div className="p-5">
               {data.weeklyOrders.length > 0 ? (
@@ -308,7 +331,7 @@ const AdminDashboard = () => {
                 </div>
               ) : (
                 <div className="text-center text-muted-foreground font-body py-20 text-sm">
-                  No sales data available for the last 7 days.
+                  No data available for selected dates.
                 </div>
               )}
             </div>
@@ -390,7 +413,7 @@ const AdminDashboard = () => {
               ) : (
                 <tr>
                   <td colSpan={7} className="p-8 text-center font-body text-muted-foreground">
-                    No orders yet. Orders will appear here once customers place them.
+                    No data available for selected dates.
                   </td>
                 </tr>
               )}

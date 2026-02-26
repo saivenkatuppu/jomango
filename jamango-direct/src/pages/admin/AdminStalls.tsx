@@ -25,50 +25,50 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { useQuery } from "@tanstack/react-query";
 
 const AdminStalls = () => {
     const navigate = useNavigate();
     const { impersonate } = useAuth();
-    const [stalls, setStalls] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+
+    // UI and Form States
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [stallToDelete, setStallToDelete] = useState<string | null>(null);
     const [editingStall, setEditingStall] = useState<any>(null);
-    const [createdCredentials, setCreatedCredentials] = useState<any>(null); // New state for success message
+    const [createdCredentials, setCreatedCredentials] = useState<any>(null);
     const [search, setSearch] = useState("");
+
     const [formData, setFormData] = useState({
         stallName: "",
         stallId: "",
         ownerName: "",
         ownerMobile: "",
         ownerEmail: "",
-        password: "", // Added password field
+        password: "",
         location: "",
         address: "",
         stallType: "Temporary",
         operatingDates: { from: "", to: "" }
     });
 
-    useEffect(() => {
-        fetchStalls();
-    }, []);
-
-    const fetchStalls = async () => {
-        try {
-            setLoading(true);
+    const { data: stalls = [], isLoading: loading, refetch: fetchStalls, isError, error } = useQuery({
+        queryKey: ["admin_stalls"],
+        queryFn: async () => {
             const { data } = await client.get("/stalls");
-            setStalls(data);
-        } catch (error: any) {
-            console.error("Fetch Stalls Error:", error.response?.data || error.message);
-            toast.error("Failed to fetch stalls", {
-                description: error.response?.data?.message || "Check your connection or permissions."
-            });
-        } finally {
-            setLoading(false);
+            return data;
         }
-    };
+    });
+
+    useEffect(() => {
+        if (isError) {
+            console.error("Fetch Stalls Error:", error);
+            toast.error("Failed to fetch stalls", {
+                description: (error as any)?.response?.data?.message || "Check your connection or permissions."
+            });
+        }
+    }, [isError, error]);
 
     const handleImpersonate = async (userId: string | undefined) => {
         if (!userId) {

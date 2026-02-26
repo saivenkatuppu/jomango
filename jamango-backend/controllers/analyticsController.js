@@ -10,10 +10,34 @@ const StallCustomer = require('../models/StallCustomer');
 // @route   GET /api/admin/stats
 // @access  Private/Admin
 const getDashboardStats = asyncHandler(async (req, res) => {
+    const { startDate, endDate } = req.query;
+
+    let rangeStart;
+    let rangeEnd;
+    let isCustomRange = false;
+
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    if (startDate && endDate) {
+        rangeStart = new Date(startDate);
+        rangeStart.setHours(0, 0, 0, 0); // Start of day
+
+        rangeEnd = new Date(endDate);
+        rangeEnd.setHours(23, 59, 59, 999); // End of day
+        isCustomRange = true;
+    } else {
+        rangeStart = startOfToday;
+        rangeEnd = new Date(now);
+        rangeEnd.setHours(23, 59, 59, 999);
+    }
+
     const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - 6); // last 7 days
+    startOfWeek.setDate(now.getDate() - 6); // default last 7 days for trend if no custom range
+
+    // If custom range is selected, we use that for the trend graph instead of strictly 'weekly'
+    const trendStart = isCustomRange ? rangeStart : startOfWeek;
+    const trendEnd = isCustomRange ? rangeEnd : new Date(now.setHours(23, 59, 59, 999));
 
     const [
         totalOrders,
@@ -31,29 +55,30 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     ] = await Promise.all([
         // Total orders ever
         Order.countDocuments(),
-        // Today's orders
-        Order.countDocuments({ createdAt: { $gte: startOfToday } }),
-        // Pending orders
-        Order.countDocuments({ status: 'Pending' }),
-        // Delivered today
-        Order.countDocuments({ status: 'Delivered', createdAt: { $gte: startOfToday } }),
-        // Total revenue (paid orders, not cancelled)
+        // Total orders in range (Replacing todayOrders logic)
+        Order.countDocuments({ createdAt: { $gte: rangeStart, $lte: rangeEnd } }),
+        // Pending orders in range
+        Order.countDocuments({ status: 'Pending', createdAt: { $gte: rangeStart, $lte: rangeEnd } }),
+        // Delivered in range
+        Order.countDocuments({ status: 'Delivered', createdAt: { $gte: rangeStart, $lte: rangeEnd } }),
+        // Total revenue in range (paid orders, not cancelled)
         Order.aggregate([
-            { $match: { paymentStatus: 'paid', status: { $ne: 'Cancelled' } } },
+            { $match: { paymentStatus: 'paid', status: { $ne: 'Cancelled' }, createdAt: { $gte: rangeStart, $lte: rangeEnd } } },
             { $group: { _id: null, total: { $sum: '$totalAmount' } } },
         ]),
-        // Today's revenue
+        // Keep the old 'todayRevenue' purely for legacy reasons if frontend relies on exactly today, but rename it conceptually if we want
+        // Let's make "todayRevenueResult" the revenue for the *selected range* so the frontend variable name still works
         Order.aggregate([
-            { $match: { paymentStatus: 'paid', createdAt: { $gte: startOfToday }, status: { $ne: 'Cancelled' } } },
+            { $match: { paymentStatus: 'paid', createdAt: { $gte: rangeStart, $lte: rangeEnd }, status: { $ne: 'Cancelled' } } },
             { $group: { _id: null, total: { $sum: '$totalAmount' } } },
         ]),
-        // Recent 5 orders
-        Order.find({}).sort({ createdAt: -1 }).limit(5),
-        // Low stock products (stock < 15)
+        // Recent 5 orders inside the range
+        Order.find({ createdAt: { $gte: rangeStart, $lte: rangeEnd } }).sort({ createdAt: -1 }).limit(5),
+        // Low stock products (stock < 15) - doesn't depend on date
         Product.find({ stock: { $lt: 15 }, active: true }).select('name stock'),
-        // Orders per day for last 7 days (not cancelled)
+        // Orders per day for trend (not cancelled)
         Order.aggregate([
-            { $match: { createdAt: { $gte: startOfWeek }, status: { $ne: 'Cancelled' } } },
+            { $match: { createdAt: { $gte: trendStart, $lte: trendEnd }, status: { $ne: 'Cancelled' } } },
             {
                 $group: {
                     _id: {
@@ -65,9 +90,9 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             },
             { $sort: { _id: 1 } },
         ]),
-        // Product name breakdown from order items
+        // Product name breakdown from order items in range
         Order.aggregate([
-            { $match: { status: { $ne: 'Cancelled' } } },
+            { $match: { status: { $ne: 'Cancelled' }, createdAt: { $gte: rangeStart, $lte: rangeEnd } } },
             { $unwind: '$items' },
             {
                 $group: {
@@ -78,15 +103,15 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             },
             { $sort: { count: -1 } },
         ]),
-        // Boxes ordered today
+        // Boxes ordered in range
         Order.aggregate([
-            { $match: { createdAt: { $gte: startOfToday } } },
+            { $match: { createdAt: { $gte: rangeStart, $lte: rangeEnd } } },
             { $unwind: '$items' },
             { $group: { _id: null, totalBoxes: { $sum: '$items.quantity' } } }
         ]),
-        // Boxes ordered today grouped by payment mode
+        // Boxes ordered in range grouped by payment mode
         Order.aggregate([
-            { $match: { createdAt: { $gte: startOfToday } } },
+            { $match: { createdAt: { $gte: rangeStart, $lte: rangeEnd } } },
             { $unwind: '$items' },
             { $group: { _id: '$paymentMode', totalBoxes: { $sum: '$items.quantity' } } }
         ])
