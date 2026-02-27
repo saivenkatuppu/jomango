@@ -3,8 +3,7 @@ const { MongoClient } = require('mongodb');
 // The OLD database from which we want to pull data
 const oldUri = 'mongodb://venturemond_db_user:qUcaE4bfAuBtq5F6@ac-y4mzg3v-shard-00-00.brmnphx.mongodb.net:27017,ac-y4mzg3v-shard-00-01.brmnphx.mongodb.net:27017,ac-y4mzg3v-shard-00-02.brmnphx.mongodb.net:27017/jamango_db?ssl=true&replicaSet=atlas-kmkrnk-shard-0&authSource=admin&retryWrites=true&w=majority';
 
-// The NEW database to which we want to push data
-const newUri = 'mongodb+srv://techteam_db_user:g2PHdOFTAftpfFAi@cluster0.frlryi6.mongodb.net/jamango_db?appName=Cluster0';
+const newUri = 'mongodb://techteam_db_user:g2PHdOFTAftpfFAi@ac-t9pebry-shard-00-00.frlryi6.mongodb.net:27017,ac-t9pebry-shard-00-01.frlryi6.mongodb.net:27017,ac-t9pebry-shard-00-02.frlryi6.mongodb.net:27017/jamango_db?ssl=true&replicaSet=atlas-t9pebry-shard-0&authSource=admin&retryWrites=true';
 
 async function migrate() {
     let oldClient, newClient;

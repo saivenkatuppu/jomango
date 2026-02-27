@@ -74,7 +74,7 @@ router.post('/', upload.single('image'), (req, res) => {
         return res.json(req.file.location);
     }
 
-    const protocol = req.headers['x-forwarded-proto'] || (req.hostname === 'localhost' ? 'http' : 'https');
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
     const envPath = process.env.PUBLIC_URL || `${protocol}://${req.get('host')}`;
     const fileUrl = `${envPath}/uploads/${req.file.filename}`;
     res.json(fileUrl);
