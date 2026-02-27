@@ -537,7 +537,18 @@ const StallOwnerDashboard = () => {
                                             />
                                             {uploadingImage && <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />}
                                         </div>
-                                        {mangoForm.image && <div className="text-[10px] text-green-600 flex items-center gap-1 mt-1 font-bold"><Check className="h-3 w-3" /> Image Uploaded</div>}
+                                        {mangoForm.image && (
+                                            <div className="flex items-center justify-between mt-1 pr-1">
+                                                <div className="text-[10px] text-green-600 flex items-center gap-1 font-bold"><Check className="h-3 w-3" /> Image Uploaded</div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setMangoForm(f => ({ ...f, image: "" }))}
+                                                    className="text-[10px] text-red-500 hover:text-red-700 font-bold transition-colors"
+                                                >
+                                                    Remove Image
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className={`grid ${mangoForm.priceUnit === 'per box' ? 'grid-cols-3' : 'grid-cols-2'} gap-4`}>

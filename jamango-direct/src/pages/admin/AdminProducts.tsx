@@ -265,8 +265,17 @@ const AdminProducts = () => {
                   {uploadingImage && <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />}
                 </div>
                 {form.image && (
-                  <div className="mt-2 text-xs text-green-600 truncate flex items-center gap-1">
-                    <Check className="h-3 w-3" /> Image uploaded
+                  <div className="mt-2 text-xs flex items-center justify-between pr-1">
+                    <span className="text-green-600 flex items-center gap-1 font-bold truncate">
+                      <Check className="h-3 w-3" /> Image uploaded
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, image: "" }))}
+                      className="text-red-500 hover:text-red-700 font-bold transition-colors"
+                    >
+                      Remove Image
+                    </button>
                   </div>
                 )}
               </div>
