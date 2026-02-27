@@ -103,15 +103,8 @@ const getSubscribers = asyncHandler(async (req, res) => {
         ];
     }
 
-    // Debug
-    // console.log("Subscriber Filter:", filter);
-
-    // Debug
-    console.log("GET /subscribers Request:", { type, query_start, filter });
-
     try {
         const subscribers = await Subscriber.find(filter).sort({ createdAt: -1 });
-        console.log(`Found ${subscribers.length} subscribers`);
         res.json(subscribers);
     } catch (error) {
         console.error("Error fetching subscribers:", error);

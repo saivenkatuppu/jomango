@@ -39,11 +39,6 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const trendStart = isCustomRange ? rangeStart : startOfWeek;
     const trendEnd = isCustomRange ? rangeEnd : new Date(now.setHours(23, 59, 59, 999));
 
-    console.log('[API getDashboardStats] user:', req.user?.email, req.user?.role);
-    console.log('[API getDashboardStats] query:', req.query);
-    console.log('[API getDashboardStats] rangeStart:', rangeStart);
-    console.log('[API getDashboardStats] rangeEnd:', rangeEnd);
-
     const [
         totalOrders,
         todayOrders,
@@ -123,7 +118,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
     let totalRevenue = revenueResult[0]?.total || 0;
     let todayRevenue = todayRevenueResult[0]?.total || 0;
-    
+
     // Dynamically calculate average based on the selected dates range instead of all time
     let avgOrderValue = todayOrders > 0 ? Math.round(todayRevenue / todayOrders) : 0;
 
@@ -176,7 +171,6 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         productBreakdown: processedProductBreakdown,
     };
 
-    console.log('[API getDashboardStats] Response stats:', payload.stats);
     res.json(payload);
 });
 

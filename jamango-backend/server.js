@@ -1,6 +1,9 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
@@ -24,6 +27,20 @@ dotenv.config();
 connectDB();
 
 const app = express();
+
+// High Traffic & Security Middlewares
+app.use(helmet({ crossOriginResourcePolicy: false })); // protect headers, false for image viewing
+app.use(compression()); // gzip compress payloads
+
+// Rate Limiting (Prevent DDoS)
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 500, // limit each IP to 500 requests per windowMs
+    message: { message: "Too many requests from this IP, please try again after 15 minutes" },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use('/api/', apiLimiter);
 
 app.use(cors());
 app.use(express.json());

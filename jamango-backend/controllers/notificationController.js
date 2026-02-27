@@ -41,10 +41,6 @@ const triggerProductNotification = asyncHandler(async (req, res) => {
         triggeredBy: req.user ? req.user._id : undefined,
     });
 
-    console.log(`[NOTIFICATION_MOCK] Triggered for Product: ${product.name}`);
-    console.log(`[NOTIFICATION_MOCK] Emails: ${emailSubscribers.length}, Phones: ${phoneSubscribers.length}`);
-    console.log(`[NOTIFICATION_MOCK] Payload:`, payload);
-
     res.json({
         message: 'Notification trigger recorded (API integration pending)',
         logId: log._id,
