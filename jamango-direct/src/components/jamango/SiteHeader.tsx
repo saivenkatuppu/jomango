@@ -48,6 +48,33 @@ const SiteHeader = () => {
     setMobileOpen(false);
   };
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith('/#') && location.pathname === '/') {
+      e.preventDefault();
+      const targetId = href.replace('/#', '');
+
+      const scrollWithOffset = () => {
+        const element = document.getElementById(targetId);
+        if (element) {
+          const y = element.getBoundingClientRect().top + window.scrollY - 100;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      };
+
+      scrollWithOffset();
+      setMobileOpen(false);
+
+      // Robust layout shift correction: Recalculate and adjust scroll if dynamic components (like ProductCards) shifted the anchor while scrolling
+      setTimeout(scrollWithOffset, 300);
+      setTimeout(scrollWithOffset, 800);
+    } else if (href.startsWith('/#')) {
+      // If we are on another page, let the native or router navigation happen
+      setMobileOpen(false);
+    } else {
+      setMobileOpen(false);
+    }
+  };
+
   return (
     <motion.header
       initial={{ y: -100 }}
@@ -78,6 +105,7 @@ const SiteHeader = () => {
             <a
               key={link.label}
               href={link.href}
+              onClick={(e) => handleNavClick(e, link.href)}
               className={`relative font-body text-sm font-medium transition-colors duration-300 group py-1 ${useDarkText ? "text-muted-foreground hover:text-charcoal" : "text-white/90 hover:text-white"}`}
             >
               {link.label}
@@ -110,6 +138,7 @@ const SiteHeader = () => {
 
           <a
             href="/#products"
+            onClick={(e) => handleNavClick(e, '/#products')}
             className="group relative inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[hsl(44,80%,46%)] text-white font-medium text-sm rounded-full shadow-lg shadow-[hsl(44,80%,46%)]/20 hover:shadow-xl hover:shadow-[hsl(44,80%,46%)]/40 hover:-translate-y-0.5 transition-all duration-300 ease-out overflow-hidden"
           >
             <div className="absolute inset-0 -translate-x-full group-hover:animate-shimmer bg-gradient-to-r from-transparent via-white/30 to-transparent" />
@@ -153,7 +182,7 @@ const SiteHeader = () => {
                 key={link.label}
                 href={link.href}
                 className="block font-display text-2xl text-charcoal hover:text-[hsl(44,80%,46%)]"
-                onClick={() => setMobileOpen(false)}
+                onClick={(e) => handleNavClick(e, link.href)}
               >
                 {link.label}
               </a>
@@ -188,7 +217,7 @@ const SiteHeader = () => {
 
             <a
               href="/#products"
-              onClick={() => setMobileOpen(false)}
+              onClick={(e) => handleNavClick(e, '/#products')}
               className="w-full py-4 bg-[hsl(44,80%,46%)] text-white font-medium text-lg rounded-full flex items-center justify-center gap-2 shadow-lg hover:bg-[hsl(44,80%,46%)]/90"
             >
               Order Harvest
