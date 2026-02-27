@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import { ShoppingCart, IndianRupee, Clock, CheckCircle, AlertTriangle, RefreshCw, TrendingUp, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import client from "@/api/client";
@@ -94,19 +95,19 @@ const AdminDashboard = () => {
     }
   };
 
-    const fetchStats = useCallback(async () => {
-        setLoading(true);
-        setError("");
-        try {
-            const { data: res } = await client.get(`/analytics/stats?startDate=${startDate}&endDate=${endDate}`);
-            setData(res);
-        } catch (err: any) {
-            console.error("Fetch Stats Error:", err.response?.data || err.message);
-            setError(err.response?.data?.message || "Failed to load dashboard data");
-        } finally {
-            setLoading(false);
-        }
-    }, [startDate, endDate]);
+  const fetchStats = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const { data: res } = await client.get(`/analytics/stats?startDate=${startDate}&endDate=${endDate}`);
+      setData(res);
+    } catch (err: any) {
+      console.error("Fetch Stats Error:", err.response?.data || err.message);
+      setError(err.response?.data?.message || "Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  }, [startDate, endDate]);
 
   // Initial load uses the default 'today' dates
   useEffect(() => {
@@ -150,8 +151,23 @@ const AdminDashboard = () => {
     ]
     : [];
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 300, damping: 24 } }
+  };
+
   return (
-    <div>
+    <motion.div initial="hidden" animate="show" variants={containerVariants}>
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="font-display text-3xl font-semibold text-foreground">Dashboard</h1>
@@ -193,44 +209,53 @@ const AdminDashboard = () => {
       )}
 
       {/* Stat Cards */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <motion.div variants={containerVariants} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {loading
           ? Array(4).fill(0).map((_, i) => (
-            <div key={i} className="bg-card rounded-xl border border-border p-5 animate-pulse">
+            <motion.div variants={itemVariants} key={i} className="bg-card rounded-xl border border-border p-5 animate-pulse">
               <div className="h-4 bg-muted rounded w-2/3 mb-3" />
               <div className="h-8 bg-muted rounded w-1/2 mb-2" />
               <div className="h-3 bg-muted rounded w-3/4" />
-            </div>
+            </motion.div>
           ))
           : statCards.map((stat) => (
-            <div key={stat.label} className="bg-card rounded-xl border border-border p-5">
+            <motion.div
+              variants={itemVariants}
+              whileHover={{ y: -4, scale: 1.01 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              key={stat.label}
+              className="bg-card rounded-xl border border-border p-5 shadow-sm hover:shadow-md transition-shadow cursor-default"
+            >
               <div className="flex items-center justify-between mb-3">
                 <span className="font-body text-sm text-muted-foreground">{stat.label}</span>
-                <stat.icon className="h-4 w-4 text-muted-foreground" />
+                <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+                  <stat.icon className="h-4 w-4" />
+                </div>
               </div>
-              <p className="font-display text-2xl font-semibold text-foreground">{stat.value}</p>
-              <p className="font-body text-xs text-muted-foreground mt-1">{stat.sub}</p>
-            </div>
+              <p className="font-display text-2xl font-bold text-foreground tracking-tight">{stat.value}</p>
+              <p className="font-body text-xs text-muted-foreground mt-2 font-medium">{stat.sub}</p>
+            </motion.div>
           ))}
-      </div>
+      </motion.div>
 
       {/* Selected Range Deep Dive Grid */}
       {data && (
-        <div className="mb-8">
+        <motion.div variants={itemVariants} className="mb-8">
           <h2 className="font-display text-lg font-semibold text-foreground mb-4">Selected Date Range Overview</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-card rounded-xl border border-border p-4 bg-secondary/10">
-              <p className="font-body text-xs text-muted-foreground mb-1 uppercase tracking-wider font-semibold">Total Boxes Sold</p>
-              <p className="font-display text-2xl font-bold text-foreground">{data.stats.boxesToday}</p>
-              <p className="font-body text-xs text-muted-foreground mt-1">Total physical units moved</p>
-            </div>
-            <div className="bg-card rounded-xl border border-border p-4 bg-blue-50/50">
-              <p className="font-body text-xs text-blue-700/70 mb-1 uppercase tracking-wider font-semibold">Pre-Paid Orders</p>
-              <p className="font-display text-2xl font-bold text-blue-700">{data.stats.paidBoxesToday}</p>
-              <p className="font-body text-xs text-blue-700/70 mt-1">No collection required</p>
-            </div>
+            <motion.div whileHover={{ scale: 1.02 }} className="bg-card rounded-xl border border-border p-5 bg-secondary/10 shadow-sm hover:shadow-md transition-all cursor-default">
+              <p className="font-body text-xs text-muted-foreground mb-2 uppercase tracking-wider font-semibold">Total Boxes Sold</p>
+              <p className="font-display text-3xl font-bold text-foreground">{data.stats.boxesToday}</p>
+              <p className="font-body text-xs text-muted-foreground mt-2">Total physical units moved</p>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.02 }} className="bg-card rounded-xl border border-border p-5 bg-blue-50/50 shadow-sm hover:shadow-md transition-all cursor-default relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-xl -mr-10 -mt-10" />
+              <p className="font-body text-xs text-blue-700/70 mb-2 uppercase tracking-wider font-semibold relative z-10">Pre-Paid Orders</p>
+              <p className="font-display text-3xl font-bold text-blue-700 relative z-10">{data.stats.paidBoxesToday}</p>
+              <p className="font-body text-xs text-blue-700/70 mt-2 relative z-10">No collection required</p>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Low Stock Alert */}
@@ -421,7 +446,7 @@ const AdminDashboard = () => {
           </table>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

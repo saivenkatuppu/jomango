@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
     Users,
     PlusCircle,
@@ -272,8 +273,23 @@ const StallOwnerDashboard = () => {
         c.mobile.includes(searchCRM)
     );
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 300, damping: 24 } }
+    };
+
     return (
-        <div className="space-y-8 max-w-5xl mx-auto pb-20 px-4 sm:px-0">
+        <motion.div initial="hidden" animate="show" variants={containerVariants} className="space-y-8 max-w-5xl mx-auto pb-20 px-4 sm:px-0">
             {/* Locked Stall Warning Banner */}
             {stallData?.isLocked && (
                 <div className="bg-amber-600 text-white px-6 py-4 rounded-[1.5rem] flex items-center justify-between shadow-lg shadow-amber-600/20 animate-in slide-in-from-top duration-500">
@@ -382,8 +398,13 @@ const StallOwnerDashboard = () => {
             {/* 2. Dashboard Metrics Cards */}
             {activeTab === 'summary' && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="bg-white p-6 rounded-3xl border border-charcoal/5 shadow-sm hover:shadow-md transition-shadow group">
+                    <motion.div variants={containerVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <motion.div
+                            variants={itemVariants}
+                            whileHover={{ y: -4, scale: 1.01 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                            className="bg-white p-6 rounded-3xl border border-charcoal/5 shadow-sm hover:shadow-md transition-shadow group cursor-default"
+                        >
                             <div className="flex items-center justify-between mb-4">
                                 <div className="h-10 w-10 bg-mango/10 rounded-xl flex items-center justify-center text-mango">
                                     <Leaf className="h-5 w-5" />
@@ -392,9 +413,12 @@ const StallOwnerDashboard = () => {
                             </div>
                             <p className="text-4xl font-black text-charcoal">{stats?.totalVarieties || 0}</p>
                             <p className="text-xs font-black text-muted-foreground uppercase tracking-wider mt-2">Active Varieties</p>
-                        </div>
+                        </motion.div>
 
-                        <div
+                        <motion.div
+                            variants={itemVariants}
+                            whileHover={{ y: -4, scale: 1.01 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 25 }}
                             onClick={() => setActiveTab('mangoes')}
                             className="bg-white p-6 rounded-3xl border border-charcoal/5 shadow-sm hover:shadow-md hover:bg-yellow-400 transition-all duration-300 cursor-pointer group"
                         >
@@ -410,9 +434,12 @@ const StallOwnerDashboard = () => {
                             <div className="mt-4 flex items-center gap-1 text-[10px] font-bold text-muted-foreground">
                                 <History className="h-3 w-3" /> Updated just now
                             </div>
-                        </div>
+                        </motion.div>
 
-                        <div
+                        <motion.div
+                            variants={itemVariants}
+                            whileHover={{ y: -4, scale: 1.01 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 25 }}
                             onClick={() => setActiveTab('customer_list')}
                             className="bg-white p-6 rounded-3xl border border-charcoal/5 shadow-sm hover:shadow-md hover:bg-yellow-400 transition-all duration-300 cursor-pointer group"
                         >
@@ -424,9 +451,12 @@ const StallOwnerDashboard = () => {
                             </div>
                             <p className="text-4xl font-black text-green-600">{stats?.customerCount || 0}</p>
                             <p className="text-xs font-black text-muted-foreground uppercase tracking-wider mt-2">Total Contacts</p>
-                        </div>
+                        </motion.div>
 
-                        <div
+                        <motion.div
+                            variants={itemVariants}
+                            whileHover={{ y: -4, scale: 1.01 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 25 }}
                             onClick={() => setActiveTab('customer_list')}
                             className="bg-white p-6 rounded-3xl border border-charcoal/5 shadow-sm hover:shadow-md hover:bg-yellow-400 transition-all duration-300 cursor-pointer group"
                         >
@@ -446,8 +476,8 @@ const StallOwnerDashboard = () => {
                             <div className="mt-4 flex items-center gap-1 text-[10px] font-bold text-green-600">
                                 <TrendingUp className="h-3 w-3" /> Growing your base
                             </div>
-                        </div>
-                    </div>
+                        </motion.div>
+                    </motion.div>
                 </div>
             )}
 
@@ -498,12 +528,12 @@ const StallOwnerDashboard = () => {
                                     <div className="space-y-2">
                                         <label className="text-[10px] uppercase font-black tracking-widest text-charcoal/40 ml-1">Variety Image</label>
                                         <div className="flex gap-2 items-center">
-                                            <Input 
-                                               type="file" 
-                                               accept="image/*" 
-                                               onChange={handleImageUpload} 
-                                               disabled={uploadingImage} 
-                                               className="h-10 rounded-xl bg-white flex-1 relative file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-mango/20 file:text-mango-deep hover:file:bg-mango/40 transition-all cursor-pointer" 
+                                            <Input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleImageUpload}
+                                                disabled={uploadingImage}
+                                                className="h-10 rounded-xl bg-white flex-1 relative file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-mango/20 file:text-mango-deep hover:file:bg-mango/40 transition-all cursor-pointer"
                                             />
                                             {uploadingImage && <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />}
                                         </div>
@@ -820,7 +850,7 @@ const StallOwnerDashboard = () => {
                     <span className="text-[10px] font-black tracking-tighter text-mango">ORCHARD OPS™</span>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 
