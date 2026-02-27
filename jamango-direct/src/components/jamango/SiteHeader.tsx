@@ -49,8 +49,10 @@ const SiteHeader = () => {
   };
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    if (href.startsWith('/#') && location.pathname === '/') {
+    if (href.startsWith('/#')) {
       e.preventDefault();
+      setMobileOpen(false);
+
       const targetId = href.replace('/#', '');
 
       const scrollWithOffset = () => {
@@ -61,15 +63,17 @@ const SiteHeader = () => {
         }
       };
 
-      scrollWithOffset();
-      setMobileOpen(false);
-
-      // Robust layout shift correction: Recalculate and adjust scroll if dynamic components (like ProductCards) shifted the anchor while scrolling
-      setTimeout(scrollWithOffset, 300);
-      setTimeout(scrollWithOffset, 800);
-    } else if (href.startsWith('/#')) {
-      // If we are on another page, let the native or router navigation happen
-      setMobileOpen(false);
+      if (location.pathname !== '/') {
+        navigate('/');
+        // Apply scrolling loop after component mount
+        setTimeout(scrollWithOffset, 100);
+        setTimeout(scrollWithOffset, 500);
+        setTimeout(scrollWithOffset, 1000);
+      } else {
+        scrollWithOffset();
+        setTimeout(scrollWithOffset, 300);
+        setTimeout(scrollWithOffset, 800);
+      }
     } else {
       setMobileOpen(false);
     }
