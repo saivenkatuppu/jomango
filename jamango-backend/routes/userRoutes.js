@@ -7,12 +7,15 @@ const {
     createStaff,
     updateStaff,
     deleteStaff,
-    impersonateUser
+    impersonateUser,
+    updateUserProfile
 } = require('../controllers/userController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
 router.post('/', registerUser);
 router.post('/login', authUser);
+
+router.route('/profile').put(protect, updateUserProfile);
 
 // Staff management routes
 router.route('/staff')

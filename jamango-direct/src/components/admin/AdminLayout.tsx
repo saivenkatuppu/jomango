@@ -11,7 +11,9 @@ import {
   Users,
   ShieldAlert,
   UserCog,
-  Store
+  Store,
+  User,
+  Settings
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -97,7 +99,14 @@ const AdminLayout = () => {
           })}
         </nav>
 
-        <div className="p-6 border-t border-white/10 bg-[hsl(80,42%,13%)]">
+        <div className="p-6 border-t border-white/10 bg-[hsl(80,42%,13%)] flex flex-col gap-2">
+          <Link
+            to="/admin/profile"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-[#F8F4EC]/60 hover:bg-white/5 hover:text-white transition-colors w-full group"
+          >
+            <User className="h-5 w-5 group-hover:scale-110 transition-transform" />
+            Profile Settings
+          </Link>
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-[#F8F4EC]/60 hover:bg-red-500/10 hover:text-red-400 transition-colors w-full group"

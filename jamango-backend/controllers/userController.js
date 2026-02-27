@@ -215,6 +215,41 @@ const impersonateUser = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Update user profile
+// @route   PUT /api/users/profile
+// @access  Private
+const updateUserProfile = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+        user.name = req.body.name || user.name;
+        user.email = req.body.email || user.email;
+        user.phone = req.body.phone || user.phone;
+
+        if (req.body.password) {
+            user.password = req.body.password;
+        }
+
+        const updatedUser = await user.save();
+
+        res.json({
+            _id: updatedUser._id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            phone: updatedUser.phone,
+            isAdmin: updatedUser.isAdmin,
+            role: updatedUser.role,
+            status: updatedUser.status,
+            stallId: updatedUser.stallId,
+            assignedStall: updatedUser.assignedStall,
+            token: generateToken(updatedUser._id), // Optionally generate new token
+        });
+    } else {
+        res.status(404);
+        throw new Error('User not found');
+    }
+});
+
 module.exports = {
     authUser,
     registerUser,
@@ -222,5 +257,6 @@ module.exports = {
     createStaff,
     updateStaff,
     deleteStaff,
-    impersonateUser
+    impersonateUser,
+    updateUserProfile
 };

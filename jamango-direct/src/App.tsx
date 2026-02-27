@@ -16,6 +16,7 @@ import AdminContacts from "./pages/admin/AdminContacts";
 import AdminStalls from "./pages/admin/AdminStalls";
 import AdminCRM from "./pages/admin/AdminCRM";
 import AdminStaff from "./pages/admin/AdminStaff";
+import AdminProfile from "./pages/admin/AdminProfile";
 import StallInventoryOverview from "./pages/admin/StallInventoryOverview";
 import AdminLayout from "./components/admin/AdminLayout";
 import { AuthProvider } from "./context/AuthContext";
@@ -71,6 +72,7 @@ const App = () => (
                 <Route path="/admin/stall-inventory" element={<StallInventoryOverview />} />
                 <Route path="/admin/crm" element={<AdminCRM />} />
                 <Route path="/admin/staff" element={<AdminStaff />} />
+                <Route path="/admin/profile" element={<AdminProfile />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
